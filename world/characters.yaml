@@ -6,7 +6,7 @@
   gender: male
   age: 23
   realm:
-    body: 练气三层 (肉身：锻骨圆满)
+    body: 通窍境三层 (肉身：锻骨圆满)
     spirit: 感知境 (中期)
   affiliation: 星衍宗 (内门弟子) / 青云城-方家 (少族长)
   status:
@@ -14,10 +14,10 @@
     mental: 冷静、绝对理智
   inventory:
     - 智脑·零号 (DaoOS 1.1)
-    - 灵石 x9000+ (赵家战利品)
+    - 灵石 x3950+ (消耗50枚引爆阵法节点)
     - 功法：《道OS·纳气诀 2.0》(融合气血熔炉)
-    - 技能：太初剑经·算尽苍生、微观修复
-    - 物品：星衍宗内门弟子令牌
+    - 技能：太初剑经·算尽苍生、微观修复、高频震荡·灵魂穿刺、阵法反向操控
+    - 物品：星衍宗内门弟子令牌、回灵丹 (纳兰嫣赠)、聚气丹 (纳兰嫣退婚赠)
   relationships:
     - name: 方天正
       relation: 父亲
@@ -27,8 +27,17 @@
       attitude: 合作
     - name: 李青萝
       relation: 宗门长老
-      attitude: 赏识 (被视为天才阵法师)
-  description: 哈佛计算机系博士穿越。利用DaoOS破解星衍宗剑阵，震惊全场，被破格录用为内门弟子。
+      attitude: 赏识 (因破阵及飞舟表现被看重)
+    - name: 王猛
+      relation: 外门执事
+      attitude: 敬畏、巴结 (因被救命)
+    - name: 神秘胖少年 (小胖)
+      relation: 同门 (九阳灵体)
+      attitude: 关注 (发现其扮猪吃虎)
+    - name: 纳兰嫣
+      relation: 前未婚妻
+      attitude: 复杂 (从轻视转为震惊与别扭的感激)
+  description: 哈佛计算机系博士穿越。利用DaoOS在飞舟遇袭中指挥反击，一指废掉筑基中期魔修，救下全船弟子。
 
 - id: li_qingluo
   name: 李青萝
@@ -47,6 +56,9 @@
     - name: 纳兰嫣
       relation: 弟子
       attitude: 严厉
+    - name: 王猛
+      relation: 外门执事
+      attitude: 下属
   description: 星衍宗内门长老，号称“清冷仙子”。精通阵法与剑道。在青云城考核中被方源的破阵天赋震惊，将其招入内门。
 
 - id: zhao_tie
@@ -80,20 +92,22 @@
       relation: 梦魇
       attitude: 恐惧
   description: 赵家前族长。企图在方源昏迷时偷袭，被城主慕容云海阻拦。后在乱葬岗被方天正截杀，赵家覆灭。
+
+- id: nalan_yan
   name: 纳兰嫣
   role: supporting
   gender: female
   age: 18
   realm:
-    body: 练气七层
-  affiliation: 青云城-城主府 / 星衍宗 (准弟子)
+    body: 通窍境八层
+  affiliation: 青云城-城主府 / 星衍宗 (真传弟子)
   status:
-    mental: 清冷、高傲
+    mental: 别扭、感激 (方源救命后心态动摇)
   relationships:
     - name: 方源
       relation: 前未婚夫
-      attitude: 漠然、轻视
-  description: 青云城第一美人，天赋卓绝，被星衍宗长老看中。
+      attitude: 极度复杂 (震惊、羞愧、感激)
+  description: 青云城第一美人。飞舟遇袭中被方源指挥作战，意识到方源的深不可测，心态从高傲转向迷茫。
 
 - id: fang_tianzheng
   name: 方天正
@@ -106,6 +120,10 @@
   status:
     physical: 暗伤已愈
     mental: 欣慰、坚定支持儿子
+    inventory:
+      - 《道OS·纳气诀 2.0》(简化版)
+      - 灵石 x5000
+      - 爆裂符 x3
   relationships:
     - name: 方源
       relation: 儿子
@@ -146,4 +164,35 @@
       attitude: 怨毒
   description: 前方家大长老。因贪污公款、勾结赵家被方源揭发，被方天正废除修为逐出家族。
 
+- id: wang_meng
+  name: 王猛
+  role: supporting
+  gender: male
+  age: 35
+  realm:
+    body: 凝气境 (初期/丹药堆砌)
+  affiliation: 星衍宗 (外门执事/杂务堂)
+  status:
+    mental: 狂喜、对方源死心塌地
+  relationships:
+    - name: 方源
+      relation: 救命恩人
+      attitude: 唯首是瞻
+  description: 星衍宗外门执事。在飞舟遇袭中被方源指点，越级斩杀魔修，从此将方源视为真神。
 
+- id: fatty_unknown
+  name: 神秘胖少年 (小胖)
+  role: hidden_expert
+  gender: male
+  age: 13
+  realm:
+    body: 通窍境 (初期/隐藏实力)
+  physique: 九阳灵体 (纯阳之体进阶版)
+  affiliation: 星衍宗 (新入门弟子)
+  status:
+    mental: 扮猪吃虎、偷吃烧饼
+  relationships:
+    - name: 方源
+      relation: 师兄 (唯一识破他的人)
+      attitude: 讨好、忌惮
+  description: 表面憨厚爱吃，实则天赋恐怖且极富心机。血煞宗袭击的目标。被方源识破后，试图通过卖萌蒙混过关。
