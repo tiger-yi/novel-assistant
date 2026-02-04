@@ -6,28 +6,25 @@
   gender: male
   age: 23
   realm:
-    body: 练气一层 (Body Cultivation)
-    spirit: 感知境·中期 (Spirit Cultivation)
-  affiliation: 青云城-方家 (少族长 -> 实际掌权者)
+    body: 练气三层 (肉身：锻骨圆满)
+    spirit: 感知境 (中期)
+  affiliation: 青云城-方家 (少族长)
   status:
-    physical: 重伤 (经脉断裂 12 处)
-    mental: 深度昏迷 (系统重启中)
+    physical: 完美 (基因优化完成)
+    mental: 冷静、绝对理智
   inventory:
-    - 智脑·零号 (过热强制休眠)
-    - 养魂玉 (能量已吸收)
-    - 聚气丹 (纳兰嫣退婚补偿)
-    - 灵石 x2990+ (消耗 10 枚用于超频)
-    - 功法：《道OS·纳气诀 1.0》
-    - 新功能：阵法模拟器
-    - 成就：弑神者（伪）- 精神力上限+30%
+    - 智脑·零号 (DaoOS 1.1)
+    - 灵石 x9000+ (赵家战利品)
+    - 功法：《道OS·纳气诀 2.0》(融合气血熔炉)
+    - 技能：太初剑经·算尽苍生、微观修复
   relationships:
     - name: 方天正
       relation: 父亲
       attitude: 敬重、守护
-    - name: 赵铁
-      relation: 手下败将
-      attitude: 已击杀
-  description: 哈佛计算机系博士穿越。在家族大比中开启“超频模式二阶”，越级击杀赵家伪宗师赵铁。目前因精神力透支陷入昏迷，智脑正在进行深度修复。
+    - name: 慕容云海
+      relation: 盟友 (暂定)
+      attitude: 合作
+  description: 哈佛计算机系博士穿越。利用赵家资源完成“基因优化”，肉身大幅强化。智脑升级至 1.1 版本，具备微观修复与更强的推演能力。准备参加星衍宗考核。
 
 - id: zhao_tie
   name: 赵铁 (赵家供奉)
@@ -52,14 +49,14 @@
   age: 50
   realm:
     body: 凝气境 (圆满)
-  affiliation: 青云城-赵家 (族长)
+  affiliation: 青云城-赵家 (前族长)
   status:
-    mental: 极度恐慌、后悔
+    physical: 死亡 (被方天正斩首)
   relationships:
     - name: 方源
       relation: 梦魇
       attitude: 恐惧
-  description: 赵家族长。亲眼目睹宗师被杀，心态崩坏，面临家族覆灭的危机。
+  description: 赵家前族长。企图在方源昏迷时偷袭，被城主慕容云海阻拦。后在乱葬岗被方天正截杀，赵家覆灭。
   name: 纳兰嫣
   role: supporting
   gender: female
