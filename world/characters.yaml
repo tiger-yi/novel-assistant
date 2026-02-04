@@ -6,29 +6,60 @@
   gender: male
   age: 23
   realm:
-    body: 练气二层 (Body Cultivation)
-    spirit: 感知境·半成品 (Spirit Cultivation)
-  affiliation: 青云城-方家
+    body: 练气一层 (Body Cultivation)
+    spirit: 感知境·中期 (Spirit Cultivation)
+  affiliation: 青云城-方家 (少族长 -> 实际掌权者)
   status:
-    physical: 虚弱 (长期透支精神力)
-    mental: 冷静、隐忍、绝对理性
+    physical: 重伤 (经脉断裂 12 处)
+    mental: 深度昏迷 (系统重启中)
   inventory:
-    - 智脑·零号 (道OS 1.0 满载运行)
-    - 养魂玉 (已吸收)
+    - 智脑·零号 (过热强制休眠)
+    - 养魂玉 (能量已吸收)
     - 聚气丹 (纳兰嫣退婚补偿)
+    - 灵石 x2990+ (消耗 10 枚用于超频)
+    - 功法：《道OS·纳气诀 1.0》
+    - 新功能：阵法模拟器
+    - 成就：弑神者（伪）- 精神力上限+30%
   relationships:
     - name: 方天正
       relation: 父亲
-      attitude: 敬重、守护 (视为恩师投射)
-    - name: 方烈
-      relation: 堂弟/竞争对手
-      attitude: 无视 (数据层面的蝼蚁)
-    - name: 纳兰嫣
-      relation: 前未婚妻
-      attitude: 漠然 (无聊的变量)
-  description: 哈佛计算机系博士穿越。为了构建智脑，蛰伏五年，被视为疯子。实则拥有顶尖的计算思维和微操能力。智脑已初步觉醒。
+      attitude: 敬重、守护
+    - name: 赵铁
+      relation: 手下败将
+      attitude: 已击杀
+  description: 哈佛计算机系博士穿越。在家族大比中开启“超频模式二阶”，越级击杀赵家伪宗师赵铁。目前因精神力透支陷入昏迷，智脑正在进行深度修复。
 
-- id: nalan_yan
+- id: zhao_tie
+  name: 赵铁 (赵家供奉)
+  role: antagonist
+  gender: male
+  age: 45
+  realm:
+    body: 凝气境 (圆满/伪宗师)
+  affiliation: 青云城-赵家
+  status:
+    physical: 死亡 (心脏爆裂)
+  relationships:
+    - name: 方源
+      relation: 杀身仇人
+      attitude: 轻视 -> 恐惧
+  description: 号称“血手人屠”，赵家供奉。服用“燃血丹”伪装成宗师，实为凝气圆满。被方源识破后利用“高频震荡”击碎心脏而亡。
+
+- id: zhao_wuji
+  name: 赵无极
+  role: antagonist
+  gender: male
+  age: 50
+  realm:
+    body: 凝气境 (圆满)
+  affiliation: 青云城-赵家 (族长)
+  status:
+    mental: 极度恐慌、后悔
+  relationships:
+    - name: 方源
+      relation: 梦魇
+      attitude: 恐惧
+  description: 赵家族长。亲眼目睹宗师被杀，心态崩坏，面临家族覆灭的危机。
   name: 纳兰嫣
   role: supporting
   gender: female
@@ -53,13 +84,13 @@
     body: 凝气境 (后期)
   affiliation: 青云城-方家 (族长)
   status:
-    physical: 暗伤已愈 (服用了方源提纯的三品洗髓丹)
-    mental: 狂喜、护犊子、对儿子能力感到震惊
+    physical: 暗伤已愈
+    mental: 欣慰、坚定支持儿子
   relationships:
     - name: 方源
       relation: 儿子
       attitude: 溺爱、无条件支持
-  description: 方家族长，顶住家族压力保住方源的少族长之位。服用儿子提纯的洗髓丹后，暗伤痊愈，修为突破至凝气后期。
+  description: 方家族长。赠予方源家族至宝“养魂玉”，无条件支持儿子的“疯言疯语”。
 
 - id: fang_lie
   name: 方烈
@@ -67,15 +98,16 @@
   gender: male
   age: 20
   realm:
-    body: 练气六层
-  affiliation: 青云城-方家 (大长老一脉)
+    body: 废人 (丹田破碎)
+  affiliation: 青云城-方家 (弃子)
   status:
-    mental: 震惊、嫉妒、恐慌
+    physical: 重伤、丹田破碎
+    mental: 绝望、怨毒
   relationships:
     - name: 方源
-      relation: 堂兄
-      attitude: 嫉妒、畏惧
-  description: 家族年轻一代的翘楚，被大长老推出来争夺少族长之位，性格张扬。在演武场被方源的手段震慑。持有大长老赐予的“爆血丹”。
+      relation: 堂兄/仇人
+      attitude: 恐惧、怨恨
+  description: 家族年轻一代的翘楚。服用爆血丹试图击杀方源，反被方源利用“数据溢出”原理一指点破丹田，沦为废人。
 
 - id: fang_li
   name: 方厉
@@ -83,12 +115,15 @@
   gender: male
   age: 70
   realm:
-    body: 凝气境 (中期)
-  affiliation: 青云城-方家 (大长老)
+    body: 废人 (修为被废)
+  affiliation: 无 (逐出家族)
   status:
-    mental: 骇然、难以置信
+    physical: 虚弱
+    mental: 崩溃、悔恨
   relationships:
     - name: 方源
-      relation: 族长之子/政敌
-      attitude: 敌视、忌惮
-  description: 方家大长老，二品炼丹师。试图用毒丹逼宫，却被方源当众打脸。
+      relation: 仇人
+      attitude: 怨毒
+  description: 前方家大长老。因贪污公款、勾结赵家被方源揭发，被方天正废除修为逐出家族。
+
+
