@@ -8,7 +8,7 @@
   realm:
     body: 练气三层 (肉身：锻骨圆满)
     spirit: 感知境 (中期)
-  affiliation: 青云城-方家 (少族长)
+  affiliation: 星衍宗 (内门弟子) / 青云城-方家 (少族长)
   status:
     physical: 完美 (基因优化完成)
     mental: 冷静、绝对理智
@@ -17,14 +17,37 @@
     - 灵石 x9000+ (赵家战利品)
     - 功法：《道OS·纳气诀 2.0》(融合气血熔炉)
     - 技能：太初剑经·算尽苍生、微观修复
+    - 物品：星衍宗内门弟子令牌
   relationships:
     - name: 方天正
       relation: 父亲
       attitude: 敬重、守护
     - name: 慕容云海
-      relation: 盟友 (暂定)
+      relation: 盟友
       attitude: 合作
-  description: 哈佛计算机系博士穿越。利用赵家资源完成“基因优化”，肉身大幅强化。智脑升级至 1.1 版本，具备微观修复与更强的推演能力。准备参加星衍宗考核。
+    - name: 李青萝
+      relation: 宗门长老
+      attitude: 赏识 (被视为天才阵法师)
+  description: 哈佛计算机系博士穿越。利用DaoOS破解星衍宗剑阵，震惊全场，被破格录用为内门弟子。
+
+- id: li_qingluo
+  name: 李青萝
+  role: supporting
+  gender: female
+  age: 120
+  realm:
+    spirit: 化形境 (圆满)
+  affiliation: 星衍宗 (内门长老)
+  status:
+    mental: 清冷、惜才
+  relationships:
+    - name: 方源
+      relation: 赏识的后辈
+      attitude: 关注
+    - name: 纳兰嫣
+      relation: 弟子
+      attitude: 严厉
+  description: 星衍宗内门长老，号称“清冷仙子”。精通阵法与剑道。在青云城考核中被方源的破阵天赋震惊，将其招入内门。
 
 - id: zhao_tie
   name: 赵铁 (赵家供奉)

@@ -163,23 +163,12 @@ flowchart TD
 系统在执行 **构思剧情** 和 **撰写正文** 时，必须遵循以下思维链模式：
 
 ### 1. 构思阶段 (Phase: Plan)
-*   **Thought (思考)**：
-    *   当前剧情目标是什么？（参考 `outline.md`）
-    *   有哪些伏笔需要回收？（参考 `timeline.md`）
-    *   角色当前的动机和状态是否支持该行为？（参考 `characters.yaml`）
-    *   力量体系是否允许这种操作？（参考 `power.md`）
-*   **Action (行动)**：生成分镜大纲或细纲。
-*   **Observation (观察/校验)**：自我审查逻辑漏洞（如：主角重伤未愈却进行了高强度战斗），若有冲突，返回 Thought 阶段修正。
+参照规范:[logic-blueprint-spec.md](writespec/logic-blueprint-spec.md)
+每章开始前，AI 必须输出 **Plan: ReAct** 块。在 **Observation** 环节，如果未能通过“战力平衡”或“状态同步”审计，AI 必须显式写出：`
 
 ### 2. 撰写阶段 (Phase: Draft)
-*   **Thought (思考)**：
-    *   本场景的氛围基调是什么？（压抑、热血、悲凉）
-    *   需要调用哪些感官描写？（视觉、听觉、嗅觉）
-    *   如何通过侧面描写体现“爽点”？（路人反应、环境烘托）
-*   **Action (行动)**：撰写正文内容。
-*   **Observation (观察/校验)**：
-    *   检查是否出现“AI 味”词汇（如：显而易见、综上所述）。
-    *   检查战力描写是否符合 `power.md` 的越级规则。
+参照规范:[chapter-drafting-spec.md](writespec/chapter-drafting-spec.md)
+“在执行 **Draft** 任务时，**必须显式输出 Thought 和 Observation 过程**。Observation 部分如果未提及对 `inventory.md` 的物品消耗审计和对 `power.md` 的战力压制核对，则该章节视为不合格，必须重写。”
 
 ## 模板示例
 
