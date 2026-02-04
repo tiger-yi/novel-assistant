@@ -13,8 +13,9 @@
     physical: 虚弱 (长期透支精神力)
     mental: 冷静、隐忍、绝对理性
   inventory:
-    - 智脑·零号 (观想物，完成度 99.9%)
-    - 养魂玉 (父亲赠予，充能中)
+    - 智脑·零号 (道OS 1.0 满载运行)
+    - 养魂玉 (已吸收)
+    - 聚气丹 (纳兰嫣退婚补偿)
   relationships:
     - name: 方天正
       relation: 父亲
@@ -22,7 +23,26 @@
     - name: 方烈
       relation: 堂弟/竞争对手
       attitude: 无视 (数据层面的蝼蚁)
-  description: 哈佛计算机系博士穿越。为了构建智脑，蛰伏五年，被视为疯子。实则拥有顶尖的计算思维和微操能力。
+    - name: 纳兰嫣
+      relation: 前未婚妻
+      attitude: 漠然 (无聊的变量)
+  description: 哈佛计算机系博士穿越。为了构建智脑，蛰伏五年，被视为疯子。实则拥有顶尖的计算思维和微操能力。智脑已初步觉醒。
+
+- id: nalan_yan
+  name: 纳兰嫣
+  role: supporting
+  gender: female
+  age: 18
+  realm:
+    body: 练气七层
+  affiliation: 青云城-城主府 / 星衍宗 (准弟子)
+  status:
+    mental: 清冷、高傲
+  relationships:
+    - name: 方源
+      relation: 前未婚夫
+      attitude: 漠然、轻视
+  description: 青云城第一美人，天赋卓绝，被星衍宗长老看中。
 
 - id: fang_tianzheng
   name: 方天正
@@ -30,16 +50,16 @@
   gender: male
   age: 50
   realm:
-    body: 凝气境 (中期)
+    body: 凝气境 (后期)
   affiliation: 青云城-方家 (族长)
   status:
-    physical: 暗伤未愈 (早年战斗留存)
-    mental: 忧心忡忡，但对儿子坚定信任
+    physical: 暗伤已愈 (服用了方源提纯的三品洗髓丹)
+    mental: 狂喜、护犊子、对儿子能力感到震惊
   relationships:
     - name: 方源
       relation: 儿子
       attitude: 溺爱、无条件支持
-  description: 方家族长，顶住家族压力保住方源的少族长之位。是方源在这个世界唯一的软肋和逆鳞。
+  description: 方家族长，顶住家族压力保住方源的少族长之位。服用儿子提纯的洗髓丹后，暗伤痊愈，修为突破至凝气后期。
 
 - id: fang_lie
   name: 方烈
@@ -50,9 +70,25 @@
     body: 练气六层
   affiliation: 青云城-方家 (大长老一脉)
   status:
-    mental: 傲慢、急躁
+    mental: 震惊、嫉妒、恐慌
   relationships:
     - name: 方源
       relation: 堂兄
-      attitude: 鄙视、嫉妒
-  description: 家族年轻一代的翘楚，被大长老推出来争夺少族长之位，性格张扬，实则是被利用的棋子。
+      attitude: 嫉妒、畏惧
+  description: 家族年轻一代的翘楚，被大长老推出来争夺少族长之位，性格张扬。在演武场被方源的手段震慑。持有大长老赐予的“爆血丹”。
+
+- id: fang_li
+  name: 方厉
+  role: antagonist
+  gender: male
+  age: 70
+  realm:
+    body: 凝气境 (中期)
+  affiliation: 青云城-方家 (大长老)
+  status:
+    mental: 骇然、难以置信
+  relationships:
+    - name: 方源
+      relation: 族长之子/政敌
+      attitude: 敌视、忌惮
+  description: 方家大长老，二品炼丹师。试图用毒丹逼宫，却被方源当众打脸。
