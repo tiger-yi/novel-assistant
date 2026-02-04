@@ -10,7 +10,7 @@ Novel Assistant 是一个用于辅助创作中文玄幻小说的结构化世界�
 novel-assistant/
 ├── world/                    # 世界观数据目录（核心）
 │   ├── outline.md            # 剧情大纲
-│   ├── characters.yaml       # 人物档案
+│   ├── characters.toml       # 人物档案
 │   ├── timeline.md           # 时间线管理
 │   ├── geography.md          # 地理与势力
 │   ├── inventory.md          # 道具与功法
@@ -18,7 +18,7 @@ novel-assistant/
 ├── chapters/                 # 正文章节目录
 ├── templates/                # 模板目录
 │   ├── outline-template.md   # 剧情大纲模板
-│   ├── characters-template.yaml
+│   ├── characters-template.toml
 │   ├── timeline-template.md
 │   ├── geography-template.md
 │   ├── inventory-template.md
@@ -50,9 +50,10 @@ flowchart TD
     
     CheckOthers -->|"全部存在"| Read["读取 World Bible"]
 
-    Read --> Plan["构思剧情 & 检查伏笔"]
-    Plan --> Draft["撰写/生成正文"]
-    Draft --> Verify{"逻辑一致性检查"}
+    Read --> Plan["ReAct 构思剧情\n(Thought: 分析现状 -> Action: 生成大纲 -> Obs: 逻辑校验)"]
+    Plan --> Draft["ReAct 撰写正文\n(Thought: 设定场景 -> Action: 描写细节 -> Obs: 风格检查)"]
+    Draft --> Polish["调用 chapter-polisher\n(字数检查 & AI 去味)"]
+    Polish --> Verify{"逻辑一致性检查"}
     
     Verify -->|"冲突/吃书"| Fix["修正正文或设定"]
     Fix --> Verify
@@ -63,7 +64,7 @@ flowchart TD
     subgraph UpdateBible ["同步更新数据"]
         direction TB
         U1["更新 outline.md (剧情/伏笔)"]
-        U2["更新 characters.yaml (境界/状态)"]
+        U2["更新 characters.toml (境界/状态)"]
         U3["更新 timeline.md (时间流逝)"]
         U4["更新 inventory.md (物品变动)"]
         U5["更新 geography.md (地图探索)"]
@@ -82,7 +83,7 @@ flowchart TD
     *   一切始于 `outline.md`。如果该文件不存在，系统会要求**输入**一段剧情概要（如：“主角叶辰被退婚，获得戒指老爷爷...”）,参照模板`templates\outline-template.md`创建outline.md。
 2.  **智能提取 (Auto-Extraction)**：
     *   系统会分析 `outline.md` 中的文本，尝试提取：
-        *   **角色**：姓名、身份、初始境界（生成 `characters.yaml`）
+        *   **角色**：姓名、身份、初始境界（生成 `characters.toml`）
         *   **时间**：开篇年份、关键节点（生成 `timeline.md`）
         *   **地点**：出生地、新手村（生成 `geography.md`）
         *   **物品**：金手指、初始道具（生成 `inventory.md`）
@@ -104,6 +105,10 @@ flowchart TD
 #### 2. "update world bible"
 分析最近生成的正文，同步更新所有 World Bible 文件。
 - **功能**: 触发全量文档审查与更新。
+- **流程**:
+  1. 调用 `chapter-polisher` 技能对新章节进行字数检查和 AI 去味。
+  2. 确保章节质量达标后，分析正文内容。
+  3. 更新人物、物品、地理等数据文件。
 - **触发时机**: 
   - 每写完一个完整情节或章节后。
   - 发现新的世界观设定或模式时。
@@ -123,8 +128,8 @@ flowchart TD
   - 确保大事件（如宗门灭亡）在至少 3 章前有征兆
   - 使用指令 **"update world bible"** 自动同步
 
-### 2. 人物档案 (`world/characters.yaml`)
-- **功能**：YAML 格式的人物数据
+### 2. 人物档案 (`world/characters.toml`)
+- **功能**：TOML 格式的人物数据
 - **关键字段**：姓名、当前境界、所属势力、核心功法、当前状态、好感度
 - **自动升级**：
   - 主角突破时自动更新 `当前境界`
@@ -153,35 +158,56 @@ flowchart TD
   - 战斗校验：每次战斗前对比双方境界，计算越级代价（参考 power.md）
   - 体系扩展：出现新地图或新种族时，需同步更新力量体系的兼容性说明
 
-## 模板示例
+## ReAct 创作协议 (ReAct Protocol)
 
-### 1. 人物档案 (`characters.yaml`)
+系统在执行 **构思剧情** 和 **撰写正文** 时，必须遵循以下思维链模式：
 
-采用 YAML 格式存储，便于程序解析和层级管理。
+### 1. 构思阶段 (Phase: Plan)
+参照规范:[logic-blueprint-spec.md](writespec/logic-blueprint-spec.md)
+每章开始前，AI 必须输出 **Plan: ReAct** 块。在 **Observation** 环节，如果未能通过“战力平衡”或“状态同步”审计，AI 必须显式写出：`[Audit Failed] -> Refine Plan`。
 
-详见模板文件：[characters-template.yaml](templates/characters-template.yaml)
+### 2. 撰写阶段 (Phase: Draft)
+参照规范:[chapter-drafting-spec.md](writespec/chapter-drafting-spec.md)
+在执行 **Draft** 任务时，**必须显式输出 Thought 和 Observation 过程**。Observation 部分如果未提及对 `inventory.md` 的物品消耗审计和对 `power.md` 的战力压制核对，则该章节视为不合格，必须重写。
 
-### 2. 道具与功法 (`inventory.md`)
+## 模板与 ReAct 联动机制 (Templates & ReAct Integration)
 
-分类管理物品，记录来源、功能和消耗状态。
+本系统不视模板为死板的文档，而是通过 **ReAct 闭环** 驱动其动态演化。
 
-详见模板文件：[inventory-template.md](templates/inventory-template.md)
+### 1. 人物档案 (`characters.toml`) - 状态机驱动
+*   **ReAct 场景**：主角突破、受伤、势力变更。
+*   **Thought**: 分析当前剧情对角色的物理/心理影响。检索 `power.md` 确认突破条件。
+*   **Action**: 按照 `[id.realm]` 结构更新境界，并在 `status` 记录实时负面状态。
+*   **Observation**: 校验角色当前战力数值是否与 `inventory.md` 中的装备加成产生冲突。
+*   **模板参考**: [characters-template.toml](templates/characters-template.toml)
 
-### 3. 地理与势力 (`geography.md`)
+### 2. 道具与功法 (`inventory.md`) - 资源审计驱动
+*   **ReAct 场景**：战斗消耗、击杀掉落、秘境寻宝。
+*   **Thought**: 计算战斗中的灵力消耗比与符箓剩余数量。
+*   **Action**: 在 `[consumables]` 中扣除使用次数，或在 `[artifacts]` 中新增战利品。
+*   **Observation**: 检查“杀人夺宝”后的资源获取是否导致主角战力过快崩坏（战力膨胀预警）。
+*   **模板参考**: [inventory-template.md](templates/inventory-template.md)
 
-记录地图层级、势力分布及危险程度。
+### 3. 地理与势力 (`geography.md`) - 探索迷雾驱动
+*   **ReAct 场景**：地图切换、势力开战、情报解锁。
+*   **Thought**: 根据 `timeline.md` 计算消息传播的速度，判断主角是否已知某势力动向。
+*   **Action**: 在 `[regions]` 中解锁新坐标，更新 `risk_level`（如：战乱导致危险度上升）。
+*   **Observation**: 确保主角的移动轨迹符合 `power.md` 中定义的飞行/传送速度限制。
+*   **模板参考**: [geography-template.md](templates/geography-template.md)
 
-详见模板文件：[geography-template.md](templates/geography-template.md)
+### 4. 力量体系 (`power.md`) - 全局逻辑基石
+*   **ReAct 场景**：所有战斗描写、技能判定。
+*   **Thought**: 检索 `power.md` 中的“境界压制系数”，判定主角能否越级。
+*   **Action**: 在正文中应用“大道压制”或“法则反噬”的描写。
+*   **Observation**: **[核心审计]** 若描写中出现低境界反杀高两个大境界且无特殊法宝，直接触发 `[Audit Failed]` 并重写。
+*   **模板参考**: [power-system-template.md](templates/power-system-template.md)
 
-### 4. 时间线管理 (`timeline.md`)
-
-详见模板文件：[timeline-template.md](templates/timeline-template.md)
-
-### 5. 力量体系 (`power.md`)
-
-用于定义全局的等级划分、品阶、战斗规则与时间线代价记录。
-
-详见模板文件：[power-system-template.md](templates/power-system-template.md)
+### 5. 时间线管理 (`timeline.md`) - 因果律驱动
+*   **ReAct 场景**：闭关、长途跋涉、伏笔回收。
+*   **Thought**: 计算从 A 点到 B 点的航行时间，同步所有角色的年龄。
+*   **Action**: 新增 `[纪元/年份] - [事件]` 条目，记录“草蛇灰线”的埋点位置。
+*   **Observation**: 检查是否出现“主角闭关十年，外界毫无变化”的逻辑死结。
+*   **模板参考**: [timeline-template.md](templates/timeline-template.md)
 
 ## 创作规范
 
@@ -252,15 +278,16 @@ flowchart TD
 > "主角叶辰进入了'魔兽山脉'外围，遇到了一只二阶魔兽，准备战斗。"
 
 **AI 处理流程**：
-1. 读取 `characters.yaml` 确认叶辰当前境界（淬体境九重）
-2. 读取 `geography.md` 确认魔兽山脉位置和等级建议
-3. 读取 `inventory.md` 确认可用道具和功法
-4. 生成战斗场景（符合境界逻辑）
-5. 更新时间线和道具消耗
+1. **[Thought]** 分析请求：主角遭遇二阶魔兽。检查档案：主角淬体九重 vs 二阶魔兽（相当于筑基期），属于越级挑战。
+2. **[Action]** 检索 `inventory.md`，发现主角持有“爆裂符”。
+3. **[Thought]** 制定战术：正面必败，需利用地形 + 符箓。
+4. **[Action]** 生成战斗描写：叶辰诱敌深入峡谷，引爆符箓。
+5. **[Observation]** 校验战损：主角应受轻伤，符合逻辑。
+6. **[Sync]** 更新时间线和道具消耗。
 
 ## 注意事项
 
 - 文件编码：UTF-8
-- 人物档案使用 YAML 格式（文件名：`characters.yaml`）
+- 人物档案使用 TOML 格式（文件名：`characters.toml`）
 - 所有世界观变更必须同步更新对应的数据文件
 - 保持战力体系的严谨性，避免逻辑冲突

@@ -1,0 +1,45 @@
+# [ReAct Protocol: Characters]
+# 1. Thought: 检索 outline.md 中的冲突点，分析该角色在当前剧情节点的必然状态。
+# 2. Action: 严格按照以下 schema 填入数据，禁止删除既有字段。
+# 3. Observation: 校验该角色的境界是否与 power.md 中的战力梯队一致。
+
+# 主角配置 (Protagonist Spec)
+[main_character]
+name = "叶辰"
+identity = "家族弃子 / 剑墓传人" # 需体现社会关系与隐秘身份
+realm = "淬体境 (九重)"        # 必须符合 power.md 定义的层级名称
+affiliation = "青云城-叶家"
+personality = "坚毅、杀伐果断、尊师重道"
+status = "经脉重塑中"          # 记录当前实时的负面 buff 或伤势
+
+[main_character.attributes]
+physique = "凡体 -> 荒古圣体 (未觉醒)"
+soul = "两世为人 (灵魂力强大)"
+
+[[main_character.skills]]
+name = "太初剑经"
+grade = "天级残篇"
+mastery = "小成" # 入门/小成/大成/圆满/化境
+
+[[main_character.skills]]
+name = "碎石掌"
+grade = "黄级下品"
+mastery = "圆满"
+
+[[main_character.relationships]]
+name = "剑老"
+relation = "师尊"
+trust = 100
+
+[[main_character.relationships]]
+name = "柳如烟"
+relation = "死敌 (前未婚妻)"
+trust = -100
+
+# 重要配角
+[[side_characters]]
+name = "萧薰儿"
+identity = "古族千金"
+realm = "灵脉境 (三重)"
+affiliation = "神秘势力"
+relation_to_mc = "青梅竹马"
