@@ -1,0 +1,37 @@
+# [ReAct Protocol: Characters]
+
+# 主角配置 (Protagonist Spec)
+[main_character]
+name = "苏哲"
+identity = "青云宗杂役 / 穿越物理学家"
+realm = "凡人 (未入阶)"
+affiliation = "青云宗-杂役房"
+personality = "理智冷静、极度好奇、实事求是"
+status = "灵魂融合期，身体虚弱"
+
+[main_character.attributes]
+physique = "伪灵根 (传统标准下的废柴)"
+soul = "顶级物理学家内核 (算力惊人，观察入微)"
+
+[[main_character.skills]]
+name = "微观灵气观察"
+grade = "特殊 (科学思维)"
+mastery = "入门"
+
+[[main_character.relationships]]
+name = "王富贵"
+relation = "同屋杂役"
+trust = 60
+
+[[main_character.relationships]]
+name = "李总管"
+relation = "压迫者"
+trust = -20
+
+# 重要配角
+[[side_characters]]
+name = "林倾城"
+identity = "青云宗内门天才"
+realm = "筑基期 (初期)"
+affiliation = "青云宗"
+relation_to_mc = "未曾谋面的偶像/潜在交集"
