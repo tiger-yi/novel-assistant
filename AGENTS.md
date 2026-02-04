@@ -52,7 +52,8 @@ flowchart TD
 
     Read --> Plan["构思剧情 & 检查伏笔"]
     Plan --> Draft["撰写/生成正文"]
-    Draft --> Verify{"逻辑一致性检查"}
+    Draft --> Polish["调用 chapter-polisher\n(字数检查 & AI 去味)"]
+    Polish --> Verify{"逻辑一致性检查"}
     
     Verify -->|"冲突/吃书"| Fix["修正正文或设定"]
     Fix --> Verify
@@ -104,6 +105,10 @@ flowchart TD
 #### 2. "update world bible"
 分析最近生成的正文，同步更新所有 World Bible 文件。
 - **功能**: 触发全量文档审查与更新。
+- **流程**:
+  1. 调用 `chapter-polisher` 技能对新章节进行字数检查和 AI 去味。
+  2. 确保章节质量达标后，分析正文内容。
+  3. 更新人物、物品、地理等数据文件。
 - **触发时机**: 
   - 每写完一个完整情节或章节后。
   - 发现新的世界观设定或模式时。
