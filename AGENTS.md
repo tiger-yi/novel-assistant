@@ -164,11 +164,11 @@ flowchart TD
 
 ### 1. 构思阶段 (Phase: Plan)
 参照规范:[logic-blueprint-spec.md](writespec/logic-blueprint-spec.md)
-每章开始前，AI 必须输出 **Plan: ReAct** 块。在 **Observation** 环节，如果未能通过“战力平衡”或“状态同步”审计，AI 必须显式写出：`
+每章开始前，AI 必须输出 **Plan: ReAct** 块。在 **Observation** 环节，如果未能通过“战力平衡”或“状态同步”审计，AI 必须显式写出：`[Audit Failed] -> Refine Plan`。
 
 ### 2. 撰写阶段 (Phase: Draft)
 参照规范:[chapter-drafting-spec.md](writespec/chapter-drafting-spec.md)
-“在执行 **Draft** 任务时，**必须显式输出 Thought 和 Observation 过程**。Observation 部分如果未提及对 `inventory.md` 的物品消耗审计和对 `power.md` 的战力压制核对，则该章节视为不合格，必须重写。”
+在执行 **Draft** 任务时，**必须显式输出 Thought 和 Observation 过程**。Observation 部分如果未提及对 `inventory.md` 的物品消耗审计和对 `power.md` 的战力压制核对，则该章节视为不合格，必须重写。
 
 ## 模板示例
 
