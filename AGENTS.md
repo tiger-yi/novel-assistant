@@ -28,79 +28,72 @@ novel-assistant/
 
 ## World Bible 核心工作流程
 
-本通过 Mermaid 流程图描述了以**“大纲驱动 (Outline-Driven)”**为核心的初始化与创作闭环。系统严格依赖 `outline.md` 作为世界观种子的来源。
+系统严格依赖 `outline.md` 作为世界观种子的来源，遵循 **"大纲驱动 (Outline-Driven)"** 的创作闭环。
 
 ```mermaid
 flowchart TD
-    Start["开始创作"] --> CheckOutline{"检查 outline.md"}
+    Start["指令: initialize/update"] --> CheckOutline{"检查 world/outline.md"}
 
-    CheckOutline -->|"不存在"| InputOutline["用户输入大纲\n初始化 outline.md"]
-    InputOutline --> CheckOutline
+    CheckOutline -->|"不存在"| Genesis["启动'五步登仙'引导程序\n(交互式构建世界观)"]
+    Genesis --> GenerateBible["生成完整 World Bible"]
+    GenerateBible --> CheckOutline
 
-    CheckOutline -->|"存在"| CheckOthers{"检查其他核心文件"}
-    
-    CheckOthers -->|"部分缺失"| Extract["从 outline.md 提取设定"]
-    Extract --> VerifyExtract{"提取是否成功?"}
-    
-    VerifyExtract -->|"信息不足"| RequestUpdate["提示: 请丰富大纲细节"]
-    RequestUpdate --> InputOutline
-    
-    VerifyExtract -->|"成功提取"| Generate["生成缺失文件\n(Characters/Timeline/Power/etc)"]
-    Generate --> CheckOthers
-    
-    CheckOthers -->|"全部存在"| Read["读取 World Bible"]
+    CheckOutline -->|"存在"| Read["读取全量数据\n(Bible Context)"]
 
-    Read --> Plan["ReAct 构思剧情\n(Thought: 分析现状 -> Action: 生成大纲 -> Obs: 逻辑校验)"]
-    Plan --> Draft["ReAct 撰写正文\n(Thought: 设定场景 -> Action: 描写细节 -> Obs: 风格检查)"]
-    Draft --> Polish["调用 chapter-polisher\n(字数检查 & AI 去味)"]
-    Polish --> Verify{"逻辑一致性检查"}
+    Read --> Plan["ReAct 构思阶段\n(Thought: 伏笔/爽点 -> Action: 细纲)"]
+    Plan --> Draft["ReAct 撰写阶段\n(Thought: 画面/情绪 -> Action: 正文)"]
+    Draft --> Polish["Chapter Polisher\n(去味/润色)"]
+    Polish --> Verify{"逻辑审计"}
     
-    Verify -->|"冲突/吃书"| Fix["修正正文或设定"]
+    Verify -->|"战力崩坏/吃书"| Fix["修正正文"]
     Fix --> Verify
     
-    Verify -->|"通过"| Publish["输出正文"]
+    Verify -->|"通过"| Publish["归档 chapters/"]
     Publish --> Update["更新 World Bible"]
     
-    subgraph UpdateBible ["同步更新数据"]
+    subgraph UpdateBible ["数据回写 (State Update)"]
         direction TB
-        U1["更新 outline.md (剧情/伏笔)"]
-        U2["更新 characters.toml (境界/状态)"]
-        U3["更新 timeline.md (时间流逝)"]
-        U4["更新 inventory.md (物品变动)"]
-        U5["更新 geography.md (地图探索)"]
-        U6["更新 power.md (力量体系规则/修订)"]
+        U1["outline.md (标记伏笔回收)"]
+        U2["characters.toml (更新境界/状态)"]
+        U3["timeline.md (推进时间)"]
+        U4["inventory.md (扣除消耗/新增掉落)"]
+        U5["geography.md (解锁新地图)"]
     end
     
     Update --> UpdateBible
-    UpdateBible --> Finish["完成"]
+    UpdateBible --> Finish["待命"]
 ```
 
-### 初始化策略：大纲驱动生成
+## 初始化策略：五步登仙·模组化引导法
 
-系统不再创建空白模板，而是根据您的剧情大纲自动推导世界观。
+当检测到 `world/outline.md` 缺失时，AI 不应简单询问“你想写什么”，而是化身**金牌编辑**，启动 **Five-Step Genesis Protocol**，通过五个核心维度的选择题引导用户构建神作基石。
 
-1.  **大纲优先 (Outline First)**：
-    *   一切始于 `outline.md`。如果该文件不存在，系统会要求**输入**一段剧情概要（如：“主角叶辰被退婚，获得戒指老爷爷...”）,参照模板`templates\outline-template.md`创建outline.md。
-2.  **智能提取 (Auto-Extraction)**：
-    *   系统会分析 `outline.md` 中的文本，尝试提取：
-        *   **角色**：姓名、身份、初始境界（生成 `characters.toml`）
-        *   **时间**：开篇年份、关键节点（生成 `timeline.md`）
-        *   **地点**：出生地、新手村（生成 `geography.md`）
-        *   **物品**：金手指、初始道具（生成 `inventory.md`）
-        *   **力量**：境界划分、核心规则（生成 `power.md`）
-3.  **循环完善 (Iterative Refinement)**：
-    *   如果大纲过于简单（如只写了“他变强了”），系统无法提取有效设定，会提示您**丰富大纲细节**，直到能够生成完整的世界观文件为止。
+**交互原则**：使用网文行话（黑话），提供“多选+自定义”模式，激发用户灵感。
 
-### 核心指令集 (Key Commands)
+1.  **Step 1: 定流派 (The Archetype)**
+    *   询问核心爽点。选项包括：[A]凡人流（资源管理）、[B]无敌流（碾压）、[C]系统签到流（快节奏）、[D]苟道流（反套路）、[E]克系/诡道流（氛围）。
+2.  **Step 2: 铸金手指 (The Golden Finger)**
+    *   确立主角的不公平优势。选项包括：随身老爷爷、神秘小绿瓶、熟练度面板、特殊血脉/体质、重生/轮回知晓未来。
+3.  **Step 3: 黄金三章开局 (The Opening Hook)**
+    *   设定初始冲突，确立第一卷动力。选项包括：退婚羞辱、灭门逃杀、宗门废柴被逐、夺舍反派。
+4.  **Step 4: 世界观架构 (The World Scale)**
+    *   决定地图规模。选项包括：传统层层飞升、诸天万界副本流、黑暗森林猎杀场。
+5.  **Step 5: 情感与结局 (Tone & Romance)**
+    *   决定配角策略。选项包括：单女主（纯爱）、多女主（后宫）、无CP（大道独行）。
+
+**生成逻辑**：
+用户完成交互后，AI 必须运行 **ReAct 推演**，分析选项组合产生的化学反应（例如：“凡人流”+“熟练度面板”= 肝帝流），从而生成一份逻辑自洽、卖点清晰的 `outline.md`。
+
+## 核心指令集 (Key Commands)
 
 #### 1. "initialize world bible"
-引导式地建立世界观。通常在项目启动或重置时使用。
-- **功能**: 检查并初始化核心文件。如果 `outline.md` 缺失，会引导用户输入大纲。
-- **交互流程**:
-  1.  检查 `outline.md`。
-  2.  若缺失，提示输入大纲内容。
-  3.  分析大纲，自动生成或补全其他 World Bible 文件。
-  4.  若信息不足，反馈具体缺失的设定（如：“未检测到主角姓名，请在大纲中补充”）。
+**功能**: 从零构建世界观。
+- **执行流程**:
+  1. 扫描 `world/` 目录。
+  2. 若 `outline.md` 缺失，立即执行 **五步登仙引导法** 与用户对话。
+  3. 获得核心设定后，AI 提示：“天道法则已确立，正在演化世界...”。
+  4. 自动生成 `outline.md`，并提取关键信息填充 `characters.toml` (主角面板), `power.md` (初始境界), `geography.md` (新手村)。
+  5. 反馈：`[系统] World Bible 初始化完成。当前主角：[姓名]，境界：[初始境界]。`
 
 #### 2. "update world bible"
 分析最近生成的正文，同步更新所有 World Bible 文件。
@@ -115,7 +108,8 @@ flowchart TD
   - 用户显式要求更新时。
 
 #### 3. "check world status"
-快速读取当前主角状态、时间和所在位置。
+**功能**: 快速状态查询。
+- **输出**: 返回当前时间点、主角所在地、当前状态（HP/MP/Buff）、最近的主线任务目标。
 
 ## World Bible 维护详情
 
@@ -237,31 +231,6 @@ flowchart TD
 *   **欲扬先抑**：主角出手前，必有反派嘲讽或路人看衰。
 *   **震惊侧写**：关键时刻必须描写围观群众（路人、长老、圣女）的表情变化（倒吸凉气、眼珠瞪裂）。
 
-
-## 当前世界观数据
-
-### 小说名称
-《万古剑帝》
-
-### 主角信息
-- **姓名**：叶辰
-- **当前境界**：淬体境 (九重)
-- **所属势力**：青云城-叶家
-- **核心功法**：太初剑经 (天级残篇)
-- **当前目标**：重塑经脉，参加城池大比
-
-### 关键角色
-- **剑老**：古戒戒灵，上古剑宗至尊境残魂
-- **柳如烟**：前未婚妻，灵脉境，反派
-
-### 当前剧情阶段
-第一卷：青云出岫 (0-100章)
-- 已完成：家族祭祖，觉醒古戒
-- 进行中：修炼《太初剑经》，重塑经脉
-- 待办：第50章城池大比，当众休妻
-
-### 当前时间线
-荒古历 10008年，距离城池大比还有 3 个月
 
 ## 使用指南
 
