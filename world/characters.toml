@@ -1,0 +1,101 @@
+# [ReAct Protocol: Characters]
+# 1. Thought: 检索 outline.md 中的冲突点，分析该角色在当前剧情节点的必然状态。
+# 2. Action: 严格按照以下 schema 填入数据，禁止删除既有字段。
+# 3. Observation: 校验该角色的境界是否与 power.md 中的战力梯队一致。
+
+# 主角配置 (Protagonist Spec)
+[main_character]
+name = "方源"
+identity = "哈佛计算机博士穿越 / 星衍宗内门弟子 / 方家少族长"
+realm = "通窍境三层 (肉身：锻骨圆满)"
+affiliation = "星衍宗 / 青云城-方家"
+personality = "冷静、绝对理智"
+status = "完美 (基因优化完成)"
+
+[main_character.attributes]
+physique = "凡体 (基因优化完成)"
+soul = "穿越者 (智脑·零号辅助)"
+
+[[main_character.skills]]
+name = "道OS·纳气诀 2.0"
+grade = "地级 (融合气血熔炉)"
+mastery = "大成"
+
+[[main_character.skills]]
+name = "太初剑经·算尽苍生"
+grade = "天级残篇"
+mastery = "入门"
+
+[[main_character.relationships]]
+name = "方天正"
+relation = "父亲"
+trust = 100
+
+[[main_character.relationships]]
+name = "纳兰嫣"
+relation = "前未婚妻"
+trust = 10
+
+# 重要配角
+[[side_characters]]
+name = "李青萝"
+identity = "星衍宗内门长老 (清冷仙子)"
+realm = "化形境 (圆满)"
+affiliation = "星衍宗"
+relation_to_mc = "赏识的长老"
+
+[[side_characters]]
+name = "纳兰嫣"
+identity = "星衍宗真传弟子 / 青云城第一美人"
+realm = "通窍境八层"
+affiliation = "星衍宗"
+relation_to_mc = "前未婚妻 (心态动摇)"
+
+[[side_characters]]
+name = "方天正"
+identity = "方家族长"
+realm = "凝气境 (后期)"
+affiliation = "青云城-方家"
+relation_to_mc = "慈父"
+
+[[side_characters]]
+name = "王猛"
+identity = "星衍宗外门执事"
+realm = "凝气境 (初期)"
+affiliation = "星衍宗"
+relation_to_mc = "忠心下属"
+
+[[side_characters]]
+name = "神秘胖少年 (小胖)"
+identity = "九阳灵体 / 隐藏实力的妖孽"
+realm = "通窍境 (初期)"
+affiliation = "星衍宗"
+relation_to_mc = "被识破的同门"
+
+[[side_characters]]
+name = "方烈"
+identity = "方家弃子 (废人)"
+realm = "废人 (丹田破碎)"
+affiliation = "无"
+relation_to_mc = "仇人"
+
+[[side_characters]]
+name = "方厉"
+identity = "前方家大长老 (废人)"
+realm = "废人 (修为被废)"
+affiliation = "无"
+relation_to_mc = "仇人"
+
+[[side_characters]]
+name = "赵铁"
+identity = "赵家供奉 (血手人屠)"
+realm = "凝气境 (圆满/伪宗师)"
+affiliation = "青云城-赵家"
+relation_to_mc = "已击杀"
+
+[[side_characters]]
+name = "赵无极"
+identity = "赵家前族长"
+realm = "凝气境 (圆满)"
+affiliation = "青云城-赵家"
+relation_to_mc = "已击杀"
