@@ -16,6 +16,10 @@ novel-assistant/
 │   ├── inventory.md          # 道具与功法
 │   └── power.md              # 力量体系
 ├── chapters/                 # 正文章节目录
+├── metadata/                 # 项目元数据 (如 novel-metadata.md)
+├── openspec/                 # 开放规范/配置 (如 config.yaml)
+├── writespec/                # 写作规范 (如 chapter-drafting-spec.md)
+├── skills/                   # AI Skills
 ├── templates/                # 模板目录
 │   ├── outline-template.md   # 剧情大纲模板
 │   ├── characters-template.toml
@@ -23,7 +27,8 @@ novel-assistant/
 │   ├── geography-template.md
 │   ├── inventory-template.md
 │   └── power-system-template.md
-└── AGENTS.md                 # 本文件
+├── AGENTS.md                 # 本文件 (指令集与工作流)
+└── README.md                 # 项目基础说明
 ```
 
 ## World Bible 核心工作流程
