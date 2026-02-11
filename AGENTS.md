@@ -159,15 +159,30 @@ flowchart TD
 
 ## ReAct 创作协议 (ReAct Protocol)
 
-系统在执行 **构思剧情** 和 **撰写正文** 时，必须遵循以下思维链模式：
+系统在执行 **构思剧情** 和 **撰写正文** 时，必须遵循“任务驱动 + 逻辑推演”的模式，将 TODO 任务规划与 ReAct 思维链深度整合。
 
-### 1. 构思阶段 (Phase: Plan)
+### 核心工作流：TODO + ReAct
+
+#### 1. 任务规划阶段 (Phase: TODO)
+在进入任何具体创作步骤前，AI 必须首先输出一个 `[TODO]` 列表，明确本次任务的子步骤。
+- **构思阶段 TODO 示例**：
+  - [ ] 检索 `world/outline.md` 确认当前主线进度与待回收伏笔。
+  - [ ] 检索 `world/characters.toml` 核实主角境界、伤势及好感度。
+  - [ ] 构思本章 3-5 个核心剧情转折点（爽点/钩子）。
+  - [ ] 执行“战力平衡”审计，确保无“吃书”现象。
+- **撰写阶段 TODO 示例**：
+  - [ ] 设定环境氛围与叙事基调（参考文风规范）。
+  - [ ] 细化核心冲突中的动作设计（灵力流转、法则碰撞）。
+  - [ ] 插入 1-2 处路人震惊侧写，强化情绪张力。
+  - [ ] 实时核对 `inventory.md` 确保丹药/符箓消耗逻辑闭环。
+
+#### 2. 构思阶段 (Phase: Plan - ReAct)
 参照规范:[logic-blueprint-spec.md](writespec/logic-blueprint-spec.md)
-每章开始前，AI 必须输出 **Plan: ReAct** 块。在 **Observation** 环节，如果未能通过“战力平衡”或“状态同步”审计，AI 必须显式写出：`[Audit Failed] -> Refine Plan`。
+在完成 TODO 规划后，进入构思推演。在 **Observation** 环节，如果未能通过“战力平衡”或“状态同步”审计，AI 必须显式写出：`[Audit Failed] -> Refine Plan`。
 
-### 2. 撰写阶段 (Phase: Draft)
+#### 3. 撰写阶段 (Phase: Draft - ReAct)
 参照规范:[chapter-drafting-spec.md](writespec/chapter-drafting-spec.md)
-在执行 **Draft** 任务时，**必须显式输出 Thought 和 Observation 过程**。Observation 部分如果未提及对 `inventory.md` 的物品消耗审计和对 `power.md` 的战力压制核对，则该章节视为不合格，必须重写。
+在完成 TODO 规划后，执行撰写。**必须显式输出 Thought 和 Observation 过程**。Observation 部分如果未提及对 `inventory.md` 的物品消耗审计和对 `power.md` 的战力压制核对，则该章节视为不合格，必须重写。
 
 ## 模板与 ReAct 联动机制 (Templates & ReAct Integration)
 

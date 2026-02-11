@@ -2,6 +2,16 @@
 
 当用户发出“开始第 N 章”或类似指令时，AI 必须启动此预演流程，严禁“盲写”。
 
+## 第零步：TODO (任务规划 - Task Planning)
+**核心目的**：明确本次构思需要覆盖的所有 Bible 维度和剧情目标。
+
+*   **必备任务项**：
+    1.  [ ] 检索 `world/outline.md` 确认当前主线进度与待回收伏笔。
+    2.  [ ] 检索 `world/characters.toml` 核实主角及相关配角的当前状态。
+    3.  [ ] 核对 `world/power.md` 确定涉及的战力阶位与规则限制。
+    4.  [ ] 检查 `world/inventory.md` 确认可用资源。
+    5.  [ ] 明确本章的核心冲突（爽点）与预期情绪。
+
 ## 第一步：Thought (多维推演 - Multidimensional Reasoning)
 **核心目的**：在头脑中进行剧情模拟，识别潜在的逻辑陷阱。
 
@@ -50,6 +60,12 @@
 
 ```markdown
 > [Plan: ReAct]
+>
+> **0. TODO (任务规划)**
+> *   [ ] 检索 `outline.md` 确认主线定位。
+> *   [ ] 检索 `characters.toml` 核实状态。
+> *   [ ] 核对 `power.md` 确定战力基准。
+> *   [ ] 检查 `inventory.md` 确认资源库存。
 >
 > **1. Thought (多维推演)**
 > *   **剧情锚点**: [从 outline.md 提取本章定位与伏笔]
