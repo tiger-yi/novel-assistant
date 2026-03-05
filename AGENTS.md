@@ -105,7 +105,7 @@ flowchart TD
   1. 扫描 `world/` 目录。
   2. 若 `outline.md` 缺失，立即执行 **五步登仙引导法** 与用户对话。
   3. 获得核心设定后，AI 提示：“天道法则已确立，正在演化世界...”。
-  4. 自动生成 `outline.md`，并提取关键信息填充 `characters.toml` (主角面板), `power.md` (初始境界), `geography.md` (新手村)。
+  4. 读取`templates/`目录下模板,自动生成 `outline.md`，并提取关键信息填充 `characters.toml` (主角面板), `power.md` (初始境界), `geography.md` (新手村)。
   5. 反馈：`[系统] World Bible 初始化完成。当前主角：[姓名]，境界：[初始境界]。`
 
 #### 2. "update world bible"
