@@ -1,0 +1,62 @@
+# [ReAct Protocol: Characters]
+
+# 主角配置 (Protagonist Spec)
+[main_character]
+name = "张启明"
+identity = "龙虎山第101代天师 / 荒村幸存者"
+realm = "1阶: 淬体境 (中期) / 1阶: 存思"
+affiliation = "龙虎山 (前世) / 散修"
+personality = "杀伐果断、理智至极、护短、有正气但不圣母"
+status = "灵魂融合完成，身体痊愈，胸口浮现“祭”字印记"
+
+[main_character.attributes]
+physique = "凡骨 (大武武道待打熬)"
+soul = "天师法魂 (携带九天应元雷声普化天尊观想法)"
+
+[[main_character.skills]]
+name = "大武横练 (基础)"
+grade = "黄级"
+mastery = "入门"
+
+[[main_character.skills]]
+name = "九天应元雷声普化天尊观想图"
+grade = "神话位格"
+mastery = "1阶: 存思"
+description = "镇守灵台，万邪不侵，雷霆之威对诡异有绝对压制。已开启【静心】能力，免疫基础诡异低语。"
+
+[[main_character.skills]]
+name = "龙虎山五雷正法 (残)"
+grade = "道门至宝"
+mastery = "入门 (威力因世界法则限制严重削弱)"
+description = "已掌握初步运用技巧：崩劲（附雷于拳，透体杀伤）。"
+
+[[main_character.relationships]]
+name = "大武朝廷"
+relation = "死敌 (食人者) / 击杀收尸队，已被锁定"
+trust = -100
+
+[[main_character.relationships]]
+name = "全村村民"
+relation = "因果绑定 (已故)"
+trust = 0
+
+[[main_character.relationships]]
+name = "白莲教"
+relation = "互相利用 (敌人的敌人)"
+trust = 10
+
+# 敌对势力
+[[side_characters]]
+name = "白灵"
+identity = "白莲教平安分舵香主"
+realm = "1阶: 淬体境 (后期)"
+affiliation = "白莲教"
+relation_to_mc = "临时盟友 / 交易对象"
+status = "受伤 (左臂)，潜伏中"
+
+[[side_characters]]
+name = "诡影主祭"
+identity = "灭村事件背后黑手"
+realm = "未知"
+affiliation = "诡异教团"
+relation_to_mc = "宿敌"
