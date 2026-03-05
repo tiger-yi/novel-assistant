@@ -4,13 +4,13 @@
 [main_character]
 name = "张启明"
 identity = "龙虎山第101代天师 / 荒村幸存者"
-realm = "1阶: 淬体境 (中期) / 1阶: 存思"
+realm = "1阶: 淬体境 (后期) / 1阶: 存思"
 affiliation = "龙虎山 (前世) / 散修"
 personality = "杀伐果断、理智至极、护短、有正气但不圣母"
-status = "灵魂融合完成，身体痊愈，胸口浮现“祭”字印记。因连续施展“雷降”，神魂略显疲劳，急需静养或灵草补益。"
+status = "完成雷火内炼，突破至淬体后期。气血如汞，神魂稳固，已通过印记感应锁定地牢方位及小翠现状。"
 
 [main_character.attributes]
-physique = "凡骨 (气血充盈，即将触碰后期瓶颈)"
+physique = "凡骨 (气血盈满，雷火内炼完成，进入无漏金身初期)"
 soul = "天师法魂 (神威初显，已锁定影卫核心位格)"
 
 [[main_character.skills]]
