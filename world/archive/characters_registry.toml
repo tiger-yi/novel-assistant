@@ -1,0 +1,89 @@
+# 死亡/离场人物登记簿 (Characters Registry)
+
+# [已死亡/已消失/长期离场]
+
+[[deceased]]
+name = "李文正"
+identity = "青州边城城主 / 祭祀监潜伏者"
+realm = "3阶: 披甲境 (初期/异化)"
+affiliation = "大武朝廷 / 祭祀监 / 食堂"
+death_chapter = "第41章"
+cause_of_death = "死于张启明‘九天雷脉’全力爆发，肉身被雷霆内炼炸成飞灰。"
+description = "外表儒雅的父母官，实则为异化者，将青州边城化为‘食堂’，视百姓为猪狗。"
+
+[[deceased]]
+name = "白骨大夫 (Doctor Bai)"
+identity = "白骨医馆坐堂大夫"
+realm = "2阶: 熔脉境 (骨骼异化)"
+affiliation = "青州边城 / 邪道医家"
+death_chapter = "前期"
+cause_of_death = "被张启明踩爆头颅。"
+description = "觊觎主角雷骨，擅长骨骼异化邪法。"
+
+[[deceased]]
+name = "金面具人"
+identity = "大武巡察使 / 祭祀监察官"
+realm = "未知 (位格推测：3阶-4阶)"
+affiliation = "大武朝廷 / 祭坛"
+death_chapter = "第23章"
+cause_of_death = "死于张启明法铃震慑与雷火反击，肉身在长生观地宫火海中焚尽。"
+description = "曾执掌“巡察使”印信，融合了“细犬”战斗位格。"
+
+[[deceased]]
+name = "畸变老猿 (煞猿)"
+identity = "阴平山精怪"
+realm = "2阶: 蛮力级 (巅峰)"
+death_chapter = "第31章"
+cause_of_death = "被斩杀作为入市费消耗其首级。"
+
+[[deceased]]
+name = "太阳之躯师兄 (道门遗蜕)"
+identity = "龙虎山前代高功"
+realm = "4阶: 脏雷境 (生前)"
+affiliation = "龙虎山"
+death_chapter = "第20章 (彻底化灰)"
+cause_of_death = "遗体承载‘太乙真雷种’引爆，与邪祟同归于尽。"
+description = "拥有道门正统‘太阳之躯’，其残留灵机助张启明悟得风水逆转之法。"
+
+[[deceased]]
+name = "青州三鬼"
+identity = "荒野流寇"
+realm = "熔脉境初期 (老大鬼火) / 淬体圆满 (老二老三)"
+death_chapter = "第35章"
+cause_of_death = "死于张启明右手雷罡与物理爆发，全员五脏六腑被震碎。"
+
+[[deceased]]
+name = "红绸猎手 (血肉畸变体)"
+identity = "红雾荒原特产规则怪物"
+realm = "熔脉境中期 (战力受红雾加成)"
+affiliation = "大武禁区 (本能驱动)"
+death_chapter = "第43章"
+cause_of_death = "被张启明以玄铁桃木剑配合雷火真意斩杀，核心晶体被剥离。"
+description = "由血肉纤维构成的畸变生物，能感应气血。核心为一颗刻有扭曲道门云纹的血色晶体。"
+
+[[deceased]]
+name = "林大勇"
+identity = "林家护卫队长 / 祭祀监卧底"
+realm = "异化境 (细犬特征)"
+affiliation = "祭祀监"
+death_chapter = "第46章"
+cause_of_death = "死于张启明以‘崩劲·雷斩’正面击破，肉身在道门法铃镇压下崩溃。"
+description = "林家长辈级护卫，实则为祭祀监安插的细犬异化者。在界河古渡露出真面目企图献祭林月儿，被张启明斩杀。"
+
+[[deceased]]
+name = "云深观老道"
+identity = "云深观守护者 / 疑似龙虎山前辈"
+realm = "未知 (法相睁眼雏形 / 畸变态)"
+affiliation = "云深观"
+death_chapter = "第50章"
+cause_of_death = "理智唤醒后，肉身随云深观禁制一同消融，融入地脉引导雷火。"
+description = "枯瘦如柴，脊椎隆起如蜘蛛。在云雾泽深处等待张启明，临终前引导主角引爆大泽禁忌。"
+
+[[deceased]]
+name = "银面执法官 (分身投影)"
+identity = "大武祭祀监执法官 / 银面"
+realm = "3阶: 披甲境 (投影位格)"
+affiliation = "祭祀监"
+death_chapter = "第50章"
+cause_of_death = "死于张启明引爆云雾泽地脉雷火，分身被至阴雷浆彻底消融。"
+description = "由祭祀监执法官投下的神识分身，具备本体三成战力，持有银煞长剑，擅长‘化神煞’。在云雾泽追踪主角，最终被张启明利用地利与自残式秘法反杀。"
