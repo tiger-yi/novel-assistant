@@ -172,7 +172,9 @@ flowchart TD
 ### 核心工作流：TODO + ReAct
 
 #### 1. 任务规划阶段 (Phase: TODO)
-在进入任何具体创作步骤前，AI 必须首先输出一个 `[TODO]` 列表，明确本次任务的子步骤。此步骤为强制执行项，不得跳过。
+在进入任何具体创作步骤前，AI 必须首先输出一个 `[TODO]` 列表，明确本次任务的子步骤。
+- **构思阶段 (Plan)**：严格遵循 [logic-blueprint-spec.md](writespec/logic-blueprint-spec.md) 中的任务清单。
+- **撰写阶段 (Draft)**：严格遵循 [chapter-drafting-spec.md](writespec/chapter-drafting-spec.md) 中的任务清单。
 
 #### 2. 构思阶段 (Phase: Plan - ReAct)
 **执行标准**：严格参照规范 **[logic-blueprint-spec.md](writespec/logic-blueprint-spec.md)**。
