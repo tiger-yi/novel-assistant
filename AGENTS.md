@@ -9,6 +9,12 @@ Novel Assistant 是一个用于辅助创作中文玄幻小说的结构化世界�
 ```
 novel-assistant/
 ├── world/                    # 世界观数据目录（核心）
+│   ├── archive/              # 归档数据目录
+│   │   ├── outline_history.md      # 剧情大纲历史存档
+│   │   ├── characters_registry.toml # 死亡/离场人物登记簿
+│   │   ├── timeline_chronicles.md  # 历史时间线长卷
+│   │   ├── inventory_logs.md       # 道具消耗/损毁记录
+│   │   └── world_atlas.md          # 旧地图/已探索区域志
 │   ├── outline.md            # 剧情大纲
 │   ├── characters.toml       # 人物档案
 │   ├── timeline.md           # 时间线管理
@@ -17,7 +23,10 @@ novel-assistant/
 │   └── power.md              # 力量体系
 ├── chapters/                 # 正文章节目录
 ├── metadata/                 # 项目元数据 (如 novel-metadata.md)
-├── writespec/                # 写作规范 (如 chapter-drafting-spec.md)
+├── writespec/                # 写作规范
+│   ├── archiving-spec.md     # 归档规范
+│   ├── chapter-drafting-spec.md # 章节撰写规范
+│   └── logic-blueprint-spec.md  # 章节构思规范
 ├── skills/                   # AI Skills
 ├── templates/                # 模板目录
 │   ├── outline-template.md   # 剧情大纲模板
@@ -36,7 +45,7 @@ novel-assistant/
 
 ```mermaid
 flowchart TD
-    Start["指令: initialize/update"] --> CheckOutline{"检查 world/outline.md"}
+    Start["指令: 初始化/更新世界"] --> CheckOutline{"检查 world/outline.md"}
 
     CheckOutline -->|"不存在"| Genesis["启动'五步登仙'引导程序\n(交互式构建世界观)"]
     Genesis --> GenerateBible["生成完整 World Bible"]
@@ -44,8 +53,8 @@ flowchart TD
 
     CheckOutline -->|"存在"| Read["读取全量数据\n(Bible Context)"]
 
-    Read --> Plan["ReAct 构思阶段\n(Thought: 伏笔/爽点 -> Action: 细纲)"]
-    Plan --> Draft["ReAct 撰写阶段\n(Thought: 画面/情绪 -> Action: 正文)"]
+    Read --> Plan["ReAct Plan 阶段 (指令: 构思章节)"]
+    Plan --> Draft["ReAct 撰写阶段"]
     Draft --> Polish["Chapter Polisher\n(去味/润色)"]
     Polish --> Verify{"逻辑审计"}
     
@@ -53,7 +62,7 @@ flowchart TD
     Fix --> Verify
     
     Verify -->|"通过"| Publish["归档 chapters/"]
-    Publish --> Update["更新 World Bible"]
+    Publish --> Update["指令: 更新世界"]
     
     subgraph UpdateBible ["数据回写 (State Update)"]
         direction TB
@@ -98,7 +107,7 @@ flowchart TD
 
 ## 核心指令集 (Key Commands)
 
-#### 1. "initialize world bible"
+#### 1. "初始化世界" (Initialize World)
 **功能**: 从零构建世界观。
 - **执行流程**:
   1. 扫描 `world/` 目录。
@@ -107,7 +116,7 @@ flowchart TD
   4. 读取`templates/`目录下模板,自动生成 `outline.md`，并提取关键信息填充 `characters.toml` (主角面板), `power.md` (初始境界), `geography.md` (新手村)。
   5. 反馈：`[系统] World Bible 初始化完成。当前主角：[姓名]，境界：[初始境界]。`
 
-#### 2. "update world bible"
+#### 2. "更新世界" (Update World)
 分析最近生成的正文，同步更新所有 World Bible 文件。
 - **功能**: 触发全量文档审查与更新。
 - **流程 (强制执行)**:
@@ -115,14 +124,41 @@ flowchart TD
   2. 只有在 `chapter-polisher` 确认章节质量达标并完成润色后，方可分析正文内容。
   3. 根据正文内容，同步更新人物、物品、地理等数据文件（World Bible）。
   4. 检查`outline.md`详细章节规划表是否存在后续待创作章节,如果不存在补充1-3个待创作章节(章节标题字数随机2-8字)，存在则不补充;更新**执行管理进度表**;
+  5. **归档检查**: 完成同步后，自动检查是否满足 `archiving-spec.md` 触发条件。若满足，**自动静默执行**归档逻辑。
 - **触发时机**: 
   - 每写完一个完整情节或章节后。
   - 发现新的世界观设定或模式时。
   - 用户显式要求更新时。
 
-#### 3. "check world status"
+#### 3. "归档世界" (Archive World)
+**功能**: 强制扫描并清理 `world/` 目录，生成归档索引。
+- **执行流程**:
+  1. 扫描 `world/` 下的所有活跃文件。
+  2. 识别已完成的剧情卷、死亡/离场人物、已消耗道具、已离开的旧地图。
+  3. 将冗余数据迁移至 `world/archive/` 对应文件。
+  4. 在活跃文件中保留归档索引链接。
+
+#### 4. "查看世界状态" (Check World Status)
 **功能**: 快速状态查询。
 - **输出**: 返回当前时间点、主角所在地、当前状态（HP/MP/Buff）、最近的主线任务目标。
+
+#### 5. "构思章节" (Draft Chapter)
+**功能**: 启动单章创作的标准 ReAct 工作流。
+- **执行流程**:
+  1. **初始化 (Init)**: 确认目标章节号。
+  2. **任务规划 (Phase: TODO)**: 
+  在进入任何具体创作步骤前，AI 必须首先输出一个 `[TODO]` 列表，明确本次任务的子步骤。
+    - **构思阶段 (Plan)**：严格遵循 [logic-blueprint-spec.md](writespec/logic-blueprint-spec.md) 中的任务清单。
+    - **撰写阶段 (Draft)**：严格遵循 [chapter-drafting-spec.md](writespec/chapter-drafting-spec.md) 中的任务清单。
+  3. **构思阶段 (Phase: Plan)**: 
+    - **执行标准**：读取规范**[logic-blueprint-spec.md](writespec/logic-blueprint-spec.md)**,按照规范严格执行。
+    - **核心逻辑**：检索 World Bible -> 确认主线与状态 -> 输出场景细纲 -> 逻辑审计。
+    - **输出要求**：必须显式输出 `Thought`（推演）、`Action`（细纲）和 `Observation`（审计结果）。
+  4. **撰写阶段 (Phase: Draft)**:
+    - **执行标准**：读取规范 **[chapter-drafting-spec.md](writespec/chapter-drafting-spec.md)**,按照规范严格执行。
+    - **核心逻辑**：设定感官锚点 -> 确认生理限制 -> 执行正文撰写 -> 质量审计。
+    - **输出要求**：必须统一输出至 `chapters/` 目录，并显式进行去 AI 味审计与数据变更预告。 
+  5. **收尾 (Finish)**: 提示用户检查并执行 "更新世界"。
 
 ## World Bible 维护详情
 
@@ -133,7 +169,7 @@ flowchart TD
 - **维护逻辑**：
   - 生成新剧情前，检索大纲中的"未回收伏笔"
   - 确保大事件（如宗门灭亡）在至少 3 章前有征兆
-  - 使用指令 **"update world bible"** 自动同步
+  - 使用指令 **"更新世界"** 自动同步
 
 ### 2. 人物档案 (`world/characters.toml`)
 - **功能**：TOML 格式的人物数据
@@ -164,28 +200,6 @@ flowchart TD
   - 境界一致性：角色突破必须符合 power.md 定义的条件与资源消耗
   - 战斗校验：每次战斗前对比双方境界，计算越级代价（参考 power.md）
   - 体系扩展：出现新地图或新种族时，需同步更新力量体系的兼容性说明
-
-## ReAct 创作协议 (ReAct Protocol)
-
-系统在执行 **构思剧情** 和 **撰写正文** 时，必须遵循“任务驱动 + 逻辑推演”的模式，将 TODO 任务规划与 ReAct 思维链深度整合。
-
-### 核心工作流：TODO + ReAct
-
-#### 1. 任务规划阶段 (Phase: TODO)
-在进入任何具体创作步骤前，AI 必须首先输出一个 `[TODO]` 列表，明确本次任务的子步骤。
-- **构思阶段 (Plan)**：严格遵循 [logic-blueprint-spec.md](writespec/logic-blueprint-spec.md) 中的任务清单。
-- **撰写阶段 (Draft)**：严格遵循 [chapter-drafting-spec.md](writespec/chapter-drafting-spec.md) 中的任务清单。
-
-#### 2. 构思阶段 (Phase: Plan - ReAct)
-**执行标准**：严格参照规范 **[logic-blueprint-spec.md](writespec/logic-blueprint-spec.md)**。
-- **核心逻辑**：检索 World Bible -> 确认主线与状态 -> 输出场景细纲 -> 逻辑审计。
-- **输出要求**：必须显式输出 `Thought`（推演）、`Action`（细纲）和 `Observation`（审计结果）。
-
-#### 3. 撰写阶段 (Phase: Draft - ReAct)
-**执行标准**：严格参照规范 **[chapter-drafting-spec.md](writespec/chapter-drafting-spec.md)**。
-- **核心逻辑**：设定感官锚点 -> 确认生理限制 -> 执行正文撰写 -> 质量审计。
-- **输出要求**：必须统一输出至 `chapters/` 目录，并显式进行去 AI 味审计与数据变更预告。
-
 
 ## 模板与 ReAct 联动机制 (Templates & ReAct Integration)
 
