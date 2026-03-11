@@ -68,7 +68,7 @@ flowchart TD
     
     subgraph UpdateBible ["数据回写 (State Update)"]
         direction TB
-        U1["outline.md (标记伏笔回收)"]
+        U1["outline.md (标记伏笔回收/新增组织与势力)"]
         U2["characters.toml (更新境界/状态)"]
         U3["timeline.md (推进时间)"]
         U4["inventory.md (扣除消耗/新增掉落)"]
@@ -125,7 +125,7 @@ flowchart TD
   1. **首要任务**: **必须立即**调用 `chapter-polisher` 技能对新章节进行字数检查和 AI 去味。此步骤为硬性前置条件，**严禁跳过**。
   2. 只有在 `chapter-polisher` 确认章节质量达标并完成润色后，方可分析正文内容。
   3. 根据正文内容，同步更新人物、物品、地理等数据文件（World Bible）。
-  4. 检查`outline.md`详细章节规划表是否存在后续待创作章节,如果不存在补充1-3个待创作章节(章节标题字数随机2-8字)，存在则不补充;更新**执行管理进度表**;
+  4. 检查`outline.md`详细章节规划表是否存在后续待创作章节,如果不存在补充1-3个待创作章节(章节标题字数随机2-8字)，存在则不补充;更新**执行管理进度表**;新增组织势力,更新**核心设定**
   5. **归档检查**: 完成同步后，自动检查是否满足 `archiving-spec.md` 触发条件。若满足，**自动静默执行**归档逻辑。
 - **触发时机**: 
   - 每写完一个完整情节或章节后。
@@ -186,7 +186,7 @@ flowchart TD
     - **方案 B (都市脑洞/规则怪谈)**：结合冷门职业或规则限制，融入直播弹幕反馈，适合短剧化。
     - **方案 C (极道横推/高武)**：极致肉身流或寿元加点流，主打快节奏宣泄与暴力美学。
 
-5. **原创深度分析**: 针对推荐方案，按照 `templates/trending-analysis-template.md` 输出报告，重点评估**“情绪价值密度”**与**“短剧改编潜力”**。
+5. **原创深度分析**: 调用 `novel-originality-auditor` 技能，针对推荐方案，按照 `templates/trending-analysis-template.md` 输出报告，重点评估**“情绪价值密度”**与**“爆款创新潜力”**。
 
 6. **持久化存档**: 将分析结果记录至 `analysis/trending-analysis.md`。
 

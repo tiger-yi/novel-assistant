@@ -66,6 +66,7 @@
     *   **冲突检测 (Conflict Check)**：是否存在“瞬移”或“医学奇迹”？
     *   **体系纯度校验 (System Purity)**：名词是否被污染（如修仙出现魔力）？
     *   **战力与资源审计 (Power & Inventory Audit)**：境界压制是否合理？库存资源是否充足？
+    *   **势力逻辑审计 (Faction Logic Audit)**：组织结构是否符合修炼体系逻辑？（如：资源垄断、晋升通道、经济基础）。
     *   **爽点/节奏评估 (Pacing Check)**：是否达到预期情绪目标？
 *   **修正机制 (Loopback)**：
     *   若发现 Observation 中有 ❌ 项，必须强制返回 Thought 重新构思，直到逻辑闭环。
