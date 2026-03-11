@@ -1,0 +1,74 @@
+# [ReAct Protocol: Characters]
+
+# 主角配置 (Protagonist Spec)
+[main_character]
+name = "陆斩"
+identity = "大景王朝巡天监 - 巡天使"
+realm = "武者 (淬体境)"
+affiliation = "大景王朝 - 巡天监"
+personality = "外温内冷、极度理智、规则控"
+status = "人性：98% | 规则畸变：2% (初次编织)"
+humanity_anchor = "母亲缝制的半个香囊 (状态：针脚清晰。随着人性丧失，香囊将逐渐褪色。终极阶段：陆斩将忘记'母亲'这个概念，香囊仅作为一种生理习惯存在)"
+memory_contamination = "[Scenario A] 核心记忆错位：陆斩在触摸香囊时，脑海中偶尔会浮现红嫁衣尖叫的声波频率，而非母亲温婉的嘱托。这种感官污染使他难以通过纯粹的情感回归平静。"
+common_sense_erosion = "初步显现：由于痛觉神经被空间规则部分替代，陆斩已丧失对'轻微创伤'的防御本能。他在握持利刃时，若非刻意控制，常会因用力过猛导致指骨错位而不自知。"
+visual_mutation = "左臂在特定光线下呈现三层空间重叠的虚影，挥动时伴随刺耳的空间撕裂声。且缝合处皮肤呈现一种半透明的死灰色，隐约可见内部流动的黑色阴能。"
+combat_habit = "自残式压制：因无法感知痛苦，在面对强敌时，陆斩倾向于以伤换伤，利用'空间错位'在自身肉体受创的瞬间，将攻击反弹或偏转至敌方要害。这种战斗风格极具视觉冲击力，常令对手感到生理性恐惧。"
+perception_feedback = "[Scenario A] 规则排斥感应：当陆斩靠近具备'生态同化'规则的非人区域（如南疆妖兽领地）时，体内的空间碎片会因为底层逻辑冲突而产生剧烈的灼热感或'剥离感'。这种感官异动使他具备了天然的'非人势力探测'能力，能提前察觉被规则同化的禁区边缘。"
+rejection_status = "稳定 (仅含单一地缘类规则)"
+rule_slots = "1/3 (已占用/上限)"
+flaws = ["对槐花糕的执念（维持人性的心理暗示）", "极端理智下的非理性愤怒（灵魂被规则侵蚀的征兆）"]
+
+[main_character.attributes]
+physique = "凡胎 (已缝合'空间错位'碎片)"
+soul = "高频震荡态 (适合规则剥离)"
+
+[[main_character.equipment]]
+name = "制式封灵针"
+function = "中断诡异规则运行"
+status = "已消耗：0/3"
+
+[[main_character.equipment]]
+name = "规则量尺 (铜制)"
+function = "测量规则波动，判断收割价值"
+
+[[main_character.equipment]]
+name = "掌中镇魂炉"
+function = "临时存储规则碎片，防止阴能逸散"
+
+[[main_character.skills]]
+name = "碎石掌 (真意编织版)"
+grade = "入品武学"
+features = ["规则：空间错位", "效果：无视防御，直接震碎核心"]
+mastery = "初步融合"
+
+[[main_character.skills]]
+name = "敛息术"
+grade = "基础武学"
+mastery = "大成"
+
+[[main_character.relationships]]
+name = "老捕快"
+relation = "最初的祭品 / 引导者"
+trust = 0 # 主角已看穿其真实目的
+
+# 重要反派/势力
+[[side_characters]]
+name = "巡天监首座"
+identity = "大景王朝幕后操控者之一"
+realm = "断因境 (第七阶)"
+affiliation = "巡天监总部"
+relation_to_mc = "导师 / 潜在的收割者"
+
+[[side_characters]]
+name = "北狄尸巫"
+identity = "北狄部落大祭司"
+realm = "域主境 (第六阶)"
+affiliation = "北狄王庭"
+relation_to_mc = "外部强敌"
+
+[[side_characters]]
+name = "冥教圣女"
+identity = "古神意志的载体"
+realm = "化生境 (第四阶)"
+affiliation = "冥教"
+relation_to_mc = "纠缠者 / 规则共鸣者"
