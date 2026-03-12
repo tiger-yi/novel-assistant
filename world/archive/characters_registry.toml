@@ -12,13 +12,13 @@ cause_of_death = "死于张启明‘九天雷脉’全力爆发，肉身被雷�
 description = "外表儒雅的父母官，实则为异化者，将青州边城化为‘食堂’，视百姓为猪狗。"
 
 [[deceased]]
-name = "白骨大夫 (Doctor Bai)"
-identity = "白骨医馆坐堂大夫"
+name = "白神医 (Bai Shenyi)"
+identity = "回春医馆坐堂大夫 / “食堂”成员"
 realm = "2阶: 熔脉境 (骨骼异化)"
-affiliation = "青州边城 / 邪道医家"
-death_chapter = "前期"
+affiliation = "青州边城 / 邪道医家 / 食堂"
+death_chapter = "第39章"
 cause_of_death = "被张启明踩爆头颅。"
-description = "觊觎主角雷骨，擅长骨骼异化邪法。"
+description = "表面为边城名医，实则觊觎主角雷骨，擅长骨骼异化邪法。其身份为“食堂”成员，负责处理食材。"
 
 [[deceased]]
 name = "金面具人"
@@ -77,7 +77,7 @@ realm = "未知 (法相睁眼雏形 / 畸变态)"
 affiliation = "云深观"
 death_chapter = "第50章"
 cause_of_death = "理智唤醒后，肉身随云深观禁制一同消融，融入地脉引导雷火。"
-description = "枯瘦如柴，脊椎隆起如蜘蛛。在云雾泽深处等待张启明，临终前引导主角引爆大泽禁忌。"
+description = "枯瘦如柴，脊椎隆起如蜘蛛。面部呈现恐怖的反差：半边脱落化为白骨，半边红润如婴儿，眉心生有紧闭竖眼。在云雾泽深处等待张启明，临终前引导主角引爆大泽禁忌。"
 
 [[deceased]]
 name = "银面执法官 (分身投影)"
