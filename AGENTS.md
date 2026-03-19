@@ -11,17 +11,19 @@ novel-assistant/
 ├── world/                    # 世界观数据目录（核心）
 │   ├── archive/              # 归档数据目录
 │   │   ├── outline_history.md      # 剧情大纲历史存档
-│   │   ├── characters_registry.toml # 死亡/离场人物登记簿
+│   │   ├── characters_registry.md # 死亡/离场人物登记簿
 │   │   ├── timeline_chronicles.md  # 历史时间线长卷
 │   │   ├── inventory_logs.md       # 道具消耗/损毁记录
 │   │   └── world_atlas.md          # 旧地图/已探索区域志
 │   ├── outline.md            # 剧情大纲
-│   ├── characters.toml       # 人物档案
+│   ├── characters.md       # 人物档案
 │   ├── timeline.md           # 时间线管理
 │   ├── geography.md          # 地理与势力
 │   ├── inventory.md          # 道具与功法
 │   └── power.md              # 力量体系
 ├── chapters/                 # 正文章节目录
+├── analysis/                 # 分析报告
+│   └── trending-analysis.md  # 长篇小说题材深度分析
 ├── metadata/                 # 项目元数据 (如 novel-metadata.md)
 ├── writespec/                # 写作规范
 │   ├── archiving-spec.md     # 归档规范
@@ -29,12 +31,14 @@ novel-assistant/
 │   └── logic-blueprint-spec.md  # 章节构思规范
 ├── skills/                   # AI Skills
 ├── templates/                # 模板目录
-│   ├── outline-template.md   # 剧情大纲模板
-│   ├── characters-template.toml
-│   ├── timeline-template.md
-│   ├── geography-template.md
-│   ├── inventory-template.md
-│   └── power-system-template.md
+│   ├── outline-template.md         # 剧情大纲模板
+│   ├── characters-template.md      # 人物档案模板
+│   ├── timeline-template.md        # 时间线模板
+│   ├── hooks-template.md           # 钩子与伏笔回收表模板
+│   ├── geography-template.md       # 地图势力模板
+│   ├── inventory-template.md       # 道具模板
+│   ├── chapter-summary-template.md # 章节摘要模板
+│   └── power-system-template.md    # 力量体系模板
 ├── AGENTS.md                 # 本文件 (指令集与工作流)
 └── README.md                 # 项目基础说明
 ```
@@ -60,20 +64,23 @@ flowchart TD
     Verify -->|"战力崩坏/吃书"| Fix["修正正文"]
     Fix --> Verify
     
-    Verify -->|"通过"| Publish["归档 chapters/"]
+    Verify -->|"通过"| Publish["保存 chapters/"]
     Publish --> Update["指令: 更新世界"]
     
     subgraph UpdateBible ["数据回写 (State Update)"]
         direction TB
-        U1["outline.md (标记伏笔回收)"]
-        U2["characters.toml (更新境界/状态)"]
-        U3["timeline.md (推进时间)"]
-        U4["inventory.md (扣除消耗/新增掉落)"]
-        U5["geography.md (解锁新地图)"]
+        U1["outline.md (详细章节规划表)"]
+        U2["hooks.md (钩子与伏笔回收表)"]
+        U3["characters.md (更新境界/状态)"]
+        U4["timeline.md (推进时间)"]
+        U5["inventory.md (扣除消耗/新增掉落)"]
+        U6["geography.md (解锁新地图/势力)"]
+        U7["chapter-summary.md (章节摘要)"]
     end
     
     Update --> UpdateBible
-    UpdateBible --> Finish["待命"]
+    UpdateBible --> Archive["指令: 归档世界"]
+    Archive --> Finish["待命"]
 ```
 
 ## 初始化策略：五步登仙·模组化引导法
@@ -112,22 +119,40 @@ flowchart TD
   1. 扫描 `world/` 目录。
   2. 若 `outline.md` 缺失，立即执行 **五步登仙引导法** 与用户对话。
   3. 获得核心设定后，AI 提示：“天道法则已确立，正在演化世界...”。
-  4. 读取`templates/`目录下模板,自动生成 `outline.md`，并提取关键信息填充 `characters.toml` (主角面板), `power.md` (初始境界), `geography.md` (新手村)。
+  4. 读取`templates/`目录下模板,自动生成 `outline.md`，并提取关键信息填充 `characters.md` (人物档案), `power.md` (力量体系), `geography.md` (地图与势力),`hooks.md` (钩子与伏笔回收表)。
   5. 反馈：`[系统] World Bible 初始化完成。当前主角：[姓名]，境界：[初始境界]。`
 
 #### 2. "更新世界"(Update World)
 分析最近生成的正文，同步更新所有 World Bible 文件。
 - **功能**: 触发全量文档审查与更新。
+- **执行流程**:
+    1. **更新 `world/characters.md`**:
+        - 添加新出现的人物档案、功法技能、天赋属性、人际关系变化或状态更新。
+    2. **更新 `world/inventory.md`**:
+        - 记录新获得的装备与法宝、消耗品与材料、功法/武技、情报与地图。
+        - 移除本章已消耗的丹药、符箓等一次性物品、已损毁的装备和法宝等。
+    3. **更新 `world/timeline.md` 与 `world/power.md`**:
+        - 记录本章发生的重大事件时间节点（闭关时间、赶路时间等）。
+        - 若有境界突破或战力体系扩展，同步更新 `power.md`。
+    4. **更新 `world/hooks.md`**:
+        - 记录新的核心钩子、伏笔埋设、情绪爆发点。
+        - 回收钩子标记为“✅ 已回收”
+    5. **更新 `world/chapter-summary.md`**:
+        - 记录每一章节的摘要
+    6. **更新 `world/outline.md`**:
+        - 标记当前情节点为“✅ 已完成”。
+        - 更新 **字数规划** 中的当前总字数。
+        - 检查**详细章节规划表**，若后续待创作章节不存在或不足，自动补充 1-3 个待创作章节标题（字数随机 2-8 字）。
 - **触发时机**:
   - 每写完一个完整情节或章节后。
   - 发现新的世界观设定或模式时。
   - 用户显式要求更新时。
-
+  
 #### 3. "归档世界" (Archive World)
 **功能**: 强制扫描并清理 `world/` 目录，生成归档索引。
 - **执行流程**:
   1. 扫描 `world/` 下的所有活跃文件。
-  2. 参照执行规范:[archiving-spec.md](writespec/archiving-spec.md),识别已完成的剧情卷、死亡/离场人物、已消耗道具、已离开的旧地图。
+  2. 按照[archiving-spec.md](references/archiving-spec.md)规则识别已完成的剧情卷、死亡/离场人物、已消耗道具、已离开的旧地图。
   3. 将冗余数据迁移至 `world/archive/` 对应文件。
   4. 在活跃文件中保留归档索引链接。
 
@@ -141,97 +166,44 @@ flowchart TD
   1. **初始化 (Init)**: 确认目标章节号。
   2. **任务规划 (Phase: TODO)**: 
   在进入任何具体创作步骤前，AI 必须首先输出一个 `[TODO]` 列表，明确本次任务的子步骤。
-    - **构思阶段 (Plan)**：严格遵循 [logic-blueprint-spec.md](writespec/logic-blueprint-spec.md) 中的任务清单。
-    - **撰写阶段 (Draft)**：严格遵循 [chapter-drafting-spec.md](writespec/chapter-drafting-spec.md) 中的任务清单。
-  3. **构思阶段 (Phase: Plan)**: 
-    - **执行标准**：读取规范**[logic-blueprint-spec.md](writespec/logic-blueprint-spec.md)**,按照规范严格执行。
+    - 严格遵循 **[chapter-creation-spec.md](writespec/chapter-creation-spec.md)** 中的任务清单。
+  3. **构思阶段 (Phase 1: Plan)**: 
+    - **执行标准**：读取规范 **[chapter-creation-spec.md](writespec/chapter-creation-spec.md)** 中的 Phase 1 阶段要求。
     - **核心逻辑**：检索 World Bible -> 确认主线与状态 -> 输出场景细纲 -> 逻辑审计。
     - **输出要求**：必须显式输出 `Thought`（推演）、`Action`（细纲）和 `Observation`（审计结果）。
-  4. **撰写阶段 (Phase: Draft)**:
-    - **执行标准**：读取规范 **[chapter-drafting-spec.md](writespec/chapter-drafting-spec.md)**,按照规范严格执行。
+    - **自动流转**：Phase 1 结束后，自动选择推荐的剧情分支，无缝衔接进入 Phase 2。
+  4. **撰写阶段 (Phase 2: Draft)**:
+    - **执行标准**：自动选择推荐分支后，继续执行 **[chapter-creation-spec.md](writespec/chapter-creation-spec.md)** 中的 Phase 2 阶段要求。
     - **核心逻辑**：设定感官锚点 -> 确认生理限制 -> 执行正文撰写 -> 质量审计。
-    - **输出要求**：必须统一输出至 `chapters/` 目录。 
-  5. **收尾 (Finish)**: 执行**更新世界**,同步更新大纲文件。
+    - **输出要求**：必须统一输出至 `chapters/` 目录，并显式进行去 AI 味审计与数据变更预告。 
+  5. **收尾 (Finish)**: 自动执行 "更新世界" 指令，同步更新所有 World Bible 文件。
+  6. **归档 (Archive)**: 执行 "归档世界" 指令，扫描并清理 `world/` 目录下的冗余数据，生成归档索引。
 
-## World Bible 维护详情
+#### 6. "热门话题" (Trending Topics)
+**指令说明**：基于 2025/2026 年网文市场核心逻辑（从**单纯爽**转向**情绪价值 + 短剧适配 + 脑洞落地**），主动分析番茄、七猫、起点等主流平台的最新风向。重点聚焦**新派历史**、**都市脑洞**、**极道横推**及**短剧改编潜力**题材，为百万字长篇创作提供具备爆款基因的选题与预测。
 
-该项目遵循严格的世界观维护逻辑，当生成新章节或更新剧情时，需同步更新以下核心文件：
+#### 执行流程 (Execution Flow):
+1. **核心赛道检索与分析**: 调用 `WebSearch` 工具针对以下三大基本盘进行风向校准：
+    - **新派历史**：检索“2025 网文 工业大摸底”、“国运流小说 风向”。关注“降维打击”与“民族情绪”的结合点（如：手搓光刻机、国运绑定）。
+    - **都市脑洞**：检索“规则怪谈 职业流”、“直播 诡异 复苏”。关注“冷门职业成神”与“规则/克系”的融合。
+    - **极道横推**：检索“肉身成圣 小说”、“消耗寿元 加点流”。关注极致暴力美学与快节奏爽点（去花哨法术）。
 
-### 1. 剧情大纲 (`world/outline.md`)
-- **功能**：记录核心主线和关键剧情节点
-- **维护逻辑**：
-  - 生成新剧情前，检索大纲中的"未回收伏笔"
-  - 确保大事件（如宗门灭亡）在至少 3 章前有征兆
-  - 使用指令 **"更新世界"** 自动同步
+2. **潜力黑马与短剧适配性扫描**:
+    - 检索“2026 网文 短剧改编风口”、“反套路 战神/神医”。
+    - 挖掘适合视觉化呈现的题材：**现代神医/战神微创新**（下山高手+豪门、奶爸/宠妹）、**脑洞鉴宝/捡漏**（万物皆可鉴定、废品回收站黑科技）。
 
-### 2. 人物档案 (`world/characters.toml`)
-- **功能**：TOML 格式的人物数据
-- **关键字段**：姓名、当前境界、所属势力、核心功法、当前状态、好感度
-- **自动升级**：
-  - 主角突破时自动更新 `当前境界`
-  - 境界一致性检查：确保角色行为符合其境界设定
+3. **创作风向标校准 (避坑指南)**:
+    - **节奏检查**：验证是否符合“黄金前 500 字”原则（开篇即高潮）。
+    - **人设去味**：确保主角“去爹味”，打造“精致利己主义”或“唯我独法”人设。
+    - **系统优化**：确保金手指单一且强大（如仅“加点”或“签到”），避免复杂数据计算。
+    - **情绪审计**：所有剧情必须服务于“爽、怒、燃、泪”四大情绪价值。
 
-### 3. 时间线管理 (`world/timeline.md`)
-- **格式**：`[纪元/年份] - [事件] - [主角年龄/修为]`
-- **维护逻辑**：
-  - 每次"闭关"、"赶路"剧情后计算流逝时间
-  - 更新主角年龄，防止时间逻辑错误
+4. **输出推荐方案**: 提供 3 组符合 2026 爆款逻辑的立意方案：
+    - **方案 A (新派历史/大国重工)**：侧重工业摸底或国运崛起，强调民族情绪与降维打击。
+    - **方案 B (都市脑洞/规则怪谈)**：结合冷门职业或规则限制，融入直播弹幕反馈，适合短剧化。
+    - **方案 C (极道横推/高武)**：极致肉身流或寿元加点流，主打快节奏宣泄与暴力美学。
 
-### 4. 道具与功法 (`world/inventory.md`)
-- **维护逻辑**：
-  - 消耗品（丹药、符箓）使用后移除
-  - 大招（禁术）使用后记录虚弱期结束时间
-  - 击杀 BOSS 后列出掉落清单
-
-### 5. 地理与势力 (`world/geography.md`)
-- **维护逻辑**：
-  - 记录每个地图的"建议进入等级"
-  - 势力动态：消息传播需要时间（除非有传送阵）
-
-### 6. 力量体系 (`world/power.md`)
-- **维护逻辑**：
-  - 境界一致性：角色突破必须符合 power.md 定义的条件与资源消耗
-  - 战斗校验：每次战斗前对比双方境界，计算越级代价（参考 power.md）
-  - 体系扩展：出现新地图或新种族时，需同步更新力量体系的兼容性说明
-
-## 模板与 ReAct 联动机制 (Templates & ReAct Integration)
-
-本系统不视模板为死板的文档，而是通过 **ReAct 闭环** 驱动其动态演化。
-
-### 1. 人物档案 (`characters.toml`) - 状态机驱动
-*   **ReAct 场景**：主角突破、受伤、势力变更。
-*   **Thought**: 分析当前剧情对角色的物理/心理影响。检索 `power.md` 确认突破条件。
-*   **Action**: 按照 `[id.realm]` 结构更新境界，并在 `status` 记录实时负面状态。
-*   **Observation**: 校验角色当前战力数值是否与 `inventory.md` 中的装备加成产生冲突。
-*   **模板参考**: [characters-template.toml](templates/characters-template.toml)
-
-### 2. 道具与功法 (`inventory.md`) - 资源审计驱动
-*   **ReAct 场景**：战斗消耗、击杀掉落、秘境寻宝。
-*   **Thought**: 计算战斗中的灵力消耗比与符箓剩余数量。
-*   **Action**: 在 `[consumables]` 中扣除使用次数，或在 `[artifacts]` 中新增战利品。
-*   **Observation**: 检查“杀人夺宝”后的资源获取是否导致主角战力过快崩坏（战力膨胀预警）。
-*   **模板参考**: [inventory-template.md](templates/inventory-template.md)
-
-### 3. 地理与势力 (`geography.md`) - 探索迷雾驱动
-*   **ReAct 场景**：地图切换、势力开战、情报解锁。
-*   **Thought**: 根据 `timeline.md` 计算消息传播的速度，判断主角是否已知某势力动向。
-*   **Action**: 在 `[regions]` 中解锁新坐标，更新 `risk_level`（如：战乱导致危险度上升）。
-*   **Observation**: 确保主角的移动轨迹符合 `power.md` 中定义的飞行/传送速度限制。
-*   **模板参考**: [geography-template.md](templates/geography-template.md)
-
-### 4. 力量体系 (`power.md`) - 全局逻辑基石
-*   **ReAct 场景**：所有战斗描写、技能判定。
-*   **Thought**: 检索 `power.md` 中的“境界压制系数”，判定主角能否越级。
-*   **Action**: 在正文中应用“大道压制”或“法则反噬”的描写。
-*   **Observation**: **[核心审计]** 若描写中出现低境界反杀高两个大境界且无特殊法宝，直接触发 `[Audit Failed]` 并重写。
-*   **模板参考**: [power-system-template.md](templates/power-system-template.md)
-
-### 5. 时间线管理 (`timeline.md`) - 因果律驱动
-*   **ReAct 场景**：闭关、长途跋涉、伏笔回收。
-*   **Thought**: 计算从 A 点到 B 点的航行时间，同步所有角色的年龄。
-*   **Action**: 新增 `[纪元/年份] - [事件]` 条目，记录“草蛇灰线”的埋点位置。
-*   **Observation**: 检查是否出现“主角闭关十年，外界毫无变化”的逻辑死结。
-*   **模板参考**: [timeline-template.md](templates/timeline-template.md)
+5. **原创深度分析**: 针对推荐方案使用技能`novel-originality-auditor`进行原创性审计，按照 [trending-analysis-template.md](templates/trending-analysis-template.md) 模板格式输出报告至 `analysis/trending-analysis.md`，重点评估**情绪价值密度**与**爆款创新潜力**。
 
 ## 创作规范
 
@@ -287,6 +259,5 @@ flowchart TD
 ## 注意事项
 
 - 文件编码：UTF-8
-- 人物档案使用 TOML 格式（文件名：`characters.toml`）
 - 所有世界观变更必须同步更新对应的数据文件
 - 保持战力体系的严谨性，避免逻辑冲突
