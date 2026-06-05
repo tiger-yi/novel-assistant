@@ -12,6 +12,7 @@ def main():
     parser = argparse.ArgumentParser(description='Check word count of a chapter file')
     parser.add_argument('file_path', help='Path to the chapter file')
     parser.add_argument('--target', type=int, default=2000, help='Target word count (default: 2000)')
+    parser.add_argument('--max', type=int, default=2300, help='Maximum word count (default: 2300)')
     parser.add_argument('--segments', action='store_true', help='Output paragraph-level word counts')
     
     args = parser.parse_args()
@@ -24,7 +25,7 @@ def main():
         
         print(f"File: {os.path.basename(args.file_path)}")
         print(f"Total Word Count: {current_count}")
-        print(f"Target Word Count: {args.target}")
+        print(f"Target Word Count: {args.target}-{args.max}")
         
         if args.segments:
             print("\n--- Segment Analysis ---")
@@ -52,10 +53,14 @@ def main():
 
         if current_count < args.target:
             diff = args.target - current_count
-            print(f"\n❌ Word count check failed! Need {diff} more words.")
+            print(f"\n❌ Word count too low! Need {diff} more words.")
             print(f"Status: INCOMPLETE")
+        elif current_count > args.max:
+            diff = current_count - args.max
+            print(f"\n❌ Word count too high! Need to trim {diff} words.")
+            print(f"Status: TOO_LONG")
         else:
-            print(f"\n✅ Word count check passed!")
+            print(f"\n✅ Word count within target range!")
             print(f"Status: COMPLETE")
             
     except Exception as e:
