@@ -25,3 +25,7 @@ replay_pid*
 .iflow
 .idea
 .trae
+
+# Python caches
+__pycache__/
+*.py[cod]

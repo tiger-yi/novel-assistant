@@ -1,0 +1,276 @@
+# novel-harness 上下文清单 (Context Manifest)
+# 机器可读的规范路由 MAP。AGENTS.md 是人工入口，本文件是路由与加载顺序的唯一事实来源。
+
+schema: novel-harness/context/v1
+
+# 项目快照
+project:
+  name: Novel Assistant
+  type: 玄幻小说结构化创作辅助项目
+  root: ".."
+
+# ===== 规范路由 (Spec Routing) =====
+# commands: 命令协议 (每次执行命令时读取对应文件)
+# specs: 通用规范 (按需读取)
+# templates: 创作模板 (初始化/更新时读取)
+
+routes:
+  commands:
+    - name: init-world
+      path: ../writespec/commands/init-world.md
+      trigger: "初始化世界"
+      load: on_command
+      side_effect: write
+      requires_confirmation: when_overwriting
+    - name: update-world
+      path: ../writespec/commands/update-world.md
+      trigger: "更新世界"
+      load: on_command
+      side_effect: write
+    - name: archive-world
+      path: ../writespec/commands/archive-world.md
+      trigger: "归档世界"
+      load: on_command
+      side_effect: destructive_move
+      requires_confirmation: explicit_or_conditional_authorization
+    - name: check-status
+      path: ../writespec/commands/check-status.md
+      trigger: "查看世界状态"
+      load: on_command
+    - name: create-chapter
+      path: ../writespec/commands/draft-chapter.md
+      trigger: "创作章节"
+      patterns:
+        - '^创作第\s*(?P<chapter>\d+)\s*章$'
+        - '^构思第\s*(?P<chapter>\d+)\s*章$'
+      display_patterns:
+        - "创作第 N 章"
+        - "构思第 N 章"
+      load: on_command
+      modes:
+        preview:
+          writes: []
+        full:
+          writes:
+            - ../chapters/
+            - ../world/
+          auto_select_recommended_branch: true
+          two_phase_commit: true
+          conditional_archive: true
+    - name: trending
+      path: ../writespec/commands/trending.md
+      trigger: "热门话题"
+      load: on_command
+    - name: create-style
+      path: ../writespec/commands/create-style.md
+      trigger: "创建写作风格"
+      load: on_command
+
+  specs:
+    - name: workflow
+      path: ../writespec/workflow.md
+      purpose: World Bible 主创作流程与状态机
+    - name: chapter-creation-spec
+      path: ../writespec/chapter-creation-spec.md
+      purpose: 单章构思、文本处理、准备提交与门禁
+    - name: state-management
+      path: ../writespec/state-management.md
+      purpose: 事实优先级、事务回写、幂等与归档检索
+    - name: style-guide
+      path: ../writespec/style-guide.md
+      purpose: 写作风格指南 (核心调性/排版/去AI化)
+    - name: physical-descriptor
+      path: ../writespec/physical-descriptor.md
+      purpose: 物理化重组规则 (抽象描写转物理事实)
+    - name: archiving-spec
+      path: ../writespec/archiving-spec.md
+      purpose: 归档执行规范
+    - name: chapter-polish
+      path: ../writespec/chapter-polish.md
+      purpose: 纯文本润色协议，不包含补字数、审计或回写
+    - name: world-audit
+      path: ../writespec/world-audit.md
+      purpose: 六维世界观审计矩阵
+    - name: originality-audit
+      path: ../writespec/originality-audit.md
+      purpose: 长篇小说原创性与逻辑审计
+    - name: audit-dimensions
+      path: ../writespec/audit-dimensions.md
+      purpose: 深度审计维度 (A-J)
+    - name: trope-blacklist
+      path: ../writespec/trope-blacklist.md
+      purpose: 陈旧桥段黑名单
+    - name: original-check-guide
+      path: ../writespec/original-check-guide.md
+      purpose: 原创度提升手册
+    - name: metadata-guide
+      path: ../writespec/metadata-guide.md
+      purpose: 小说元数据生成指南 (由 novel-metadata-generator 技能转写)
+    - name: platform-rules
+      path: ../writespec/platform-rules.md
+      purpose: 平台发布规则 (字数/禁忌/封面)
+    - name: tag-options
+      path: ../writespec/tag-options.md
+      purpose: 标签候选项库
+
+# ===== 模板路由 (Template Routing) =====
+templates:
+  - name: outline
+    path: ../templates/outline-template.md
+    used_by: init-world, update-world
+  - name: characters
+    path: ../templates/characters-template.md
+    used_by: init-world, update-world
+  - name: timeline
+    path: ../templates/timeline-template.md
+    used_by: init-world, update-world
+  - name: geography
+    path: ../templates/geography-template.md
+    used_by: init-world, update-world
+  - name: inventory
+    path: ../templates/inventory-template.md
+    used_by: init-world, update-world
+  - name: hooks
+    path: ../templates/hooks-template.md
+    used_by: init-world, update-world
+  - name: chapter-summary
+    path: ../templates/chapter-summary-template.md
+    used_by: init-world, update-world
+  - name: power-system
+    path: ../templates/power-system-template.md
+    used_by: init-world, update-world
+  - name: trending-analysis
+    path: ../templates/trending-analysis-template.md
+    used_by: trending
+  - name: transaction-log
+    path: ../templates/transaction-log-template.md
+    used_by: create-chapter, update-world
+
+# ===== 世界数据加载顺序 (World Data Loading Order) =====
+# 构思/创作章节前，按此顺序加载 World Bible 上下文。
+world_data:
+  default_order:
+    - ../world/outline.md           # 主线大纲 (必须)
+    - ../world/chapter-summary.md   # 章节摘要承接 (必须)
+    - ../world/characters.md        # 人物状态 (必须)
+    - ../world/hooks.md             # 伏笔钩子 (必须)
+    - ../writespec/style-guide.md   # 风格对齐 (写作阶段)
+    - ../world/power.md             # 力量体系 (战斗场景按需)
+    - ../world/inventory.md         # 道具库存 (战斗/消耗按需)
+    - ../world/timeline.md          # 时间线 (时序按需)
+    - ../world/geography.md         # 地理势力 (环境按需)
+  required:
+    - ../world/outline.md
+    - ../world/chapter-summary.md
+    - ../world/characters.md
+    - ../world/hooks.md
+    - ../world/power.md
+    - ../world/inventory.md
+    - ../world/timeline.md
+    - ../world/geography.md
+  profiles:
+    preview:
+      - ../world/outline.md
+      - ../world/chapter-summary.md
+      - ../world/characters.md
+      - ../world/hooks.md
+    drafting:
+      - ../world/outline.md
+      - ../world/chapter-summary.md
+      - ../world/characters.md
+      - ../world/hooks.md
+      - ../writespec/style-guide.md
+    full-audit:
+      - ../world/outline.md
+      - ../world/chapter-summary.md
+      - ../world/characters.md
+      - ../world/hooks.md
+      - ../world/power.md
+      - ../world/inventory.md
+      - ../world/timeline.md
+      - ../world/geography.md
+
+# ===== 技能路由 (Skill Routing) =====
+# 说明: 原 .trae/skills 技能已转化为 writespec/ 下的规范，不再以独立技能形式保留。
+skills:
+  - name: chapter-polisher
+    status: converted
+    target: ../writespec/chapter-polish.md
+  - name: novel-originality-auditor
+    status: converted
+    target: ../writespec/originality-audit.md
+  - name: novel-metadata-generator
+    status: converted
+    target: ../writespec/metadata-guide.md
+
+# ===== 验证命令 (Verification Commands) =====
+verification:
+  preflight_gates:
+    - name: style-ready
+      description: 写作风格 frontmatter 状态为 ready 且必需章节齐全
+      command: python scripts/validate_harness.py
+    - name: world-completeness
+      description: 八类 World Bible 齐全且目标章节号无冲突
+  commands:
+    - name: harness-integrity
+      description: 校验 Manifest、AGENTS、README、风格就绪状态与文件路由一致性
+      command: python scripts/validate_harness.py
+    - name: chapter-length
+      description: 章节字数检查 (>=2000字)
+      command: python scripts/check_count.py <chapter_file> --target 2000 --segments
+    - name: chapter-format
+      description: 校验章节字数、禁用符号、Markdown 与风格黑名单
+      command: python scripts/validate_chapter.py <chapter_file> --target 2000
+  semantic_gates:
+    - name: world-audit
+      spec: ../writespec/world-audit.md
+      evidence_required: true
+    - name: logic-closure
+      spec: ../writespec/state-management.md
+      evidence_required: true
+  transaction_gates:
+    - name: prepared-change-set
+      description: 发布前生成无冲突的 World Bible 变更集
+      evidence_required: true
+    - name: postflight-consistency
+      description: 校验正式正文、事务日志、World Bible 引用与幂等键
+      evidence_required: true
+  periodic_gates:
+    - name: originality-cycle
+      spec: ../writespec/originality-audit.md
+      interval_chapters: 10
+      triggers:
+        - outline_initialized
+        - arc_completed
+        - premise_changed
+      blocks_next_cycle: true
+
+# ===== 归档目录 (Archive) =====
+archive:
+  - name: outline-history
+    path: ../world/archive/outline_history.md
+  - name: characters-registry
+    path: ../world/archive/characters_registry.md
+  - name: timeline-chronicles
+    path: ../world/archive/timeline_chronicles.md
+  - name: inventory-logs
+    path: ../world/archive/inventory_logs.md
+  - name: world-atlas
+    path: ../world/archive/world_atlas.md
+  - name: hooks-history
+    path: ../world/archive/hooks_history.md
+  - name: chapter-summary-history
+    path: ../world/archive/chapter_summary_history.md
+
+# ===== 加载策略 (Loading Policy) =====
+loading_policy:
+  default_order:
+    - "读取 AGENTS.md 确认项目规则"
+    - "读取 context.manifest.yaml 获取路由"
+    - "按命令路由读取对应命令协议 (commands/*)"
+    - "按需读取规范 (specs/*) 与模板 (templates/*)"
+    - "按任务模式加载 world_data.profiles；无匹配项时才使用默认顺序"
+    - "命中归档索引、历史实体或跨卷因果时按 state-management 最小回溯"
+    - "验证阶段执行 verification.commands"
+  lazy_load: true
+  scope_must_be_explicit: true

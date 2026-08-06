@@ -1,97 +1,88 @@
-# Novel Assistant (AI小说写作助手)
+# Novel Assistant (AI 小说写作助手)
 
-Novel Assistant 是一个用于辅助创作中文玄幻小说的结构化世界观数据库管理项目。项目旨在通过结构化的数据文件（World Bible）来维护长篇玄幻小说的剧情、人物、时间线、道具和地理信息，确保长篇作品的世界观一致性和逻辑连贯性。
+Novel Assistant 使用结构化 World Bible 管理中文玄幻长篇小说的剧情、人物、力量、时间、道具、地理、伏笔与章节摘要。Agent 从 [AGENTS.md](AGENTS.md) 进入，机器路由以 `novel-harness/context.manifest.yaml` 为准。
 
-## 核心指令集 (Key Commands)
+## 核心指令
 
-### 1. "初始化世界" (Initialize World)
-从零构建世界观
+| 目的 | 指令 |
+| :--- | :--- |
+| 初始化八类 World Bible | `初始化世界` |
+| 一次性定制全书文风 | `创建写作风格` |
+| 创作章节并自动收尾 | `创作第 N 章` |
+| 仅查看细纲与推荐分支 | `构思第 N 章` |
+| 独立修复状态回写 | `更新世界` |
+| 独立执行归档维护 | `归档世界` |
+| 查看当前世界状态 | `查看世界状态` |
+| 分析热门题材 | `热门话题` |
 
-方式一:
-直接输入指令:
-```markdow
+## 推荐流程
+
+新项目只需先执行：
+
+```text
 初始化世界
-
-```
-方式二:
-直接输入指令+信息:
-```markdow
-初始化世界 主题+剧情+风格等信息
-
+创建写作风格
 ```
 
-### 2. "更新世界" (Update World)
-分析最近生成的正文，同步更新所有 World Bible 文件（人物、物品、地理、时间线等）。
-**注意**：此指令会自动触发 `chapter-polisher` 对新章节进行润色和质量检查。
+随后每章只需一条指令：
 
-直接输入指令:
-```markdow
-更新世界
-
-```
-### 3. "构思章节" (Draft Chapter)
-启动单章创作的标准 ReAct 工作流：
-1.  **构思 (Plan)**：检索世界观，生成场景细纲。
-2.  **撰写 (Draft)**：根据细纲撰写正文。
-3.  **收尾 (Finish)**：提示用户更新世界。
-
-直接输入指令:
-```markdow
-构思章节 1
-构思章节 2
-
+```text
+创作第 1 章
+创作第 2 章
 ```
 
-### 4. "归档世界" (Archive World)
-强制扫描并清理 `world/` 目录，将已完成的剧情、死亡人物、消耗道具迁移至 `world/archive/`。
+`创作第 N 章` 会自动完成构思、采用推荐分支、撰写、文本润色、必要的内容补全、验证、发布、更新 World Bible 和到期归档。只有事实冲突、逻辑死锁或修订已发布章节时才暂停。
 
-直接输入指令:
-```markdow
-归档世界
+需要先查看方案但不写文件时使用：
 
+```text
+构思第 3 章
 ```
 
-### 5. "查看世界状态" (Check World Status)
-返回当前时间点、主角所在地、当前状态（HP/MP/Buff）、最近的主线任务目标。
+## 写作风格门禁
 
-直接输入指令:
-```markdow
-查看世界状态
+首次创作前必须显式执行一次 `创建写作风格`。生成的 `writespec/style-guide.md` 必须具有 `status: ready`，并包含核心调性、排版、受限视角、角色刻画、禁忌和黑名单。风格未就绪时，章节创作会停止而不会静默生成默认文风。
 
+## 章节事务
+
+章节事务分为两阶段：
+
+1. **准备阶段**：在 staging 中完成正文、文本润色、最终门禁和 World Bible 变更预览，不修改正式章节或 World Bible。
+2. **提交阶段**：发布正文、更新 World Bible、执行后置一致性校验，再按条件决定是否归档。
+
+文本润色只处理语言、节奏、感官描写、物理化和去 AI 味。字数判断、内容补全、世界观审计和状态回写由外层事务负责。
+
+## 归档行为
+
+每满 10 章、卷结束或满足实体离场条件时触发归档判断。`创作第 N 章` 已包含一次条件授权：预览无歧义时自动归档；存在冲突或范围不清时只记录待处理，不会撤销已经通过后置校验的章节。
+
+`归档世界` 仍可用于独立维护或重试待处理归档。
+
+## 规范入口
+
+| 范围 | 文件 |
+| :--- | :--- |
+| 主工作流 | [writespec/workflow.md](writespec/workflow.md) |
+| 章节命令 | [writespec/commands/draft-chapter.md](writespec/commands/draft-chapter.md) |
+| 章节流程 | [writespec/chapter-creation-spec.md](writespec/chapter-creation-spec.md) |
+| 状态事务 | [writespec/state-management.md](writespec/state-management.md) |
+| 文本润色 | [writespec/chapter-polish.md](writespec/chapter-polish.md) |
+| 世界审计 | [writespec/world-audit.md](writespec/world-audit.md) |
+| 归档规则 | [writespec/archiving-spec.md](writespec/archiving-spec.md) |
+
+## 开发与验证
+
+安装依赖：
+
+```powershell
+python -m pip install -r requirements-dev.txt
 ```
 
-## 技能
-技能在skills目录下解压放入AI工具的skills目录下
-### chapter-polisher
-一个复合技能，循环执行字数检查、内容扩充和去除 AI 味，直到章节在满足长度要求的同时保持高质量。
+运行门禁：
 
-### Novel Metadata Generator
-为玄幻小说生成符合平台规则的元数据（书名、标签、主角名、简介、封面提示词）。基于 world\outline.md 的内容，并严格遵守 references\platform-rules.md 中的字数和内容限制，从 references\tag-options.md 中选择合适的标签。
-* **书名**:开新书时选择一个填写即可
-* **标签**:开新书时按照填写即可
-* **主角名**:开新书时按照填写即可
-* **简介**:开新书时按照填写即可
-* **封面提示词**:将提示词输入元宝生成小说封面
-
-
-## 指令使用流程
-
-> STEP 1:
-    初始化世界
-
-> STEP 2:
-   构思章节 1
-   
-> STEP 3:
-   更新世界
-
-> STEP 4:
-   构思章节 2
-
-> STEP 5:
-   更新世界
-   
-> STEP 6:
-   循环2-3步骤
-
-
+```powershell
+python scripts/validate_harness.py
+python scripts/check_count.py <chapter_file> --target 2000 --segments
+python scripts/validate_chapter.py <chapter_file> --target 2000
+python -m unittest discover -s tests -v
+```

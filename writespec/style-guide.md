@@ -1,3 +1,8 @@
+---
+schema: novel-harness/style/v1
+status: ready
+---
+
 # 《观天神相》写作风格指南
 
 ## 1. 身份设定
