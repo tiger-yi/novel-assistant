@@ -16,8 +16,24 @@ MARKDOWN_BLOCKS = (
     re.compile(r"^\s*(?:[-+*]\s+|\d+\.\s+)"),
     re.compile(r"^\s*\|.*\|\s*$"),
 )
-FORBIDDEN_SYMBOLS = ("【", "】", "[", "]", "（", "）", "**")
+FORBIDDEN_SYMBOLS = ("【", "】", "[", "]", "（", "）", "《", "》", "**")
 CHAPTER_FORMAT_INV = "INV-CHAPTER-001"
+HARNESS_IDENTIFIER = re.compile(
+    r"(?<![A-Za-z0-9])"
+    r"(?:CH|ARC|HOOK|SEED|EVT|TX|CHAR|ITEM|LOC|FAC|GOAL|MS)"
+    r"-[A-Z0-9]+(?:-[A-Z0-9]+)*(?![A-Za-z0-9])",
+    re.IGNORECASE,
+)
+BARE_ALPHANUMERIC_CODE = re.compile(
+    r"(?<![A-Za-z0-9])"
+    r"(?=[A-Za-z0-9-]*[A-Za-z])(?=[A-Za-z0-9-]*\d)"
+    r"[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*(?![A-Za-z0-9])",
+    re.IGNORECASE,
+)
+CHAPTER_STRUCTURE_REFERENCE = re.compile(
+    r"第(?:[0-9零〇一二三四五六七八九十百千万两]+|[XxNn])章|"
+    r"上一章|上章|本章|下一章|下章|前文|后文"
+)
 
 
 def load_blacklist(style_path):
@@ -45,6 +61,45 @@ def load_blacklist(style_path):
     return terms
 
 
+def find_presentation_errors(text):
+    errors = []
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        for symbol in FORBIDDEN_SYMBOLS:
+            if symbol in line:
+                errors.append(
+                    f"{CHAPTER_FORMAT_INV}: forbidden symbol found "
+                    f"at line {line_number}: {symbol}"
+                )
+        if any(pattern.search(line) for pattern in MARKDOWN_BLOCKS):
+            errors.append(
+                f"{CHAPTER_FORMAT_INV}: Markdown block found at line {line_number}"
+            )
+
+        known_spans = []
+        for match in HARNESS_IDENTIFIER.finditer(line):
+            known_spans.append(match.span())
+            errors.append(
+                f"{CHAPTER_FORMAT_INV}: narrative-layer identifier found "
+                f"at line {line_number}: {match.group(0)}"
+            )
+        for match in BARE_ALPHANUMERIC_CODE.finditer(line):
+            if any(
+                match.start() < end and match.end() > start
+                for start, end in known_spans
+            ):
+                continue
+            errors.append(
+                f"{CHAPTER_FORMAT_INV}: bare alphanumeric code found "
+                f"at line {line_number}: {match.group(0)}"
+            )
+        for match in CHAPTER_STRUCTURE_REFERENCE.finditer(line):
+            errors.append(
+                f"{CHAPTER_FORMAT_INV}: chapter structure reference found "
+                f"at line {line_number}: {match.group(0)}"
+            )
+    return errors
+
+
 def validate_chapter(chapter_path, style_path, target=2000):
     chapter_path = Path(chapter_path)
     text = chapter_path.read_text(encoding="utf-8")
@@ -53,18 +108,7 @@ def validate_chapter(chapter_path, style_path, target=2000):
     current_count = count_words(text)
     if current_count < target:
         errors.append(f"word count {current_count} is below target {target}")
-
-    for symbol in FORBIDDEN_SYMBOLS:
-        if symbol in text:
-            errors.append(
-                f"{CHAPTER_FORMAT_INV}: forbidden symbol found: {symbol}"
-            )
-
-    for line_number, line in enumerate(text.splitlines(), start=1):
-        if any(pattern.search(line) for pattern in MARKDOWN_BLOCKS):
-            errors.append(
-                f"{CHAPTER_FORMAT_INV}: Markdown block found at line {line_number}"
-            )
+    errors.extend(find_presentation_errors(text))
 
     for term in load_blacklist(style_path):
         if term in text:

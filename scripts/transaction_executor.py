@@ -13,8 +13,12 @@ import yaml
 
 try:
     from scripts.harness_runtime import CommandResolutionError, HarnessManifest
+    from scripts.outline_contract import OutlineContractError, chapter_binding
+    from scripts.validate_chapter import find_presentation_errors
 except ModuleNotFoundError:  # Direct execution through scripts/novel_harness.py.
     from harness_runtime import CommandResolutionError, HarnessManifest
+    from outline_contract import OutlineContractError, chapter_binding
+    from validate_chapter import find_presentation_errors
 
 
 TRANSACTION_SCHEMA = "novel-harness/transaction/v1"
@@ -45,6 +49,7 @@ MARKDOWN_REFERENCE_DEFINITION = re.compile(
 MARKDOWN_REFERENCE_USE = re.compile(r"\[[^\]]+\]\[([^\]]+)\]")
 MARKDOWN_HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*#*\s*$", re.MULTILINE)
 HTML_ID = re.compile(r"\bid=[\"']([^\"']+)[\"']", re.IGNORECASE)
+PUBLISHED_CHAPTER_FILE = re.compile(r"^CH-(?P<chapter>\d{4})(?:-.+)?\.txt$")
 
 
 class TransactionError(ValueError):
@@ -154,6 +159,22 @@ def validate_transaction(data: dict) -> list[str]:
     return errors
 
 
+def validate_plan_binding(repo_root: Path, transaction: dict) -> None:
+    recorded = transaction.get("plan_contract")
+    if recorded is None:
+        return
+    chapter = (transaction.get("arguments") or {}).get("chapter")
+    if not isinstance(chapter, str) or not chapter.isdigit():
+        raise TransactionError("plan-bound transaction chapter is invalid")
+    outline_path = repo_root / "world" / "outline.md"
+    try:
+        current = chapter_binding(outline_path, int(chapter))
+    except OutlineContractError as exc:
+        raise TransactionError(str(exc)) from exc
+    if current != recorded:
+        raise TransactionError("plan contract became stale after transaction begin")
+
+
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -203,6 +224,79 @@ def _record_directory(repo_root: Path, manifest: HarnessManifest) -> Path:
             f"Manifest record directory escapes repository: {raw_directory}"
         )
     return directory
+
+
+def _scan_presentation_issues(repo_root: Path) -> dict[str, list[str]]:
+    chapter_dir = repo_root / "chapters"
+    if not chapter_dir.is_dir():
+        return {}
+    issues = {}
+    for path in sorted(chapter_dir.glob("CH-*.txt")):
+        match = PUBLISHED_CHAPTER_FILE.fullmatch(path.name)
+        if match is None:
+            continue
+        errors = find_presentation_errors(path.read_text(encoding="utf-8"))
+        if errors:
+            issues[f"CH-{match.group('chapter')}"] = errors
+    return issues
+
+
+def _migration_parent_authorization(
+    transaction_dir: Path, parent_command: str, chapter_id: str
+) -> dict:
+    authorized = []
+    for path in transaction_dir.glob("TX-CMD-MIGRATE-PRESENTATION-*-R01.yaml"):
+        try:
+            record = load_transaction(path)
+        except (OSError, UnicodeError, TransactionError):
+            continue
+        migration = record.get("migration") or {}
+        if (
+            record.get("command") == parent_command
+            and record.get("state") == "COMPLETE"
+            and chapter_id in (migration.get("chapters") or [])
+            and chapter_id not in (migration.get("completed") or [])
+        ):
+            authorized.append(record)
+    if not authorized:
+        raise TransactionError(
+            f"completed migration authorization is missing for {chapter_id}"
+        )
+    return sorted(authorized, key=lambda item: item["transaction_id"])[-1]
+
+
+def record_migration_child_completion(
+    transaction_dir: Path, child_transaction: dict
+) -> None:
+    parent_id = child_transaction.get("parent_transaction")
+    if not parent_id:
+        return
+    parent_path = transaction_dir / f"{parent_id}.yaml"
+    parent = load_transaction(parent_path)
+    if parent.get("state") != "COMPLETE":
+        raise TransactionError("migration parent authorization is not complete")
+    migration = parent.get("migration")
+    if not isinstance(migration, dict):
+        raise TransactionError("migration parent record is invalid")
+    chapter = (child_transaction.get("arguments") or {}).get("chapter")
+    if not isinstance(chapter, str) or not chapter.isdigit():
+        raise TransactionError("migration child chapter is invalid")
+    chapter_id = f"CH-{int(chapter):04d}"
+    if chapter_id not in (migration.get("chapters") or []):
+        raise TransactionError(f"migration parent did not authorize {chapter_id}")
+
+    completed = migration.setdefault("completed", [])
+    if chapter_id not in completed:
+        completed.append(chapter_id)
+        completed.sort()
+    child_transactions = migration.setdefault("child_transactions", {})
+    child_transactions[chapter_id] = child_transaction["transaction_id"]
+    migration["migration_state"] = (
+        "COMPLETE"
+        if set(completed) == set(migration.get("chapters") or [])
+        else "PARTIAL"
+    )
+    _atomic_write_yaml(parent_path, parent)
 
 
 def _allowed_target(target: Path, manifest: HarnessManifest, scopes: list[str]) -> bool:
@@ -322,6 +416,7 @@ def _preflight_changes(
     applied_keys = set(transaction.get("applied_keys") or [])
     confirmations = transaction.get("confirmations") or []
     scopes = match.write_scopes()
+    chapter_targets = 0
     for change in transaction.get("changes") or []:
         if not isinstance(change, dict):
             raise TransactionError("transaction changes must be mappings")
@@ -344,6 +439,18 @@ def _preflight_changes(
                 f"target is outside command write scope: {target_raw}"
             )
         normalized_target = target.relative_to(repo_root).as_posix()
+        if match.route.get("chapter_target_only") and _within(
+            target, repo_root / "chapters"
+        ):
+            chapter = (transaction.get("arguments") or {}).get("chapter")
+            expected_prefix = f"CH-{int(chapter):04d}"
+            if target.parent != repo_root / "chapters" or not target.name.startswith(
+                expected_prefix
+            ):
+                raise TransactionError(
+                    f"target does not match authorized chapter: {normalized_target}"
+                )
+            chapter_targets += 1
         if (
             match.route.get("requires_confirmation") == "when_overwriting"
             and change.get("baseline_hash") != "absent"
@@ -432,6 +539,8 @@ def _preflight_changes(
                 "recover": False,
             }
         )
+    if match.route.get("chapter_target_only") and chapter_targets != 1:
+        raise TransactionError("migration requires exactly one authorized chapter target")
     prepared.sort(
         key=lambda item: _commit_order(item["target"], repo_root, manifest)
     )
@@ -480,7 +589,11 @@ def _validate_pipeline_completion(
             gate = gates.get(stage_name)
             if gate is None:
                 raise TransactionError(f"required gate is missing: {stage_name}")
-            if gate.get("status") not in {"PASS", "WARN", "NOT_APPLICABLE"}:
+            allowed_statuses = set(
+                required_stage.get("allowed_statuses")
+                or {"PASS", "WARN", "NOT_APPLICABLE"}
+            )
+            if gate.get("status") not in allowed_statuses:
                 raise TransactionError(f"required gate did not pass: {stage_name}")
         else:
             stage = stages.get(stage_name)
@@ -524,6 +637,8 @@ def _staged_artifact(
             candidates.append(item["staged"])
         if artifact == "style" and relative_target == "writespec/style-guide.md":
             candidates.append(item["staged"])
+        if artifact == "outline" and relative_target == "world/outline.md":
+            candidates.append(item["staged"])
     if len(candidates) != 1:
         raise TransactionError(
             f"deterministic gate requires exactly one staged {artifact} file"
@@ -559,6 +674,8 @@ def _execute_deterministic_gates(
                 argument = str(_staged_artifact(repo_root, prepared, "chapter"))
             elif argument == "<style_file>":
                 argument = str(_staged_artifact(repo_root, prepared, "style"))
+            elif argument == "<outline_file>":
+                argument = str(_staged_artifact(repo_root, prepared, "outline"))
             resolved_arguments.append(argument)
         if resolved_arguments and resolved_arguments[0].lower() in {
             "python",
@@ -966,7 +1083,39 @@ def begin_transaction(
     transaction_dir = _record_directory(repo_root, manifest)
     _enforce_periodic_gates(transaction_dir, manifest, match)
     chapter = match.arguments.get("chapter")
-    if match.name == "create-chapter" and chapter is not None:
+    migration = None
+    parent_transaction = None
+    if match.name == "migrate-presentation":
+        issues = _scan_presentation_issues(repo_root)
+        migration = {
+            "migration_state": "SCANNED",
+            "chapters": sorted(issues),
+            "issues": issues,
+            "completed": [],
+            "failed": [],
+        }
+    parent_command = match.route.get("requires_parent_authorization")
+    if parent_command:
+        if chapter is None:
+            raise TransactionError("migration child requires a chapter argument")
+        parent = _migration_parent_authorization(
+            transaction_dir, parent_command, f"CH-{int(chapter):04d}"
+        )
+        parent_transaction = parent["transaction_id"]
+    plan_contract = None
+    if match.route.get("plan_contract") == "required":
+        if chapter is None:
+            raise TransactionError("plan-bound command requires a chapter argument")
+        try:
+            plan_contract = chapter_binding(
+                repo_root / "world" / "outline.md", int(chapter)
+            )
+        except (OutlineContractError, ValueError) as exc:
+            raise TransactionError(str(exc)) from exc
+    if match.name in {
+        "create-chapter",
+        "migrate-presentation-chapter",
+    } and chapter is not None:
         chapter_number = int(chapter)
         prefix = f"TX-CH-{chapter_number:04d}"
         pattern = re.compile(
@@ -1030,6 +1179,12 @@ def begin_transaction(
             "message": None,
         },
     }
+    if plan_contract is not None:
+        transaction["plan_contract"] = plan_contract
+    if migration is not None:
+        transaction["migration"] = migration
+    if parent_transaction is not None:
+        transaction["parent_transaction"] = parent_transaction
     if match.name == "audit-originality":
         transaction["coverage"] = {
             "through_chapter": _highest_completed_chapter(transaction_dir),
@@ -1155,6 +1310,15 @@ def commit_transaction(
         raise TransactionError("resolved mode does not match transaction mode")
     if match.arguments != (transaction.get("arguments") or {}):
         raise TransactionError("resolved arguments do not match transaction arguments")
+    if match.name == "migrate-presentation":
+        current_issues = _scan_presentation_issues(repo_root)
+        recorded_issues = (transaction.get("migration") or {}).get("issues")
+        if current_issues != recorded_issues:
+            raise TransactionError("migration scan became stale before commit")
+    if match.route.get("plan_contract") == "required":
+        if transaction.get("plan_contract") is None:
+            raise TransactionError("required plan contract binding is missing")
+        validate_plan_binding(repo_root, transaction)
     if match.name == "audit-originality":
         expected_coverage = _highest_completed_chapter(record_directory)
         expected_events = sorted(
@@ -1320,6 +1484,13 @@ def commit_transaction(
             raise
         raise TransactionError(f"commit failed: {exc}") from exc
 
+    if match.name == "migrate-presentation":
+        migration = transaction["migration"]
+        migration["migration_state"] = (
+            "AUTHORIZED" if migration.get("chapters") else "COMPLETE"
+        )
+    if match.name == "migrate-presentation-chapter":
+        record_migration_child_completion(record_directory, transaction)
     transaction["state"] = "COMPLETE"
     transaction["recovery"] = {
         "last_successful_stage": "commit",

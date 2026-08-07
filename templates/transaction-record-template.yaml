@@ -7,6 +7,23 @@ mode: full
 pipeline: create-chapter
 arguments:
   chapter: "1"
+plan_contract:
+  outline_revision: 1
+  outline_hash: sha256:generated-by-executor
+  arc_id: ARC-001
+  arc_goal_id: GOAL-ARC-001
+  chapter_id: CH-0001
+  chapter_contract_hash: sha256:generated-by-executor
+# 历史呈现迁移子事务使用；普通事务省略。
+parent_transaction: null
+# 迁移父记录使用；普通事务省略。
+migration:
+  migration_state: SCANNED
+  chapters: []
+  issues: {}
+  completed: []
+  failed: []
+  child_transactions: {}
 state: PREFLIGHT
 archive_state: NOT_CHECKED
 stages: []

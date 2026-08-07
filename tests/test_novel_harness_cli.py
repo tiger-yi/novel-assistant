@@ -141,6 +141,47 @@ class NovelHarnessCliTest(unittest.TestCase):
         self.assertEqual("create-style", payload["pipeline"])
         self.assertEqual(["generate-style"], payload["stages"])
 
+    def test_invariants_renders_manifest_owner_and_related_gates(self):
+        manifest = yaml.safe_load(self.manifest.read_text(encoding="utf-8"))
+        manifest["routes"]["specs"] = [
+            {
+                "name": "chapter",
+                "path": "../writespec/chapter.md",
+                "activation": "pipeline",
+                "invariants": ["INV-CHAPTER-001"],
+            }
+        ]
+        manifest["verification"] = {
+            "commands": [
+                {
+                    "name": "chapter-format",
+                    "command": "python validate.py <chapter_file>",
+                    "invariant": "INV-CHAPTER-001",
+                }
+            ],
+            "semantic_gates": [
+                {
+                    "name": "narrative-integrity",
+                    "spec": "../writespec/chapter.md",
+                    "invariant": "INV-CHAPTER-001",
+                }
+            ],
+        }
+        self.manifest.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = self.run_cli("invariants")
+
+        self.assertEqual(0, result.returncode)
+        payload = yaml.safe_load(result.stdout)
+        self.assertEqual("INV-CHAPTER-001", payload[0]["id"])
+        self.assertEqual("../writespec/chapter.md", payload[0]["owner"])
+        self.assertEqual(
+            ["chapter-format", "narrative-integrity"], payload[0]["gates"]
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

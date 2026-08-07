@@ -60,6 +60,8 @@ Novel Assistant 是中文玄幻长篇小说的结构化创作 Harness。项目�
 | `初始化世界` | `writespec/commands/init-world.md` |
 | `创建写作风格` | `writespec/commands/create-style.md` |
 | `创作章节`：`创作第 N 章` / `构思第 N 章` | `writespec/commands/draft-chapter.md` |
+| `修订卷规划 ARC-001` | `writespec/commands/revise-arc.md` |
+| `迁移正文呈现` / `迁移正文呈现 CH-0001` | `writespec/commands/migrate-presentation.md` |
 | `更新世界` | `writespec/commands/update-world.md` |
 | `归档世界` | `writespec/commands/archive-world.md` |
 | `查看世界状态` | `writespec/commands/check-status.md` |
@@ -93,6 +95,8 @@ Novel Assistant 是中文玄幻长篇小说的结构化创作 Harness。项目�
 ## When You Change X, Also Check Y
 
 - 修改命令协议时，同步更新 Manifest、README 和对应规范。
+- 修改卷路线图、章节执行契约或剧情对齐规则时，同步更新大纲模板、章节规范、世界审计、事务绑定校验和测试。
+- 修改正文呈现边界或历史正文迁移规则时，同步更新章节规范、风格指南、正文校验器、迁移命令、事务测试和 Manifest 门禁。
 - 新增规范、模板或技能时，只更新 Manifest 路由和 AGENTS 简要入口；不创建重复的完整索引镜像。
 - 修改风格就绪结构时，同步更新 `create-style.md`、Harness 校验器和测试。
 - 修改 World Bible 字段时，同步更新模板和 `world-audit.md`。

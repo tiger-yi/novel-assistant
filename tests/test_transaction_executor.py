@@ -11,8 +11,10 @@ from scripts.transaction_executor import (
     confirm_overwrite,
     load_transaction,
     sha256_file,
+    validate_plan_binding,
     validate_transaction,
 )
+from tests.test_validate_outline import valid_contract
 
 
 class TransactionContractTest(unittest.TestCase):
@@ -626,6 +628,41 @@ class TransactionCommitTest(unittest.TestCase):
         with self.assertRaisesRegex(TransactionError, "outside command write scope"):
             commit_transaction(self.root, self.manifest_path, transaction_path)
 
+    def test_migration_child_cannot_replace_another_chapter(self):
+        self.write_manifest(writes=["../chapters/", "../world/"])
+        manifest = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))
+        route = manifest["routes"]["commands"][0]
+        route.update(
+            {
+                "name": "migrate-presentation-chapter",
+                "matches": [
+                    {
+                        "pattern": r"^迁移正文呈现\s+CH-(?P<chapter>\d{4})$",
+                        "display": "迁移正文呈现 CH-0001",
+                    }
+                ],
+                "chapter_target_only": True,
+            }
+        )
+        self.manifest_path.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+        transaction_path = self.write_prepared_transaction(
+            target="chapters/CH-0002-他章.txt",
+            staged=(
+                "world/.staging/TX-CMD-UPDATE-WORLD-0001-R01/"
+                "chapters/CH-0002-他章.txt"
+            ),
+            baseline_hash="absent",
+            source_command="迁移正文呈现 CH-0001",
+            command="migrate-presentation-chapter",
+            arguments={"chapter": "0001"},
+        )
+
+        with self.assertRaisesRegex(TransactionError, "authorized chapter"):
+            commit_transaction(self.root, self.manifest_path, transaction_path)
+
     def test_rejects_parent_traversal(self):
         transaction_path = self.write_prepared_transaction(
             target="../outside.md",
@@ -679,6 +716,47 @@ class TransactionCommitTest(unittest.TestCase):
         )
 
         with self.assertRaisesRegex(TransactionError, "required gate is missing"):
+            commit_transaction(self.root, self.manifest_path, transaction_path)
+
+    def test_required_semantic_gate_can_disallow_warn(self):
+        transaction_path = self.write_prepared_transaction()
+        transaction = load_transaction(transaction_path)
+        transaction["gates"] = [
+            {
+                "gate": "plot-alignment",
+                "kind": "semantic",
+                "required": True,
+                "status": "WARN",
+                "summary": "存在剧情偏离风险",
+                "evidence": [
+                    {
+                        "claim": "本章没有完成绑定结果",
+                        "source": "world/outline.md",
+                    }
+                ],
+            }
+        ]
+        transaction_path.write_text(
+            yaml.safe_dump(transaction, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+        manifest = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))
+        manifest["pipelines"]["update-world"]["stages"].insert(
+            1,
+            {
+                "name": "plot-alignment",
+                "uses": "update-world",
+                "handler": "semantic-gate",
+                "required": True,
+                "allowed_statuses": ["PASS"],
+            },
+        )
+        self.manifest_path.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(TransactionError, "required gate did not pass"):
             commit_transaction(self.root, self.manifest_path, transaction_path)
 
     def test_rejects_missing_required_agent_stage(self):
@@ -763,6 +841,45 @@ class TransactionCommitTest(unittest.TestCase):
             gate for gate in result["gates"] if gate["gate"] == "script-check"
         )
         self.assertEqual("PASS", script_gate["status"])
+
+    def test_executor_resolves_staged_outline_for_deterministic_gate(self):
+        transaction_path = self.write_prepared_transaction()
+        (self.root / "check_outline.py").write_text(
+            "from pathlib import Path\n"
+            "import sys\n"
+            "path = Path(sys.argv[1])\n"
+            "raise SystemExit(0 if path.is_file() and '.staging' in path.parts else 9)\n",
+            encoding="utf-8",
+        )
+        manifest = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))
+        manifest["pipelines"]["update-world"]["stages"].insert(
+            1,
+            {
+                "name": "outline-contract",
+                "uses": "update-world",
+                "handler": "deterministic-gate",
+                "required": True,
+            },
+        )
+        manifest["verification"] = {
+            "commands": [
+                {
+                    "name": "outline-contract",
+                    "command": "python check_outline.py <outline_file>",
+                }
+            ]
+        }
+        self.manifest_path.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = commit_transaction(self.root, self.manifest_path, transaction_path)
+
+        gate = next(
+            item for item in result["gates"] if item["gate"] == "outline-contract"
+        )
+        self.assertEqual("PASS", gate["status"])
 
     def test_required_archive_stage_rejects_unresolved_archive_state(self):
         transaction_path = self.write_prepared_transaction(
@@ -983,6 +1100,284 @@ class TransactionBeginTest(unittest.TestCase):
 
     def tearDown(self):
         self.temp_dir.cleanup()
+
+    def enable_plan_contract(self):
+        manifest = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))
+        manifest["routes"]["commands"][0]["plan_contract"] = "required"
+        self.manifest_path.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+    def write_outline(self, contract=None):
+        if contract is None:
+            contract = valid_contract()
+        outline = self.root / "world/outline.md"
+        outline.parent.mkdir(parents=True, exist_ok=True)
+        outline.write_text(
+            "---\n"
+            + yaml.safe_dump(contract, allow_unicode=True, sort_keys=False)
+            + "---\n# 小说大纲\n",
+            encoding="utf-8",
+        )
+        return outline
+
+    def test_plan_bound_route_rejects_missing_outline(self):
+        self.enable_plan_contract()
+
+        with self.assertRaisesRegex(TransactionError, "cannot read outline"):
+            begin_transaction(self.root, self.manifest_path, "创作第 1 章")
+
+    def add_presentation_migration_routes(self):
+        manifest = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))
+        manifest["routes"]["commands"].extend(
+            [
+                {
+                    "name": "migrate-presentation",
+                    "path": "migrate.md",
+                    "activation": "command",
+                    "matches": [{"literal": "迁移正文呈现"}],
+                    "pipeline": "migration-scan",
+                    "side_effect": "read_only",
+                },
+                {
+                    "name": "migrate-presentation-chapter",
+                    "path": "migrate.md",
+                    "activation": "command",
+                    "matches": [
+                        {
+                            "pattern": r"^迁移正文呈现\s+CH-(?P<chapter>\d{4})$",
+                            "display": "迁移正文呈现 CH-0001",
+                        }
+                    ],
+                    "pipeline": "migration-chapter",
+                    "side_effect": "write",
+                    "writes": ["../chapters/", "../world/"],
+                    "requires_parent_authorization": "migrate-presentation",
+                },
+            ]
+        )
+        manifest["pipelines"].update(
+            {
+                "migration-scan": {
+                    "stages": [
+                        {
+                            "name": "scan",
+                            "uses": "migrate-presentation",
+                            "handler": "semantic-gate",
+                            "required": True,
+                        }
+                    ]
+                },
+                "migration-chapter": {
+                    "stages": [
+                        {
+                            "name": "prepare-rewrite",
+                            "uses": "migrate-presentation-chapter",
+                            "handler": "agent",
+                            "required": True,
+                        }
+                    ]
+                },
+            }
+        )
+        self.manifest_path.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+    def write_published_chapter(self, number, text):
+        path = self.root / "chapters" / f"CH-{number:04d}-旧章.txt"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def test_migration_parent_scans_only_chapters_with_presentation_issues(self):
+        self.add_presentation_migration_routes()
+        self.write_published_chapter(1, "上一章留下的伤仍在。")
+        self.write_published_chapter(2, "此前留下的伤仍在。")
+
+        path = begin_transaction(self.root, self.manifest_path, "迁移正文呈现")
+
+        migration = load_transaction(path)["migration"]
+        self.assertEqual(["CH-0001"], migration["chapters"])
+        self.assertIn("chapter structure reference", migration["issues"]["CH-0001"][0])
+
+    def test_migration_child_requires_completed_parent_authorization(self):
+        self.add_presentation_migration_routes()
+        self.write_published_chapter(1, "上一章留下的伤仍在。")
+
+        with self.assertRaisesRegex(TransactionError, "migration authorization"):
+            begin_transaction(
+                self.root, self.manifest_path, "迁移正文呈现 CH-0001"
+            )
+
+    def test_migration_child_uses_next_chapter_revision_and_parent_id(self):
+        self.add_presentation_migration_routes()
+        self.write_published_chapter(1, "上一章留下的伤仍在。")
+        parent_path = begin_transaction(
+            self.root, self.manifest_path, "迁移正文呈现"
+        )
+        parent = load_transaction(parent_path)
+        parent["state"] = "COMPLETE"
+        parent_path.write_text(
+            yaml.safe_dump(parent, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+        prior = parent_path.parent / "TX-CH-0001-R01.yaml"
+        prior.write_text(
+            yaml.safe_dump(
+                {"transaction_id": "TX-CH-0001-R01", "state": "COMPLETE"},
+                allow_unicode=True,
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
+
+        child_path = begin_transaction(
+            self.root, self.manifest_path, "迁移正文呈现 CH-0001"
+        )
+
+        child = load_transaction(child_path)
+        self.assertEqual("TX-CH-0001-R02.yaml", child_path.name)
+        self.assertEqual(parent["transaction_id"], child["parent_transaction"])
+
+    def test_migration_parent_commit_rejects_stale_scan(self):
+        self.add_presentation_migration_routes()
+        chapter = self.write_published_chapter(1, "上一章留下的伤仍在。")
+        parent_path = begin_transaction(
+            self.root, self.manifest_path, "迁移正文呈现"
+        )
+        parent = load_transaction(parent_path)
+        parent["state"] = "PREPARED"
+        parent["gates"] = [
+            {
+                "gate": "scan",
+                "kind": "semantic",
+                "required": True,
+                "status": "PASS",
+                "summary": "扫描完成",
+                "evidence": [
+                    {"claim": "已扫描正式章节", "source": "chapters/"}
+                ],
+            }
+        ]
+        parent_path.write_text(
+            yaml.safe_dump(parent, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+        chapter.write_text("此前留下的伤仍在。", encoding="utf-8")
+
+        with self.assertRaisesRegex(TransactionError, "migration scan became stale"):
+            commit_transaction(self.root, self.manifest_path, parent_path)
+
+    def test_migration_parent_commit_authorizes_scanned_chapters(self):
+        self.add_presentation_migration_routes()
+        self.write_published_chapter(1, "上一章留下的伤仍在。")
+        parent_path = begin_transaction(
+            self.root, self.manifest_path, "迁移正文呈现"
+        )
+        parent = load_transaction(parent_path)
+        parent["state"] = "PREPARED"
+        parent["gates"] = [
+            {
+                "gate": "scan",
+                "kind": "semantic",
+                "required": True,
+                "status": "PASS",
+                "summary": "扫描完成",
+                "evidence": [
+                    {"claim": "已扫描正式章节", "source": "chapters/"}
+                ],
+            }
+        ]
+        parent_path.write_text(
+            yaml.safe_dump(parent, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        committed = commit_transaction(self.root, self.manifest_path, parent_path)
+
+        self.assertEqual("AUTHORIZED", committed["migration"]["migration_state"])
+
+    def test_completed_migration_chapter_cannot_reuse_parent_authorization(self):
+        self.add_presentation_migration_routes()
+        self.write_published_chapter(1, "上一章留下的伤仍在。")
+        parent_path = begin_transaction(
+            self.root, self.manifest_path, "迁移正文呈现"
+        )
+        parent = load_transaction(parent_path)
+        parent["state"] = "COMPLETE"
+        parent["migration"]["completed"] = ["CH-0001"]
+        parent_path.write_text(
+            yaml.safe_dump(parent, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(TransactionError, "migration authorization"):
+            begin_transaction(
+                self.root, self.manifest_path, "迁移正文呈现 CH-0001"
+            )
+
+    def test_migration_child_completion_updates_parent_progress(self):
+        from scripts.transaction_executor import record_migration_child_completion
+
+        self.add_presentation_migration_routes()
+        self.write_published_chapter(1, "上一章留下的伤仍在。")
+        self.write_published_chapter(2, "前文留下的伤仍在。")
+        parent_path = begin_transaction(
+            self.root, self.manifest_path, "迁移正文呈现"
+        )
+        parent = load_transaction(parent_path)
+        parent["state"] = "COMPLETE"
+        parent_path.write_text(
+            yaml.safe_dump(parent, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        record_migration_child_completion(
+            parent_path.parent,
+            {
+                "transaction_id": "TX-CH-0001-R02",
+                "parent_transaction": parent["transaction_id"],
+                "arguments": {"chapter": "0001"},
+            },
+        )
+
+        updated = load_transaction(parent_path)["migration"]
+        self.assertEqual("PARTIAL", updated["migration_state"])
+        self.assertEqual(["CH-0001"], updated["completed"])
+        self.assertEqual(
+            "TX-CH-0001-R02", updated["child_transactions"]["CH-0001"]
+        )
+
+    def test_begin_records_frozen_chapter_plan_binding(self):
+        self.enable_plan_contract()
+        self.write_outline()
+
+        path = begin_transaction(self.root, self.manifest_path, "创作第 1 章")
+
+        binding = load_transaction(path)["plan_contract"]
+        self.assertEqual("ARC-001", binding["arc_id"])
+        self.assertEqual("GOAL-ARC-001", binding["arc_goal_id"])
+        self.assertEqual("CH-0001", binding["chapter_id"])
+
+    def test_plan_binding_rejects_outline_changed_after_begin(self):
+        self.enable_plan_contract()
+        outline = self.write_outline()
+        path = begin_transaction(self.root, self.manifest_path, "创作第 1 章")
+        transaction = load_transaction(path)
+        contract = valid_contract()
+        contract["revision"] = 2
+        outline.write_text(
+            "---\n"
+            + yaml.safe_dump(contract, allow_unicode=True, sort_keys=False)
+            + "---\n# 小说大纲\n",
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(TransactionError, "plan contract became stale"):
+            validate_plan_binding(self.root, transaction)
 
     def test_begin_creates_chapter_transaction_with_resolved_mode(self):
         path = begin_transaction(

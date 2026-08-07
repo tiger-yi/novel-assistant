@@ -60,6 +60,63 @@ class ChapterValidationTest(unittest.TestCase):
         self.assertTrue(any("forbidden symbol" in error for error in errors))
         self.assertTrue(any("INV-CHAPTER-001" in error for error in errors))
 
+    def test_reports_book_title_marks_as_forbidden_symbols(self):
+        chapter = self.write_chapter("他翻开《玄经》，找到炼气篇。")
+
+        errors = validate_chapter(chapter, self.style, target=1)
+
+        self.assertTrue(
+            any(
+                "forbidden symbol found at line 1: 《" in error
+                for error in errors
+            )
+        )
+        self.assertTrue(
+            any(
+                "forbidden symbol found at line 1: 》" in error
+                for error in errors
+            )
+        )
+
+    def test_reports_known_harness_identifier_with_line_number(self):
+        chapter = self.write_chapter("风停了。\nCH-0007站在门外。")
+
+        errors = validate_chapter(chapter, self.style, target=1)
+
+        self.assertTrue(
+            any(
+                "narrative-layer identifier" in error
+                and "CH-0007" in error
+                and "line 2" in error
+                for error in errors
+            )
+        )
+
+    def test_reports_bare_alphanumeric_codes_case_insensitively(self):
+        chapter = self.write_chapter("R16守在门外，c-12已经失踪，room12仍然封闭。")
+
+        errors = validate_chapter(chapter, self.style, target=1)
+
+        for code in ("R16", "c-12", "room12"):
+            self.assertTrue(any(code in error for error in errors))
+
+    def test_reports_chapter_structure_references(self):
+        chapter = self.write_chapter(
+            "上一章留下的伤还在。前文已经说明。第十二章再揭晓。第X章不能出现。"
+        )
+
+        errors = validate_chapter(chapter, self.style, target=1)
+
+        for reference in ("上一章", "前文", "第十二章", "第X章"):
+            self.assertTrue(any(reference in error for error in errors))
+
+    def test_accepts_natural_chinese_identifiers_and_event_transitions(self):
+        chapter = self.write_chapter(
+            "此前，他在七号矿井见过这道刻痕。甲字三号牢房仍锁着。"
+        )
+
+        self.assertEqual([], validate_chapter(chapter, self.style, target=1))
+
     def test_reports_markdown_blocks(self):
         chapter = self.write_chapter("第一幕。\n- 这是列表\n| 列 | 表 |")
 

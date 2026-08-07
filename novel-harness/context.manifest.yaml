@@ -37,6 +37,40 @@ routes:
       side_effect: write
       writes:
         - ../world/
+    - name: revise-arc
+      path: ../writespec/commands/revise-arc.md
+      activation: command
+      matches:
+        - pattern: '^修订卷规划\s+(?P<arc>ARC-\d{3})$'
+          display: "修订卷规划 ARC-001"
+      load: on_command
+      pipeline: revise-arc
+      side_effect: write
+      writes:
+        - ../world/outline.md
+      requires_confirmation: when_overwriting
+    - name: migrate-presentation
+      path: ../writespec/commands/migrate-presentation.md
+      activation: command
+      matches:
+        - literal: "迁移正文呈现"
+      load: on_command
+      pipeline: migration-scan
+      side_effect: read_only
+    - name: migrate-presentation-chapter
+      path: ../writespec/commands/migrate-presentation.md
+      activation: command
+      matches:
+        - pattern: '^迁移正文呈现\s+CH-(?P<chapter>\d{4})$'
+          display: "迁移正文呈现 CH-0001"
+      load: on_command
+      pipeline: migration-chapter
+      side_effect: write
+      writes:
+        - ../chapters/
+        - ../world/
+      requires_parent_authorization: migrate-presentation
+      chapter_target_only: true
     - name: archive-world
       path: ../writespec/commands/archive-world.md
       activation: command
@@ -68,6 +102,7 @@ routes:
           mode: preview
       load: on_command
       pipeline: create-chapter
+      plan_contract: required
       modes:
         preview:
           writes: []
@@ -75,7 +110,7 @@ routes:
           writes:
             - ../chapters/
             - ../world/
-          auto_select_recommended_branch: true
+          single_execution_plan: true
           two_phase_commit: true
           conditional_archive: true
     - name: trending
@@ -127,6 +162,7 @@ routes:
       purpose: 单章构思、文本处理、准备提交与门禁
       invariants:
         - INV-CHAPTER-001
+        - INV-PLOT-001
     - name: foreshadowing-spec
       path: ../writespec/foreshadowing-spec.md
       activation: pipeline
@@ -194,6 +230,16 @@ pipelines:
         uses: init-world
         handler: agent
         required: true
+      - name: plan-approval
+        uses: chapter-creation-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+      - name: outline-contract
+        uses: chapter-creation-spec
+        handler: deterministic-gate
+        required: true
       - name: commit
         uses: state-management
         handler: transaction-commit
@@ -234,10 +280,22 @@ pipelines:
         uses: chapter-creation-spec
         handler: deterministic-gate
         required: true
+      - name: narrative-integrity
+        uses: chapter-creation-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
       - name: world-audit
         uses: world-audit
         handler: semantic-gate
         required: true
+      - name: plot-alignment
+        uses: chapter-creation-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
       - name: thread-integrity
         uses: foreshadowing-spec
         handler: semantic-gate
@@ -250,6 +308,10 @@ pipelines:
         uses: archiving-spec
         handler: semantic-gate
         required: true
+      - name: outline-contract
+        uses: chapter-creation-spec
+        handler: deterministic-gate
+        required: true
       - name: commit
         uses: state-management
         handler: transaction-commit
@@ -258,6 +320,80 @@ pipelines:
         uses: archiving-spec
         handler: transaction-archive
         required: false
+  revise-arc:
+    stages:
+      - name: preflight
+        uses: revise-arc
+        handler: preflight
+        required: true
+      - name: prepare-revision
+        uses: revise-arc
+        handler: agent
+        required: true
+      - name: plan-impact
+        uses: chapter-creation-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+      - name: outline-contract
+        uses: chapter-creation-spec
+        handler: deterministic-gate
+        required: true
+      - name: commit
+        uses: state-management
+        handler: transaction-commit
+        required: true
+  migration-scan:
+    stages:
+      - name: presentation-scan
+        uses: migrate-presentation
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+  migration-chapter:
+    stages:
+      - name: preflight
+        uses: state-management
+        handler: preflight
+        required: true
+      - name: prepare-rewrite
+        uses: migrate-presentation-chapter
+        handler: agent
+        required: true
+      - name: chapter-format
+        uses: chapter-creation-spec
+        handler: deterministic-gate
+        required: true
+      - name: presentation-equivalence
+        uses: chapter-creation-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+      - name: narrative-integrity
+        uses: chapter-creation-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+      - name: plot-alignment
+        uses: chapter-creation-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+      - name: thread-integrity
+        uses: foreshadowing-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+      - name: commit
+        uses: state-management
+        handler: transaction-commit
+        required: true
   update-world:
     stages:
       - name: preflight
@@ -464,7 +600,31 @@ verification:
       description: 校验章节字数、禁用符号、Markdown 与风格黑名单
       command: python scripts/validate_chapter.py <chapter_file> --target 2000
       invariant: INV-CHAPTER-001
+    - name: outline-contract
+      description: 校验卷路线图、固定章节区间、卷目标、里程碑与章节执行契约
+      command: python scripts/validate_outline.py <outline_file>
+      invariant: INV-PLOT-001
   semantic_gates:
+    - name: presentation-scan
+      spec: ../writespec/chapter-creation-spec.md
+      evidence_required: true
+    - name: presentation-equivalence
+      spec: ../writespec/chapter-creation-spec.md
+      evidence_required: true
+    - name: narrative-integrity
+      spec: ../writespec/chapter-creation-spec.md
+      evidence_required: true
+      invariant: INV-CHAPTER-001
+    - name: plot-alignment
+      spec: ../writespec/chapter-creation-spec.md
+      evidence_required: true
+      invariant: INV-PLOT-001
+    - name: plan-impact
+      spec: ../writespec/chapter-creation-spec.md
+      evidence_required: true
+    - name: plan-approval
+      spec: ../writespec/chapter-creation-spec.md
+      evidence_required: true
     - name: world-audit
       spec: ../writespec/world-audit.md
       evidence_required: true

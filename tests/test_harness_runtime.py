@@ -126,6 +126,39 @@ class HarnessRepositoryRoutesTest(unittest.TestCase):
 
         self.assertEqual("generate-metadata", match.name)
 
+    def test_resolves_controlled_arc_revision(self):
+        match = self.manifest.resolve("修订卷规划 ARC-001")
+
+        self.assertEqual("revise-arc", match.name)
+        self.assertEqual({"arc": "ARC-001"}, match.arguments)
+
+    def test_chapter_creation_requires_frozen_plan_contract(self):
+        route = self.manifest.command("create-chapter")
+
+        self.assertEqual("required", route.get("plan_contract"))
+
+    def test_outline_contract_gate_has_registered_command(self):
+        commands = {
+            gate.get("name"): gate.get("command")
+            for gates in (self.manifest.data.get("verification") or {}).values()
+            if isinstance(gates, list)
+            for gate in gates
+            if isinstance(gate, dict)
+        }
+
+        self.assertEqual(
+            "python scripts/validate_outline.py <outline_file>",
+            commands.get("outline-contract"),
+        )
+
+    def test_resolves_presentation_migration_parent_and_child(self):
+        parent = self.manifest.resolve("迁移正文呈现")
+        child = self.manifest.resolve("迁移正文呈现 CH-0007")
+
+        self.assertEqual("migrate-presentation", parent.name)
+        self.assertEqual("migrate-presentation-chapter", child.name)
+        self.assertEqual({"chapter": "0007"}, child.arguments)
+
 
 if __name__ == "__main__":
     unittest.main()

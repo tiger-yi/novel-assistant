@@ -56,12 +56,55 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     status_parser = subparsers.add_parser("status")
     status_parser.add_argument("transaction", type=Path)
+    subparsers.add_parser("invariants")
     return parser
+
+
+def _invariant_index(manifest: HarnessManifest) -> list[dict]:
+    owners = {}
+    routes = manifest.data.get("routes") or {}
+    for entries in routes.values():
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            for invariant in entry.get("invariants") or []:
+                owners[invariant] = entry.get("path")
+
+    gates = {invariant: [] for invariant in owners}
+    for entries in (manifest.data.get("verification") or {}).values():
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            invariant = entry.get("invariant")
+            if invariant in gates and entry.get("name"):
+                gates[invariant].append(entry["name"])
+    return [
+        {
+            "id": invariant,
+            "owner": owners[invariant],
+            "gates": sorted(set(gates[invariant])),
+        }
+        for invariant in sorted(owners)
+    ]
 
 
 def main(argv=None):
     args = _build_parser().parse_args(argv)
     try:
+        if args.action == "invariants":
+            manifest = HarnessManifest.load(args.manifest)
+            print(
+                json.dumps(
+                    _invariant_index(manifest),
+                    ensure_ascii=False,
+                    sort_keys=True,
+                )
+            )
+            return 0
         if args.action == "resolve":
             manifest = HarnessManifest.load(args.manifest)
             match = manifest.resolve(args.text)
