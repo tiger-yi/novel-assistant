@@ -2,7 +2,7 @@
 
 > 来源: 由原 `chapter-polisher` 技能引用的 `world_audit_spec.md` 转化。
 
-审计必须对照 `world/` 目录下的 8 类 Bible 文件。任何未定义的“天降名词”均判定为非法；发现事实来源冲突时按 `state-management.md` 停止自动覆盖。
+审计必须对照 `world/` 目录下的 8 类 Bible 文件。运行期字段、动作和证据粒度按 `world-bible-contract.md` 判断。任何未定义的“天降名词”均判定为非法；发现事实来源冲突时按 `state-management.md` 停止自动覆盖。
 
 ## 战力不变量
 
@@ -92,4 +92,5 @@
 ## 相关规范
 - 章节润色: [chapter-polish.md](chapter-polish.md)
 - 状态管理: [state-management.md](state-management.md)
+- World Bible 运行期契约: [world-bible-contract.md](world-bible-contract.md)
 - 叙事线索: [foreshadowing-spec.md](foreshadowing-spec.md)

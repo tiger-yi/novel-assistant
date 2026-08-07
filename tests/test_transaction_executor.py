@@ -718,6 +718,34 @@ class TransactionCommitTest(unittest.TestCase):
         with self.assertRaisesRegex(TransactionError, "required gate is missing"):
             commit_transaction(self.root, self.manifest_path, transaction_path)
 
+    def test_transaction_gate_uses_executor_recorded_prepared_change_set(self):
+        transaction_path = self.write_prepared_transaction()
+        manifest = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))
+        manifest["pipelines"]["update-world"]["stages"].insert(
+            1,
+            {
+                "name": "prepared-change-set",
+                "uses": "update-world",
+                "handler": "transaction-gate",
+                "required": True,
+                "allowed_statuses": ["PASS"],
+            },
+        )
+        self.manifest_path.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        committed = commit_transaction(self.root, self.manifest_path, transaction_path)
+
+        gate = next(
+            item
+            for item in committed["gates"]
+            if item.get("gate") == "prepared-change-set"
+        )
+        self.assertEqual("PASS", gate["status"])
+        self.assertEqual("deterministic", gate["kind"])
+
     def test_required_semantic_gate_can_disallow_warn(self):
         transaction_path = self.write_prepared_transaction()
         transaction = load_transaction(transaction_path)

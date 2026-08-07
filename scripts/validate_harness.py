@@ -25,6 +25,7 @@ PIPELINE_HANDLERS = {
     "agent",
     "deterministic-gate",
     "semantic-gate",
+    "transaction-gate",
     "transaction-commit",
     "transaction-archive",
     "render",

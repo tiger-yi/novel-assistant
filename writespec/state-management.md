@@ -83,7 +83,7 @@ Manifest 声明 `requires_confirmation: when_overwriting` 时，每个被覆盖�
 
 ### INV-STATE-001 有序幂等回写
 
-World Bible 变更集必须按 `chapter-summary -> characters -> inventory -> timeline -> geography -> power -> hooks -> outline` 顺序应用，并以稳定章节/事件/实体 ID 和变更来源判重。恢复或重复执行不得重复追加、扣减或创建等价状态。
+World Bible 变更集必须按 `chapter-summary -> characters -> inventory -> timeline -> geography -> power -> hooks -> outline` 顺序应用，并以稳定章节/事件/实体 ID 和变更来源判重。字段、动作与证据粒度按 `world-bible-contract.md` 执行。恢复或重复执行不得重复追加、扣减或创建等价状态。
 
 - 同一 `CH-NNNN` 只能有一条活跃章节摘要。
 - 时间事件以 `EVT-* + CH-*` 判重。

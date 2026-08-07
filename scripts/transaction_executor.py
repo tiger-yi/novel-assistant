@@ -612,7 +612,7 @@ def _validate_pipeline_completion(
                 )
             continue
         stage_name = required_stage.get("name")
-        if handler in {"deterministic-gate", "semantic-gate"}:
+        if handler in {"deterministic-gate", "semantic-gate", "transaction-gate"}:
             gate = gates.get(stage_name)
             if gate is None:
                 raise TransactionError(f"required gate is missing: {stage_name}")
@@ -1470,16 +1470,6 @@ def commit_transaction(
         transaction,
         prepared,
     )
-    _validate_pipeline_completion(manifest, match.route, transaction)
-    if match.name == "init-world":
-        events = transaction.setdefault("events", [])
-        if "outline_initialized" not in events:
-            events.append("outline_initialized")
-    _validate_archive_changes(
-        repo_root, manifest, match.route, transaction, prepared
-    )
-    if match.name == "create-chapter" and transaction.get("archive_state") == "NOT_CHECKED":
-        raise TransactionError("conditional archive state was not checked")
     _validate_local_links(repo_root, prepared, staged=True)
     if prepared:
         _record_executor_gate(
@@ -1512,6 +1502,16 @@ def commit_transaction(
             reason=no_change_reason,
         )
     _atomic_write_yaml(transaction_path, transaction)
+    _validate_pipeline_completion(manifest, match.route, transaction)
+    if match.name == "init-world":
+        events = transaction.setdefault("events", [])
+        if "outline_initialized" not in events:
+            events.append("outline_initialized")
+    _validate_archive_changes(
+        repo_root, manifest, match.route, transaction, prepared
+    )
+    if match.name == "create-chapter" and transaction.get("archive_state") == "NOT_CHECKED":
+        raise TransactionError("conditional archive state was not checked")
     transaction["state"] = "COMMITTING"
     _atomic_write_yaml(transaction_path, transaction)
     try:

@@ -8,6 +8,10 @@
 项目核心的结构化世界观数据文件集合 (`world/*.md`), 由 outline/characters/power/timeline/inventory/geography/hooks/chapter-summary 组成, 是当前规范化状态的事实来源；已发生事件以发布章节为证据，冲突按 `state-management.md` 处理。
 _Avoid_: 设定文件、数据文件 (过泛)
 
+**World Bible 运行期结构契约**:
+`writespec/world-bible-contract.md`, 定义八类 World Bible 在章节事务与 `更新世界` 中的字段、动作、证据和幂等要求；不同于初始化模板，不承载示例剧情或创作问卷。
+_Avoid_: 模板、初始化蓝图
+
 **命令协议 (Command Protocol)**:
 每个核心指令 (初始化世界/更新世界/...) 对应的独立执行规范文件, 存放于 `writespec/commands/*.md`, 定义触发词、功能与执行流程。
 _Avoid_: 命令文档、指令说明

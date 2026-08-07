@@ -12,7 +12,7 @@ project:
 # ===== 规范路由 (Spec Routing) =====
 # commands: 命令协议 (每次执行命令时读取对应文件)
 # specs: 通用规范 (按需读取)
-# templates: 创作模板 (初始化/更新时读取)
+# templates: 初始化与专项报告模板
 
 routes:
   commands:
@@ -200,6 +200,10 @@ routes:
       purpose: 六维世界观审计矩阵
       invariants:
         - INV-POWER-001
+    - name: world-bible-contract
+      path: ../writespec/world-bible-contract.md
+      activation: pipeline
+      purpose: 八类 World Bible 运行期字段、动作、证据和幂等约束
     - name: originality-audit
       path: ../writespec/originality-audit.md
       activation: pipeline
@@ -404,10 +408,22 @@ pipelines:
         uses: update-world
         handler: agent
         required: true
+      - name: prepared-change-set
+        uses: world-bible-contract
+        handler: transaction-gate
+        required: true
+        allowed_statuses:
+          - PASS
       - name: world-audit
         uses: world-audit
         handler: semantic-gate
         required: true
+      - name: narrative-thread-integrity
+        uses: foreshadowing-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
       - name: periodic-trigger-classification
         uses: originality-audit
         handler: semantic-gate
@@ -494,28 +510,28 @@ transaction:
 templates:
   - name: outline
     path: ../templates/outline-template.md
-    used_by: init-world, update-world
+    used_by: init-world
   - name: characters
     path: ../templates/characters-template.md
-    used_by: init-world, update-world
+    used_by: init-world
   - name: timeline
     path: ../templates/timeline-template.md
-    used_by: init-world, update-world
+    used_by: init-world
   - name: geography
     path: ../templates/geography-template.md
-    used_by: init-world, update-world
+    used_by: init-world
   - name: inventory
     path: ../templates/inventory-template.md
-    used_by: init-world, update-world
+    used_by: init-world
   - name: hooks
     path: ../templates/hooks-template.md
-    used_by: init-world, update-world
+    used_by: init-world
   - name: chapter-summary
     path: ../templates/chapter-summary-template.md
-    used_by: init-world, update-world
+    used_by: init-world
   - name: power-system
     path: ../templates/power-system-template.md
-    used_by: init-world, update-world
+    used_by: init-world
   - name: trending-analysis
     path: ../templates/trending-analysis-template.md
     used_by: trending

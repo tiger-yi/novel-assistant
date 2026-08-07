@@ -42,6 +42,8 @@ Novel Assistant 使用结构化 World Bible 管理中文玄幻长篇小说的剧
 
 命令由 `python scripts/novel_harness.py resolve "<原始指令>"` 严格匹配。写命令先通过 `begin` 创建 YAML 事务，Agent 只准备 staging 内容；正式章节、World Bible、归档、风格和报告由事务执行器校验基线与门禁后提交。`审计原创性` 也创建只读执行记录，用于证明每 10 章周期门禁已经生效。
 
+八类 World Bible 初始化模板只用于 `初始化世界` 或修复缺失文件；章节后回写和 `更新世界` 依据 `writespec/world-bible-contract.md`、当前 `world/*.md`、正文证据和事务变更集执行。
+
 覆盖已有风格、元数据或初始化目标时，用户需运行 `python scripts/novel_harness.py confirm-overwrite <transaction.yaml> <target>` 并按提示输入精确目标；直接编辑 YAML 不会形成有效确认。
 
 需要先查看方案但不写文件时使用：
@@ -93,6 +95,7 @@ AGENTS 只提供人工入口和跨项目原则；Manifest 管理机器路由、�
 | 卷规划修订 | [writespec/commands/revise-arc.md](writespec/commands/revise-arc.md) |
 | 叙事线索 | [writespec/foreshadowing-spec.md](writespec/foreshadowing-spec.md) |
 | 状态事务 | [writespec/state-management.md](writespec/state-management.md) |
+| World Bible 运行期契约 | [writespec/world-bible-contract.md](writespec/world-bible-contract.md) |
 | 文本润色 | [writespec/chapter-polish.md](writespec/chapter-polish.md) |
 | 世界审计 | [writespec/world-audit.md](writespec/world-audit.md) |
 | 归档规则 | [writespec/archiving-spec.md](writespec/archiving-spec.md) |

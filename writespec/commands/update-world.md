@@ -3,7 +3,7 @@
 **触发词**: `更新世界`
 
 ## 功能
-分析指定正文, 幂等同步全部 World Bible 文件。本命令用于独立修复或补做状态回写；`创作第 N 章` 已在提交阶段自动调用同一回写协议。本命令不润色正文，也不单独扩大归档授权。
+分析指定正文, 幂等同步全部 World Bible 文件。本命令用于独立修复或补做状态回写；`创作第 N 章` 已在提交阶段自动调用同一回写协议。本命令不润色正文，也不单独扩大归档授权。运行期字段与动作以 `world-bible-contract.md` 为准，不以初始化模板作为主依据。
 
 ## 命令契约
 
@@ -16,7 +16,9 @@
 
 ## 执行流程 (Protocol)
 
-Agent 按以下职责准备候选文件，不直接修改正式 World Bible。事务执行器校验基线、门禁和幂等键后，按 `INV-STATE-001` 有序应用。
+Agent 按以下职责准备候选文件，不直接修改正式 World Bible。事务执行器校验基线、`prepared-change-set`、语义门禁和幂等键后，按 `INV-STATE-001` 有序应用。
+
+`templates/` 只用于初始化或修复缺失文件；本命令读取当前 `world/*.md`、已发布正文证据、事务变更集和 `world-bible-contract.md`。
 
 ### `world/chapter-summary.md`
 - 记录每一章节的摘要。
@@ -52,4 +54,5 @@ Agent 按以下职责准备候选文件，不直接修改正式 World Bible。�
 - 归档: [../archiving-spec.md](../archiving-spec.md) (`INV-ARCHIVE-001`)
 - 状态管理: [../state-management.md](../state-management.md)
 - 世界观审计: [../world-audit.md](../world-audit.md)
+- World Bible 运行期契约: [../world-bible-contract.md](../world-bible-contract.md)
 - 叙事线索: [../foreshadowing-spec.md](../foreshadowing-spec.md) (`INV-FORESHADOW-001`)
