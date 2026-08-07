@@ -141,6 +141,13 @@ class ChapterValidationTest(unittest.TestCase):
 
         self.assertTrue(any("word count" in error for error in errors))
 
+    def test_reports_word_count_above_maximum(self):
+        chapter = self.write_chapter("甲" * 21)
+
+        errors = validate_chapter(chapter, self.style, target=10, max_words=20)
+
+        self.assertTrue(any("above maximum 20" in error for error in errors))
+
     def test_cli_returns_nonzero_for_invalid_chapter(self):
         chapter = self.write_chapter("显然【太短】")
         env = os.environ.copy()

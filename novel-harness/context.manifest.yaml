@@ -71,6 +71,41 @@ routes:
         - ../world/
       requires_parent_authorization: migrate-presentation
       chapter_target_only: true
+    - name: polish-chapter
+      path: ../writespec/commands/polish-chapter.md
+      activation: command
+      matches:
+        - pattern: '^润色章节\s+CH-(?P<chapter>\d{4})$'
+          display: "润色章节 CH-0001"
+          mode: published
+      load: on_command
+      pipeline: polish-chapter
+      side_effect: write
+      writes:
+        - ../chapters/
+        - ../world/chapter-summary.md
+      requires_confirmation: when_overwriting
+      chapter_target_only: true
+      modes:
+        published:
+          writes:
+            - ../chapters/
+            - ../world/chapter-summary.md
+    - name: polish-current-chapter
+      path: ../writespec/commands/polish-chapter.md
+      activation: command
+      matches:
+        - literal: "润色当前章节"
+          mode: current-staging
+      load: on_command
+      pipeline: polish-current-chapter
+      side_effect: write
+      writes:
+        - ../chapters/.staging/
+      modes:
+        current-staging:
+          writes:
+            - ../chapters/.staging/
     - name: archive-world
       path: ../writespec/commands/archive-world.md
       activation: command
@@ -324,6 +359,86 @@ pipelines:
         uses: archiving-spec
         handler: transaction-archive
         required: false
+  polish-chapter:
+    stages:
+      - name: source-baseline
+        uses: polish-chapter
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+      - name: polish
+        uses: chapter-polish
+        handler: agent
+        required: true
+        delegable: true
+        worker: draft-worker
+      - name: chapter-format
+        uses: chapter-creation-spec
+        handler: deterministic-gate
+        required: true
+      - name: presentation-equivalence
+        uses: chapter-creation-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+        delegable: true
+        worker: gate-worker
+      - name: narrative-integrity
+        uses: chapter-creation-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+        delegable: true
+        worker: gate-worker
+      - name: world-audit
+        uses: world-audit
+        handler: semantic-gate
+        required: true
+        delegable: true
+        worker: gate-worker
+      - name: thread-integrity
+        uses: foreshadowing-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+        delegable: true
+        worker: gate-worker
+      - name: commit
+        uses: state-management
+        handler: transaction-commit
+        required: true
+  polish-current-chapter:
+    stages:
+      - name: staging-preflight
+        uses: polish-chapter
+        handler: preflight
+        required: true
+      - name: polish
+        uses: chapter-polish
+        handler: agent
+        required: true
+        delegable: true
+        worker: draft-worker
+      - name: chapter-format
+        uses: chapter-creation-spec
+        handler: deterministic-gate
+        required: true
+      - name: presentation-equivalence
+        uses: chapter-creation-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+      - name: narrative-integrity
+        uses: chapter-creation-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
   revise-arc:
     stages:
       - name: preflight
@@ -487,6 +602,59 @@ pipelines:
         handler: transaction-commit
         required: true
 
+# ===== Subagent Delegation (Optional) =====
+delegation:
+  default: disabled
+  enable_when:
+    - stage_delegable_true
+    - explicit_user_request
+  max_workers:
+    normal_chapter: 3
+    arc_terminal_chapter: 4
+    read_only_audit: 2
+  output_contract:
+    artifact_name: evidence artifact
+    must_include:
+      - task
+      - status
+      - artifact_path
+      - artifact_hash
+      - evidence_refs
+      - blocking_risks
+      - summary
+    forbidden_return:
+      - full_chapter_text
+      - full_world_bible
+      - full_archive_excerpt
+      - hidden_reasoning
+  workers:
+    - name: draft-worker
+      purpose: 初稿、润色和 staging 正文候选
+      may_read: full_repository
+      may_write:
+        - ../chapters/.staging/
+      may_return: evidence_artifact_pointer
+    - name: state-worker
+      purpose: World Bible 候选文件与变更集
+      may_read: full_repository
+      may_write:
+        - ../world/.staging/
+        - ../world/.transactions/
+      may_return: evidence_artifact_pointer
+    - name: gate-worker
+      purpose: 语义门禁证据和结论
+      may_read: full_repository
+      may_write:
+        - ../world/.transactions/
+      may_return: evidence_artifact_pointer
+    - name: archive-worker
+      purpose: 归档触发、迁移预览和歧义判断
+      may_read: full_repository
+      may_write:
+        - ../world/.staging/
+        - ../world/.transactions/
+      may_return: evidence_artifact_pointer
+
 # ===== 事务执行 (Transaction Execution) =====
 transaction:
   schema: novel-harness/transaction/v1
@@ -610,17 +778,23 @@ verification:
       description: 校验 Manifest、AGENTS、README、风格就绪状态与文件路由一致性
       command: python scripts/validate_harness.py
     - name: chapter-length
-      description: 章节字数检查 (>=2000字)
-      command: python scripts/check_count.py <chapter_file> --target 2000 --segments
+      description: 章节字数检查 (2300-2800字)
+      command: python scripts/check_count.py <chapter_file> --target 2300 --max 2800 --segments
     - name: chapter-format
       description: 校验章节字数、禁用符号、Markdown 与风格黑名单
-      command: python scripts/validate_chapter.py <chapter_file> --target 2000
+      command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max 2800
       invariant: INV-CHAPTER-001
     - name: outline-contract
       description: 校验卷路线图、固定章节区间、卷目标、里程碑与章节执行契约
       command: python scripts/validate_outline.py <outline_file>
       invariant: INV-PLOT-001
   semantic_gates:
+    - name: source-baseline
+      spec: ../writespec/commands/polish-chapter.md
+      evidence_required: true
+    - name: presentation-baseline
+      spec: ../writespec/commands/polish-chapter.md
+      evidence_required: true
     - name: presentation-scan
       spec: ../writespec/chapter-creation-spec.md
       evidence_required: true

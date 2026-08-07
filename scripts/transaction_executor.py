@@ -567,7 +567,7 @@ def _preflight_changes(
             }
         )
     if match.route.get("chapter_target_only") and chapter_targets != 1:
-        raise TransactionError("migration requires exactly one authorized chapter target")
+        raise TransactionError("command requires exactly one authorized chapter target")
     prepared.sort(
         key=lambda item: _commit_order(item["target"], repo_root, manifest)
     )
@@ -1216,6 +1216,7 @@ def begin_transaction(
     if match.name in {
         "create-chapter",
         "migrate-presentation-chapter",
+        "polish-chapter",
     } and chapter is not None:
         chapter_number = int(chapter)
         prefix = f"TX-CH-{chapter_number:04d}"

@@ -4,9 +4,9 @@ import sys
 from pathlib import Path
 
 try:
-    from scripts.check_count import count_words
+    from scripts.check_count import DEFAULT_MAX_WORDS, DEFAULT_MIN_WORDS, count_words
 except ModuleNotFoundError:
-    from check_count import count_words
+    from check_count import DEFAULT_MAX_WORDS, DEFAULT_MIN_WORDS, count_words
 
 
 BLACKLIST_HEADING = "### 黑名单词"
@@ -100,7 +100,12 @@ def find_presentation_errors(text):
     return errors
 
 
-def validate_chapter(chapter_path, style_path, target=2000):
+def validate_chapter(
+    chapter_path,
+    style_path,
+    target=DEFAULT_MIN_WORDS,
+    max_words=DEFAULT_MAX_WORDS,
+):
     chapter_path = Path(chapter_path)
     text = chapter_path.read_text(encoding="utf-8")
     errors = []
@@ -108,6 +113,8 @@ def validate_chapter(chapter_path, style_path, target=2000):
     current_count = count_words(text)
     if current_count < target:
         errors.append(f"word count {current_count} is below target {target}")
+    if max_words is not None and current_count > max_words:
+        errors.append(f"word count {current_count} is above maximum {max_words}")
     errors.extend(find_presentation_errors(text))
 
     for term in load_blacklist(style_path):
@@ -127,11 +134,20 @@ def main(argv=None):
         default=repo_root / "writespec" / "style-guide.md",
         help="Style guide containing the blacklist section",
     )
-    parser.add_argument("--target", type=int, default=2000)
+    parser.add_argument("--target", type=int, default=DEFAULT_MIN_WORDS)
+    parser.add_argument("--max", type=int, default=DEFAULT_MAX_WORDS)
     args = parser.parse_args(argv)
 
+    if args.target < 0 or (args.max is not None and args.max < args.target):
+        parser.error("--target must be non-negative and --max must be >= --target")
+
     try:
-        errors = validate_chapter(args.chapter_file, args.style, args.target)
+        errors = validate_chapter(
+            args.chapter_file,
+            args.style,
+            target=args.target,
+            max_words=args.max,
+        )
     except (OSError, UnicodeError, ValueError) as exc:
         print(f"[FAIL] cannot validate chapter: {exc}")
         return 1

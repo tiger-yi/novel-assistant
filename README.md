@@ -13,6 +13,8 @@ Novel Assistant 使用结构化 World Bible 管理中文玄幻长篇小说的剧
 | 修订未发布卷规划 | `修订卷规划 ARC-001` |
 | 扫描已发布正文呈现违规 | `迁移正文呈现` |
 | 执行已授权单章迁移 | `迁移正文呈现 CH-0001` |
+| 润色已发布正式章节 | `润色章节 CH-0001` |
+| 润色当前活跃 staging | `润色当前章节` |
 | 独立修复状态回写 | `更新世界` |
 | 独立执行归档维护 | `归档世界` |
 | 查看当前世界状态 | `查看世界状态` |
@@ -65,6 +67,10 @@ Novel Assistant 使用结构化 World Bible 管理中文玄幻长篇小说的剧
 
 文本润色只处理语言、节奏、感官描写、物理化和去 AI 味。字数判断、内容补全、世界观审计和状态回写由外层事务负责。
 
+已发布章节需要多次语言优化时使用 `润色章节 CH-0001`。该命令创建新的等义呈现修订事务，先做原文基线审计，再把候选正文写入 staging；通过字数、格式、等义、叙事完整性、世界观和线索门禁后，才由事务执行器覆盖正式章节。若只想处理当前活跃章节事务内的 staging，使用 `润色当前章节`；找不到活跃 staging 时返回 `STAGING_NOT_FOUND`。
+
+Manifest 支持可选 subagent delegation 策略。subagent 可以全量读取仓库，但只作为 evidence artifact 生产者，返回结构化结论、证据路径和 hash；正式章节、World Bible、归档和摘要索引仍只能由事务执行器提交。
+
 悬念钩子使用 `HOOK-*`，伏笔使用 `SEED-*`。两者保存在同一个 `world/hooks.md` 注册表中，但采用独立生命周期；只有已发布正文提供证据后，候选才能进入正式状态。
 
 每章都必须具有服务主线的“章末牵引”，但只有需要跨章追踪的问题或承诺才登记为 `HOOK-*`。剧情对齐是阻断门禁；留存质量可以重写优化，但不能成为偏离卷目标、临时增加支线或新增重大设定的理由。
@@ -91,6 +97,7 @@ AGENTS 只提供人工入口和跨项目原则；Manifest 管理机器路由、�
 | :--- | :--- |
 | 主工作流 | `python scripts/render_workflow.py create-chapter` |
 | 章节命令 | [writespec/commands/draft-chapter.md](writespec/commands/draft-chapter.md) |
+| 润色命令 | [writespec/commands/polish-chapter.md](writespec/commands/polish-chapter.md) |
 | 章节流程 | [writespec/chapter-creation-spec.md](writespec/chapter-creation-spec.md) |
 | 卷规划修订 | [writespec/commands/revise-arc.md](writespec/commands/revise-arc.md) |
 | 叙事线索 | [writespec/foreshadowing-spec.md](writespec/foreshadowing-spec.md) |
@@ -115,8 +122,8 @@ python -m pip install -r requirements-dev.txt
 python scripts/validate_harness.py
 python scripts/novel_harness.py invariants
 python scripts/validate_outline.py <outline_file>
-python scripts/check_count.py <chapter_file> --target 2000 --segments
-python scripts/validate_chapter.py <chapter_file> --target 2000
+python scripts/check_count.py <chapter_file> --target 2300 --max 2800 --segments
+python scripts/validate_chapter.py <chapter_file> --target 2300 --max 2800
 python scripts/novel_harness.py resolve "创作第 1 章"
 python scripts/render_workflow.py create-chapter
 python -m unittest discover -s tests -v

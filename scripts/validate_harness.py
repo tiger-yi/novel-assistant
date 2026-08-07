@@ -38,6 +38,15 @@ STYLE_REQUIRED_SECTIONS = (
     "## 11. 禁忌与避坑",
     "### 黑名单词",
 )
+DELEGATION_REQUIRED_OUTPUT_FIELDS = {
+    "task",
+    "status",
+    "artifact_path",
+    "artifact_hash",
+    "evidence_refs",
+    "blocking_risks",
+    "summary",
+}
 
 
 def _manifest_entries(manifest):
@@ -234,6 +243,40 @@ def validate_repository(repo_root, style_override=None):
     is_v2 = manifest.get("schema") == MANIFEST_V2
 
     if is_v2:
+        delegation = manifest.get("delegation")
+        delegation_workers = set()
+        if delegation is not None:
+            if not isinstance(delegation, dict):
+                errors.append("manifest delegation must be a mapping")
+            else:
+                output_contract = delegation.get("output_contract") or {}
+                must_include = set(output_contract.get("must_include") or [])
+                missing = DELEGATION_REQUIRED_OUTPUT_FIELDS - must_include
+                if missing:
+                    errors.append(
+                        "delegation output_contract is missing required fields: "
+                        + ", ".join(sorted(missing))
+                    )
+                workers = delegation.get("workers") or []
+                if not isinstance(workers, list):
+                    errors.append("delegation workers must be a list")
+                    workers = []
+                for worker in workers:
+                    if not isinstance(worker, dict):
+                        errors.append("delegation workers must be mappings")
+                        continue
+                    name = worker.get("name")
+                    if not name:
+                        errors.append("delegation worker requires name")
+                        continue
+                    if name in delegation_workers:
+                        errors.append(f"duplicate delegation worker: {name}")
+                    delegation_workers.add(name)
+                    if worker.get("may_return") != "evidence_artifact_pointer":
+                        errors.append(
+                            f"delegation worker {name} must return "
+                            "evidence_artifact_pointer"
+                        )
         for entry in [*(commands or []), *(specs or [])]:
             if not isinstance(entry, dict):
                 continue
@@ -346,6 +389,14 @@ def validate_repository(repo_root, style_override=None):
                         errors.append(
                             f"pipeline {pipeline_name} deterministic gate "
                             f"{stage_name} has no verification command"
+                        )
+                    if (
+                        stage.get("delegable")
+                        and stage.get("worker") not in delegation_workers
+                    ):
+                        errors.append(
+                            f"pipeline {pipeline_name} stage {stage_name} uses "
+                            f"unknown delegation worker: {stage.get('worker')}"
                         )
 
     seen_triggers = set()

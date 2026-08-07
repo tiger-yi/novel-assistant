@@ -1262,6 +1262,78 @@ class TransactionBeginTest(unittest.TestCase):
             encoding="utf-8",
         )
 
+    def add_polish_routes(self):
+        manifest = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))
+        manifest["routes"]["commands"].extend(
+            [
+                {
+                    "name": "polish-chapter",
+                    "path": "polish.md",
+                    "activation": "command",
+                    "matches": [
+                        {
+                            "pattern": r"^润色章节\s+CH-(?P<chapter>\d{4})$",
+                            "display": "润色章节 CH-0001",
+                            "mode": "published",
+                        }
+                    ],
+                    "pipeline": "polish-chapter",
+                    "side_effect": "write",
+                    "chapter_target_only": True,
+                    "requires_confirmation": "when_overwriting",
+                    "modes": {
+                        "published": {
+                            "writes": [
+                                "../chapters/",
+                                "../world/chapter-summary.md",
+                            ]
+                        }
+                    },
+                },
+                {
+                    "name": "polish-current-chapter",
+                    "path": "polish.md",
+                    "activation": "command",
+                    "matches": [
+                        {"literal": "润色当前章节", "mode": "current-staging"}
+                    ],
+                    "pipeline": "polish-current-chapter",
+                    "side_effect": "write",
+                    "modes": {
+                        "current-staging": {"writes": ["../chapters/.staging/"]}
+                    },
+                },
+            ]
+        )
+        manifest["pipelines"].update(
+            {
+                "polish-chapter": {
+                    "stages": [
+                        {
+                            "name": "polish",
+                            "uses": "polish-chapter",
+                            "handler": "agent",
+                            "required": True,
+                        }
+                    ]
+                },
+                "polish-current-chapter": {
+                    "stages": [
+                        {
+                            "name": "polish",
+                            "uses": "polish-current-chapter",
+                            "handler": "agent",
+                            "required": True,
+                        }
+                    ]
+                },
+            }
+        )
+        self.manifest_path.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
     def write_published_chapter(self, number, text):
         path = self.root / "chapters" / f"CH-{number:04d}-旧章.txt"
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -1317,6 +1389,37 @@ class TransactionBeginTest(unittest.TestCase):
         child = load_transaction(child_path)
         self.assertEqual("TX-CH-0001-R02.yaml", child_path.name)
         self.assertEqual(parent["transaction_id"], child["parent_transaction"])
+
+    def test_polish_chapter_uses_next_chapter_revision(self):
+        self.add_polish_routes()
+        prior = self.root / "world/.transactions/TX-CH-0001-R01.yaml"
+        prior.parent.mkdir(parents=True, exist_ok=True)
+        prior.write_text(
+            yaml.safe_dump(
+                {"transaction_id": "TX-CH-0001-R01", "state": "COMPLETE"},
+                allow_unicode=True,
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
+
+        path = begin_transaction(self.root, self.manifest_path, "润色章节 CH-0001")
+
+        transaction = load_transaction(path)
+        self.assertEqual("TX-CH-0001-R02.yaml", path.name)
+        self.assertEqual("polish-chapter", transaction["command"])
+        self.assertEqual("published", transaction["mode"])
+        self.assertEqual({"chapter": "0001"}, transaction["arguments"])
+
+    def test_polish_current_chapter_uses_command_run_record(self):
+        self.add_polish_routes()
+
+        path = begin_transaction(self.root, self.manifest_path, "润色当前章节")
+
+        transaction = load_transaction(path)
+        self.assertEqual("TX-CMD-POLISH-CURRENT-CHAPTER-0001-R01.yaml", path.name)
+        self.assertEqual("polish-current-chapter", transaction["command"])
+        self.assertEqual("current-staging", transaction["mode"])
 
     def test_migration_parent_commit_rejects_stale_scan(self):
         self.add_presentation_migration_routes()

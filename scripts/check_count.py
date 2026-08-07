@@ -4,6 +4,10 @@ import sys
 import unicodedata
 
 
+DEFAULT_MIN_WORDS = 2300
+DEFAULT_MAX_WORDS = 2800
+
+
 def count_words(text):
     """Count letters and numbers while excluding layout and punctuation."""
     excluded_categories = {"C", "P", "S", "Z"}
@@ -17,8 +21,18 @@ def count_words(text):
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Check word count of a chapter file')
     parser.add_argument('file_path', help='Path to the chapter file')
-    parser.add_argument('--target', type=int, default=2000, help='Target word count (default: 2000)')
-    parser.add_argument('--max', type=int, default=None, help='Optional maximum word count')
+    parser.add_argument(
+        '--target',
+        type=int,
+        default=DEFAULT_MIN_WORDS,
+        help=f'Minimum word count (default: {DEFAULT_MIN_WORDS})',
+    )
+    parser.add_argument(
+        '--max',
+        type=int,
+        default=DEFAULT_MAX_WORDS,
+        help=f'Maximum word count (default: {DEFAULT_MAX_WORDS})',
+    )
     parser.add_argument('--segments', action='store_true', help='Output paragraph-level word counts')
 
     args = parser.parse_args(argv)

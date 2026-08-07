@@ -493,6 +493,116 @@ class HarnessValidationTest(unittest.TestCase):
 
         self.assertTrue(any("must require transaction executor" in error for error in errors))
 
+    def test_accepts_v2_delegation_worker_for_delegable_stage(self):
+        manifest = yaml.safe_load(self.manifest.read_text(encoding="utf-8"))
+        manifest["schema"] = "novel-harness/context/v2"
+        manifest["routes"]["commands"][0].update(
+            {
+                "activation": "command",
+                "matches": [{"literal": "创作章节"}],
+                "pipeline": "draft",
+            }
+        )
+        for spec in manifest["routes"]["specs"]:
+            spec["activation"] = (
+                "profile" if spec["name"] == "style-guide" else "pipeline"
+            )
+        manifest["pipelines"] = {
+            "draft": {
+                "stages": [
+                    {
+                        "name": "draft",
+                        "uses": "chapter",
+                        "handler": "agent",
+                        "required": True,
+                        "delegable": True,
+                        "worker": "draft-worker",
+                    }
+                ]
+            }
+        }
+        manifest["delegation"] = {
+            "output_contract": {
+                "must_include": [
+                    "task",
+                    "status",
+                    "artifact_path",
+                    "artifact_hash",
+                    "evidence_refs",
+                    "blocking_risks",
+                    "summary",
+                ]
+            },
+            "workers": [
+                {
+                    "name": "draft-worker",
+                    "may_return": "evidence_artifact_pointer",
+                }
+            ],
+        }
+        self.manifest.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        self.assertEqual([], validate_repository(self.root))
+
+    def test_reports_v2_delegable_stage_with_unknown_worker(self):
+        manifest = yaml.safe_load(self.manifest.read_text(encoding="utf-8"))
+        manifest["schema"] = "novel-harness/context/v2"
+        manifest["routes"]["commands"][0].update(
+            {
+                "activation": "command",
+                "matches": [{"literal": "创作章节"}],
+                "pipeline": "draft",
+            }
+        )
+        for spec in manifest["routes"]["specs"]:
+            spec["activation"] = (
+                "profile" if spec["name"] == "style-guide" else "pipeline"
+            )
+        manifest["pipelines"] = {
+            "draft": {
+                "stages": [
+                    {
+                        "name": "draft",
+                        "uses": "chapter",
+                        "handler": "agent",
+                        "required": True,
+                        "delegable": True,
+                        "worker": "missing-worker",
+                    }
+                ]
+            }
+        }
+        manifest["delegation"] = {
+            "output_contract": {
+                "must_include": [
+                    "task",
+                    "status",
+                    "artifact_path",
+                    "artifact_hash",
+                    "evidence_refs",
+                    "blocking_risks",
+                    "summary",
+                ]
+            },
+            "workers": [
+                {
+                    "name": "draft-worker",
+                    "may_return": "evidence_artifact_pointer",
+                }
+            ],
+        }
+        self.manifest.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        errors = validate_repository(self.root)
+
+        self.assertTrue(any("unknown delegation worker" in error for error in errors))
+
 
 if __name__ == "__main__":
     unittest.main()

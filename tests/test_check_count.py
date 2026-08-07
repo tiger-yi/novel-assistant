@@ -47,8 +47,15 @@ class CheckCountCliTest(unittest.TestCase):
         self.assertEqual(0, result.returncode)
         self.assertIn("Status: COMPLETE", result.stdout)
 
-    def test_has_no_implicit_maximum(self):
-        result = self.run_check("甲" * 2401, "--target", "10")
+    def test_default_range_rejects_text_above_maximum(self):
+        result = self.run_check("甲" * 2801)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("Target Word Count: 2300-2800", result.stdout)
+        self.assertIn("Status: TOO_LONG", result.stdout)
+
+    def test_accepts_explicit_custom_maximum(self):
+        result = self.run_check("甲" * 2401, "--target", "10", "--max", "3000")
 
         self.assertEqual(0, result.returncode)
         self.assertIn("Status: COMPLETE", result.stdout)

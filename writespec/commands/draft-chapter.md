@@ -28,7 +28,7 @@
 3. 审计必须证明方案保持绑定结果；任何 `FAIL` 项不得继续。
 4. 将初稿写入 `chapters/.staging/TX-CH-NNNN-RNN/CH-NNNN-标题.txt`。
 5. 按 `chapter-polish.md` 执行一次纯文本润色。
-6. 运行字数检查；不足 2000 字时只依据既有细纲补全内容，再执行一次纯文本润色，禁止新增设定或注水。
+6. 运行字数检查；低于 2300 字时只依据既有细纲补全内容，高于 2800 字时只做不改变事实的压缩，再执行一次纯文本润色，禁止新增设定或注水。
 7. 对最终 staging 版本运行字数、格式、六维世界观、剧情对齐、留存结构和逻辑闭环门禁。自动修复最多 3 轮，仍失败则停止。
 8. 在事务 staging 中生成 World Bible 候选文件与变更集，列出目标、实体 ID、旧值、新值、摘要和幂等键；此时不修改正式文件。
 
@@ -45,8 +45,8 @@
 
 ## 门禁
 
-- 字数: `python scripts/check_count.py <chapter_file> --target 2000 --segments`
-- 格式: `python scripts/validate_chapter.py <chapter_file> --target 2000`，必须满足 `INV-CHAPTER-001`。
+- 字数: `python scripts/check_count.py <chapter_file> --target 2300 --max 2800 --segments`
+- 格式: `python scripts/validate_chapter.py <chapter_file> --target 2300 --max 2800`，必须满足 `INV-CHAPTER-001`。
 - 世界观: 按 `world-audit.md` 给出带文件、章节 ID 或实体 ID 的六维结果，其中战力满足 `INV-POWER-001`。
 - 剧情对齐: 按 `INV-PLOT-001` 逐项核对事务绑定、章节结果、卷目标贡献、里程碑和未授权重大事实；不允许 `WARN` 放行。
 - 状态闭环: 按 `state-management.md` 核对消耗、伤势、信息差、事务状态与幂等键；叙事线索状态满足 `INV-FORESHADOW-001`。

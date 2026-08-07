@@ -159,6 +159,16 @@ class HarnessRepositoryRoutesTest(unittest.TestCase):
         self.assertEqual("migrate-presentation-chapter", child.name)
         self.assertEqual({"chapter": "0007"}, child.arguments)
 
+    def test_resolves_polish_chapter_commands(self):
+        published = self.manifest.resolve("润色章节 CH-0007")
+        current = self.manifest.resolve("润色当前章节")
+
+        self.assertEqual("polish-chapter", published.name)
+        self.assertEqual("published", published.mode)
+        self.assertEqual({"chapter": "0007"}, published.arguments)
+        self.assertEqual("polish-current-chapter", current.name)
+        self.assertEqual("current-staging", current.mode)
+
 
 if __name__ == "__main__":
     unittest.main()
