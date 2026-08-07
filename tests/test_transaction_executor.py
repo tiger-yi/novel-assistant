@@ -1097,6 +1097,8 @@ class TransactionBeginTest(unittest.TestCase):
             ),
             encoding="utf-8",
         )
+        self.write_outline()
+        self.write_style_guide()
 
     def tearDown(self):
         self.temp_dir.cleanup()
@@ -1117,15 +1119,61 @@ class TransactionBeginTest(unittest.TestCase):
         outline.write_text(
             "---\n"
             + yaml.safe_dump(contract, allow_unicode=True, sort_keys=False)
-            + "---\n# 小说大纲\n",
+            + "---\n# 小说大纲\n\n*   **书名**：测试书\n",
             encoding="utf-8",
         )
         return outline
 
+    def write_style_guide(self, title="测试书", include_basis=True):
+        style = self.root / "writespec/style-guide.md"
+        style.parent.mkdir(parents=True, exist_ok=True)
+        basis = ""
+        if include_basis:
+            basis = (
+                "style_basis:\n"
+                f"  title: {title}\n"
+                "  genre: 玄幻\n"
+                "  tone: 冷峻\n"
+                "  protagonist_identity: 失势少年\n"
+                "  cheat: 观想法\n"
+                "  core_taboo:\n"
+                "    - 不得无代价越级\n"
+            )
+        style.write_text(
+            "---\n"
+            "schema: novel-harness/style/v1\n"
+            "status: ready\n"
+            f"{basis}"
+            "---\n"
+            "# 风格\n"
+            "## 2. 核心调性\n"
+            "## 4. 排版规范\n"
+            "### 受限视角\n"
+            "## 7. 角色刻画重点\n"
+            "## 11. 禁忌与避坑\n"
+            "### 黑名单词\n"
+            "* 显然\n",
+            encoding="utf-8",
+        )
+        return style
+
     def test_plan_bound_route_rejects_missing_outline(self):
         self.enable_plan_contract()
+        (self.root / "world/outline.md").unlink()
 
-        with self.assertRaisesRegex(TransactionError, "cannot read outline"):
+        with self.assertRaisesRegex(TransactionError, "cannot read world/outline"):
+            begin_transaction(self.root, self.manifest_path, "创作第 1 章")
+
+    def test_full_chapter_rejects_style_without_basis(self):
+        self.write_style_guide(include_basis=False)
+
+        with self.assertRaisesRegex(TransactionError, "style_basis is required"):
+            begin_transaction(self.root, self.manifest_path, "创作第 1 章")
+
+    def test_full_chapter_rejects_style_title_mismatch(self):
+        self.write_style_guide(title="旧书")
+
+        with self.assertRaisesRegex(TransactionError, "title does not match"):
             begin_transaction(self.root, self.manifest_path, "创作第 1 章")
 
     def add_presentation_migration_routes(self):
@@ -1428,7 +1476,7 @@ class TransactionBeginTest(unittest.TestCase):
         with self.assertRaisesRegex(TransactionError, "does not authorize writes"):
             begin_transaction(self.root, self.manifest_path, "构思第 1 章")
 
-        self.assertFalse((self.root / "world").exists())
+        self.assertFalse((self.root / "world/.transactions").exists())
 
     def test_begin_rejects_read_only_command(self):
         with self.assertRaisesRegex(TransactionError, "does not authorize writes"):

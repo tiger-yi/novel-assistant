@@ -52,7 +52,7 @@ Novel Assistant 使用结构化 World Bible 管理中文玄幻长篇小说的剧
 
 ## 写作风格门禁
 
-首次创作前，`writespec/style-guide.md` 必须满足 `INV-STYLE-001`。推荐通过 `创建写作风格` 生成；人工编辑或迁移的文件只要通过同一结果门禁也可使用。风格未就绪时，章节创作会停止而不会静默生成默认文风。
+首次创作前，`writespec/style-guide.md` 必须满足 `INV-STYLE-001`。推荐通过 `创建写作风格` 生成；人工编辑或迁移的文件只要通过同一结果门禁也可使用。完整章节创作会校验 `style_basis` 书名锚点，缺字段或与 `world/outline.md` 书名不匹配时停止，不会静默生成默认文风。
 
 ## 章节事务
 

@@ -15,10 +15,11 @@
 - 八类 World Bible 齐全，目标章节号与当前进度一致。
 - `world/outline.md` 通过 `INV-PLOT-001`，目标章节所属卷已经冻结，事务记录绑定大纲和章节契约摘要。
 - `writespec/style-guide.md` 必须满足 `INV-STYLE-001`，且通过 `python scripts/validate_harness.py`。
+- 完整创作时，事务 preflight 必须确认 `style_basis` 字段存在且 `title` 匹配 `world/outline.md` 书名；流派、主调、金手指和核心禁忌是否仍适用，由 Agent 在重大设定变更时提供语义判断。
 - 目标章节未发布；若已发布，必须得到明确修订授权并创建新的 `RNN`。
 - 存在未完成的同章事务时，先按 `state-management.md` 判断恢复或创建新修订。
 
-风格未就绪时必须熔断，可提示执行 `创建写作风格` 或修复现有文件，不得在章节事务中静默生成风格。
+风格未就绪、缺少风格身份锚点或书名不匹配时必须熔断，可提示执行 `创建写作风格` 或修复现有文件，不得在章节事务中静默生成风格。
 
 ## 准备阶段
 

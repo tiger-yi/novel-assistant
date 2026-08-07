@@ -11,11 +11,13 @@
 - **前置条件**: 若 `writespec/style-guide.md` 已存在，先展示变更范围并取得覆盖确认。
 - **准备写入**: Agent 只写事务 staging 中的 `writespec/style-guide.md` 候选版本。
 - **正式写入范围**: 仅由事务执行器发布 `writespec/style-guide.md`。
-- **成功标准**: 文档 frontmatter 包含 `schema: novel-harness/style/v1` 与 `status: ready`，保留项目专属设定，包含机器可提取的必需章节与 `### 黑名单词` 小节，并通过 Harness 校验。
+- **成功标准**: 文档 frontmatter 包含 `schema: novel-harness/style/v1`、`status: ready` 与 `style_basis`，保留项目专属设定，包含机器可提取的必需章节与 `### 黑名单词` 小节，并通过 Harness 校验。
 
 ### INV-STYLE-001 风格就绪结果
 
 首次创作章节前，`writespec/style-guide.md` 必须满足本命令的成功标准并通过 Harness 校验。门禁只验证当前文件结果，不追踪该文件是否由本命令、人工编辑或迁移生成。
+
+完整章节创作还必须校验风格身份锚点：`style_basis.title` 与 `world/outline.md` 书名一致，且 `genre`、`tone`、`protagonist_identity`、`cheat`、`core_taboo` 字段存在且非空。该锚点不使用 World Bible 文件指纹；流派、主调、金手指和核心禁忌是否仍适用，由 Agent 在初始化世界、修订卷规划或重大设定变更时提交语义判断。
 
 ## 执行流程 (Protocol)
 
@@ -38,6 +40,19 @@
 - **战斗与博弈**: 试探/布局 -> 底牌博弈 -> 终结/变数 三段式。
 - **去 AI 化与颗粒度**: 指纹清理黑名单词, Show-Don't-Tell, 替换高频词, 逻辑审计剔除衔接词。
 - **禁忌与避坑**: 列出题材易犯的降智套路与陈腐词汇，并引用 `INV-CHAPTER-001`。
+
+frontmatter 必须包含以下风格身份锚点:
+
+```yaml
+style_basis:
+  title: 书名
+  genre: 流派
+  tone: 主调
+  protagonist_identity: 主角/叙事身份设定
+  cheat: 金手指
+  core_taboo:
+    - 核心禁忌
+```
 
 Harness 至少校验以下标题存在：`## 2. 核心调性`、`## 4. 排版规范`、`### 受限视角`、`## 7. 角色刻画重点`、`## 11. 禁忌与避坑`、`### 黑名单词`。`创作第 N 章` 不满足 `INV-STYLE-001` 时必须熔断，可提示执行本命令或修复现有文件，但不得在章节事务中自动生成或猜测全书文风。
 

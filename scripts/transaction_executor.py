@@ -50,6 +50,15 @@ MARKDOWN_REFERENCE_USE = re.compile(r"\[[^\]]+\]\[([^\]]+)\]")
 MARKDOWN_HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*#*\s*$", re.MULTILINE)
 HTML_ID = re.compile(r"\bid=[\"']([^\"']+)[\"']", re.IGNORECASE)
 PUBLISHED_CHAPTER_FILE = re.compile(r"^CH-(?P<chapter>\d{4})(?:-.+)?\.txt$")
+OUTLINE_BOOK_TITLE = re.compile(r"^\s*[*-]\s*\*\*书名\*\*\s*[:：]\s*(.+?)\s*$", re.MULTILINE)
+STYLE_BASIS_FIELDS = (
+    "title",
+    "genre",
+    "tone",
+    "protagonist_identity",
+    "cheat",
+    "core_taboo",
+)
 
 
 class TransactionError(ValueError):
@@ -64,6 +73,24 @@ def load_transaction(path: Path) -> dict:
     if not isinstance(data, dict):
         raise TransactionError("transaction root must be a mapping")
     return data
+
+
+def _yaml_frontmatter(text: str) -> dict:
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return {}
+    try:
+        end_index = next(
+            index for index, line in enumerate(lines[1:], start=1)
+            if line.strip() == "---"
+        )
+    except StopIteration:
+        return {}
+    try:
+        data = yaml.safe_load("\n".join(lines[1:end_index]))
+    except yaml.YAMLError:
+        return {}
+    return data if isinstance(data, dict) else {}
 
 
 def validate_transaction(data: dict) -> list[str]:
@@ -1062,6 +1089,79 @@ def _enforce_periodic_gates(
             )
 
 
+def _style_guide_path(repo_root: Path, manifest: HarnessManifest) -> Path:
+    routes = manifest.data.get("routes") or {}
+    for entries in routes.values():
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if isinstance(entry, dict) and entry.get("name") == "style-guide":
+                raw_path = entry.get("path")
+                if isinstance(raw_path, str) and raw_path:
+                    return (manifest.path.parent / raw_path).resolve()
+    return repo_root / "writespec" / "style-guide.md"
+
+
+def _outline_title(outline_path: Path) -> str:
+    try:
+        text = outline_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise TransactionError(f"cannot read world/outline.md: {exc}") from exc
+    frontmatter = _yaml_frontmatter(text)
+    for key in ("book_title", "novel_title"):
+        value = frontmatter.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    match = OUTLINE_BOOK_TITLE.search(text)
+    if match and match.group(1).strip():
+        return match.group(1).strip()
+    raise TransactionError("cannot find book title in world/outline.md")
+
+
+def _basis_value_is_present(value) -> bool:
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, list):
+        return any(isinstance(item, str) and item.strip() for item in value)
+    return False
+
+
+def _normalized_label(value: str) -> str:
+    return re.sub(r"\s+", "", value)
+
+
+def _enforce_chapter_style_basis(
+    repo_root: Path, manifest: HarnessManifest, match
+) -> None:
+    if match.name != "create-chapter" or match.mode != "full":
+        return
+    outline_title = _outline_title(repo_root / "world" / "outline.md")
+    style_path = _style_guide_path(repo_root, manifest)
+    try:
+        style_text = style_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise TransactionError(f"cannot read style guide: {exc}") from exc
+    frontmatter = _yaml_frontmatter(style_text)
+    basis = frontmatter.get("style_basis")
+    if not isinstance(basis, dict):
+        raise TransactionError(
+            "INV-STYLE-001: style_basis is required for chapter creation"
+        )
+    missing = [
+        field for field in STYLE_BASIS_FIELDS
+        if not _basis_value_is_present(basis.get(field))
+    ]
+    if missing:
+        raise TransactionError(
+            "INV-STYLE-001: style_basis field is missing: "
+            + ", ".join(missing)
+        )
+    if _normalized_label(str(basis["title"])) != _normalized_label(outline_title):
+        raise TransactionError(
+            "INV-STYLE-001: style_basis.title does not match world/outline.md"
+        )
+
+
 def begin_transaction(
     repo_root: Path, manifest_path: Path, raw_text: str
 ) -> Path:
@@ -1082,6 +1182,7 @@ def begin_transaction(
 
     transaction_dir = _record_directory(repo_root, manifest)
     _enforce_periodic_gates(transaction_dir, manifest, match)
+    _enforce_chapter_style_basis(repo_root, manifest, match)
     chapter = match.arguments.get("chapter")
     migration = None
     parent_transaction = None

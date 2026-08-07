@@ -584,7 +584,7 @@ skills:
 verification:
   preflight_gates:
     - name: style-ready
-      description: 写作风格 frontmatter 状态为 ready 且必需章节齐全
+      description: 写作风格 frontmatter 状态为 ready、必需章节齐全；完整章节创作另校验 style_basis 书名锚点
       command: python scripts/validate_harness.py --style-guide <style_file>
       invariant: INV-STYLE-001
     - name: world-completeness
