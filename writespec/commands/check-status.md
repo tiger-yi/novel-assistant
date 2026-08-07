@@ -13,12 +13,13 @@
 - **最近的主线任务目标**: 当前推进的 mainline 目标。
 
 ## 执行流程
-1. 读取 `world/timeline.md` 获取当前时间点。
-2. 读取 `world/characters.md` 获取主角身份、境界、伤势和状态。
-3. 读取 `world/geography.md` 核验主角所在地与区域状态。
-4. 读取 `world/inventory.md` 汇总当前资源，不凭空生成 HP/MP 数值。
-5. 读取 `world/outline.md` 获取最近主线任务目标。
-6. 汇总输出上述四项，并为每项标注来源文件；字段不存在时输出“未记录”。
+1. 读取 `world/.transactions/*.yaml`，报告未完成事务、最后成功阶段与恢复点；不存在时标记“无活动事务”。
+2. 读取 `world/timeline.md` 获取当前时间点。
+3. 读取 `world/characters.md` 获取主角身份、境界、伤势和状态。
+4. 读取 `world/geography.md` 核验主角所在地与区域状态。
+5. 读取 `world/inventory.md` 汇总当前资源，不凭空生成 HP/MP 数值。
+6. 读取 `world/outline.md` 获取最近主线任务目标。
+7. 汇总输出并为每项标注来源文件；字段不存在时输出“未记录”。本命令只读，不创建事务。
 
 ## 相关规范
 - 时间线: `world/timeline.md`

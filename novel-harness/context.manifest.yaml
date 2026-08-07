@@ -1,7 +1,7 @@
 # novel-harness 上下文清单 (Context Manifest)
 # 机器可读的规范路由 MAP。AGENTS.md 是人工入口，本文件是路由与加载顺序的唯一事实来源。
 
-schema: novel-harness/context/v1
+schema: novel-harness/context/v2
 
 # 项目快照
 project:
@@ -18,35 +18,56 @@ routes:
   commands:
     - name: init-world
       path: ../writespec/commands/init-world.md
-      trigger: "初始化世界"
+      activation: command
+      matches:
+        - literal: "初始化世界"
       load: on_command
+      pipeline: init-world
       side_effect: write
+      writes:
+        - ../world/
       requires_confirmation: when_overwriting
     - name: update-world
       path: ../writespec/commands/update-world.md
-      trigger: "更新世界"
+      activation: command
+      matches:
+        - literal: "更新世界"
       load: on_command
+      pipeline: update-world
       side_effect: write
+      writes:
+        - ../world/
     - name: archive-world
       path: ../writespec/commands/archive-world.md
-      trigger: "归档世界"
+      activation: command
+      matches:
+        - literal: "归档世界"
       load: on_command
+      pipeline: archive-world
       side_effect: destructive_move
+      writes:
+        - ../world/
       requires_confirmation: explicit_or_conditional_authorization
     - name: check-status
       path: ../writespec/commands/check-status.md
-      trigger: "查看世界状态"
+      activation: command
+      matches:
+        - literal: "查看世界状态"
       load: on_command
+      pipeline: check-status
     - name: create-chapter
       path: ../writespec/commands/draft-chapter.md
-      trigger: "创作章节"
-      patterns:
-        - '^创作第\s*(?P<chapter>\d+)\s*章$'
-        - '^构思第\s*(?P<chapter>\d+)\s*章$'
-      display_patterns:
-        - "创作第 N 章"
-        - "构思第 N 章"
+      activation: command
+      side_effect: write
+      matches:
+        - pattern: '^创作第\s*(?P<chapter>\d+)\s*章$'
+          display: "创作第 N 章"
+          mode: full
+        - pattern: '^构思第\s*(?P<chapter>\d+)\s*章$'
+          display: "构思第 N 章"
+          mode: preview
       load: on_command
+      pipeline: create-chapter
       modes:
         preview:
           writes: []
@@ -59,59 +80,279 @@ routes:
           conditional_archive: true
     - name: trending
       path: ../writespec/commands/trending.md
-      trigger: "热门话题"
+      activation: command
+      matches:
+        - literal: "热门话题"
       load: on_command
+      pipeline: trending
+      side_effect: write
+      writes:
+        - ../analysis/
     - name: create-style
       path: ../writespec/commands/create-style.md
-      trigger: "创建写作风格"
+      activation: command
+      matches:
+        - literal: "创建写作风格"
       load: on_command
+      pipeline: create-style
+      side_effect: write
+      writes:
+        - ../writespec/style-guide.md
+      invariants:
+        - INV-STYLE-001
+    - name: audit-originality
+      path: ../writespec/commands/audit-originality.md
+      activation: command
+      matches:
+        - literal: "审计原创性"
+      load: on_command
+      pipeline: audit-originality
+      side_effect: read_only
+    - name: generate-metadata
+      path: ../writespec/commands/generate-metadata.md
+      activation: command
+      matches:
+        - literal: "生成小说元数据"
+      load: on_command
+      pipeline: generate-metadata
+      side_effect: write
+      writes:
+        - ../metadata/novel-metadata.md
+      requires_confirmation: when_overwriting
 
   specs:
-    - name: workflow
-      path: ../writespec/workflow.md
-      purpose: World Bible 主创作流程与状态机
     - name: chapter-creation-spec
       path: ../writespec/chapter-creation-spec.md
+      activation: pipeline
       purpose: 单章构思、文本处理、准备提交与门禁
+      invariants:
+        - INV-CHAPTER-001
+    - name: foreshadowing-spec
+      path: ../writespec/foreshadowing-spec.md
+      activation: pipeline
+      purpose: 悬念钩子与伏笔的身份、生命周期、证据和归档语义
+      invariants:
+        - INV-FORESHADOW-001
     - name: state-management
       path: ../writespec/state-management.md
+      activation: pipeline
       purpose: 事实优先级、事务回写、幂等与归档检索
+      invariants:
+        - INV-TRANSACTION-001
+        - INV-STATE-001
     - name: style-guide
       path: ../writespec/style-guide.md
+      activation: profile
       purpose: 写作风格指南 (核心调性/排版/去AI化)
-    - name: physical-descriptor
-      path: ../writespec/physical-descriptor.md
-      purpose: 物理化重组规则 (抽象描写转物理事实)
     - name: archiving-spec
       path: ../writespec/archiving-spec.md
+      activation: pipeline
       purpose: 归档执行规范
+      invariants:
+        - INV-ARCHIVE-001
     - name: chapter-polish
       path: ../writespec/chapter-polish.md
+      activation: pipeline
       purpose: 纯文本润色协议，不包含补字数、审计或回写
+    - name: continuous-improvement
+      path: ../writespec/continuous-improvement.md
+      activation: event
+      purpose: IMP 改进提案的触发、验证、人工晋升与规则演进
     - name: world-audit
       path: ../writespec/world-audit.md
+      activation: pipeline
       purpose: 六维世界观审计矩阵
+      invariants:
+        - INV-POWER-001
     - name: originality-audit
       path: ../writespec/originality-audit.md
+      activation: pipeline
       purpose: 长篇小说原创性与逻辑审计
-    - name: audit-dimensions
-      path: ../writespec/audit-dimensions.md
-      purpose: 深度审计维度 (A-J)
     - name: trope-blacklist
       path: ../writespec/trope-blacklist.md
+      activation: reference
       purpose: 陈旧桥段黑名单
-    - name: original-check-guide
-      path: ../writespec/original-check-guide.md
-      purpose: 原创度提升手册
     - name: metadata-guide
       path: ../writespec/metadata-guide.md
+      activation: pipeline
       purpose: 小说元数据生成指南 (由 novel-metadata-generator 技能转写)
-    - name: platform-rules
-      path: ../writespec/platform-rules.md
-      purpose: 平台发布规则 (字数/禁忌/封面)
-    - name: tag-options
-      path: ../writespec/tag-options.md
-      purpose: 标签候选项库
+  records:
+    - name: improvement-log
+      path: improvement-log.md
+      purpose: IMP 改进提案及其验证、晋升或拒绝结果
+      load: on_improvement
+
+# ===== 可执行流程 (Executable Pipelines) =====
+pipelines:
+  init-world:
+    stages:
+      - name: preflight
+        uses: init-world
+        handler: preflight
+        required: true
+      - name: generate-world
+        uses: init-world
+        handler: agent
+        required: true
+      - name: commit
+        uses: state-management
+        handler: transaction-commit
+        required: true
+  create-style:
+    stages:
+      - name: preflight
+        uses: create-style
+        handler: preflight
+        required: true
+      - name: generate-style
+        uses: create-style
+        handler: agent
+        required: true
+      - name: style-ready
+        uses: style-guide
+        handler: deterministic-gate
+        required: true
+      - name: commit
+        uses: state-management
+        handler: transaction-commit
+        required: true
+  create-chapter:
+    stages:
+      - name: preflight
+        uses: state-management
+        handler: preflight
+        required: true
+      - name: draft
+        uses: chapter-creation-spec
+        handler: agent
+        required: true
+      - name: polish
+        uses: chapter-polish
+        handler: agent
+        required: true
+      - name: chapter-format
+        uses: chapter-creation-spec
+        handler: deterministic-gate
+        required: true
+      - name: world-audit
+        uses: world-audit
+        handler: semantic-gate
+        required: true
+      - name: thread-integrity
+        uses: foreshadowing-spec
+        handler: semantic-gate
+        required: true
+      - name: periodic-trigger-classification
+        uses: originality-audit
+        handler: semantic-gate
+        required: true
+      - name: archive-integrity
+        uses: archiving-spec
+        handler: semantic-gate
+        required: true
+      - name: commit
+        uses: state-management
+        handler: transaction-commit
+        required: true
+      - name: conditional-archive
+        uses: archiving-spec
+        handler: transaction-archive
+        required: false
+  update-world:
+    stages:
+      - name: preflight
+        uses: state-management
+        handler: preflight
+        required: true
+      - name: prepare-changes
+        uses: update-world
+        handler: agent
+        required: true
+      - name: world-audit
+        uses: world-audit
+        handler: semantic-gate
+        required: true
+      - name: periodic-trigger-classification
+        uses: originality-audit
+        handler: semantic-gate
+        required: true
+      - name: commit
+        uses: state-management
+        handler: transaction-commit
+        required: true
+  archive-world:
+    stages:
+      - name: preflight
+        uses: archiving-spec
+        handler: preflight
+        required: true
+      - name: preview
+        uses: archiving-spec
+        handler: agent
+        required: true
+      - name: archive-integrity
+        uses: archiving-spec
+        handler: semantic-gate
+        required: true
+      - name: commit
+        uses: archiving-spec
+        handler: transaction-archive
+        required: true
+  check-status:
+    stages:
+      - name: render
+        uses: state-management
+        handler: render
+        required: true
+  trending:
+    stages:
+      - name: analyze
+        uses: trending
+        handler: agent
+        required: true
+      - name: originality-audit
+        uses: originality-audit
+        handler: semantic-gate
+        required: true
+      - name: commit-report
+        uses: state-management
+        handler: transaction-commit
+        required: true
+  audit-originality:
+    stages:
+      - name: audit
+        uses: originality-audit
+        handler: semantic-gate
+        required: true
+  generate-metadata:
+    stages:
+      - name: generate
+        uses: metadata-guide
+        handler: agent
+        required: true
+      - name: commit
+        uses: state-management
+        handler: transaction-commit
+        required: true
+
+# ===== 事务执行 (Transaction Execution) =====
+transaction:
+  schema: novel-harness/transaction/v1
+  record_directory: ../world/.transactions/
+  commit_order:
+    - ../chapters/
+    - ../world/archive/
+    - ../world/chapter-summary.md
+    - ../world/characters.md
+    - ../world/inventory.md
+    - ../world/timeline.md
+    - ../world/geography.md
+    - ../world/power.md
+    - ../world/hooks.md
+    - ../world/outline.md
+    - ../writespec/style-guide.md
+    - ../metadata/
+    - ../analysis/
 
 # ===== 模板路由 (Template Routing) =====
 templates:
@@ -142,8 +383,8 @@ templates:
   - name: trending-analysis
     path: ../templates/trending-analysis-template.md
     used_by: trending
-  - name: transaction-log
-    path: ../templates/transaction-log-template.md
+  - name: transaction-record
+    path: ../templates/transaction-record-template.yaml
     used_by: create-chapter, update-world
 
 # ===== 世界数据加载顺序 (World Data Loading Order) =====
@@ -153,7 +394,7 @@ world_data:
     - ../world/outline.md           # 主线大纲 (必须)
     - ../world/chapter-summary.md   # 章节摘要承接 (必须)
     - ../world/characters.md        # 人物状态 (必须)
-    - ../world/hooks.md             # 伏笔钩子 (必须)
+    - ../world/hooks.md             # 叙事线索注册表 (必须)
     - ../writespec/style-guide.md   # 风格对齐 (写作阶段)
     - ../world/power.md             # 力量体系 (战斗场景按需)
     - ../world/inventory.md         # 道具库存 (战斗/消耗按需)
@@ -208,7 +449,8 @@ verification:
   preflight_gates:
     - name: style-ready
       description: 写作风格 frontmatter 状态为 ready 且必需章节齐全
-      command: python scripts/validate_harness.py
+      command: python scripts/validate_harness.py --style-guide <style_file>
+      invariant: INV-STYLE-001
     - name: world-completeness
       description: 八类 World Bible 齐全且目标章节号无冲突
   commands:
@@ -221,23 +463,38 @@ verification:
     - name: chapter-format
       description: 校验章节字数、禁用符号、Markdown 与风格黑名单
       command: python scripts/validate_chapter.py <chapter_file> --target 2000
+      invariant: INV-CHAPTER-001
   semantic_gates:
     - name: world-audit
       spec: ../writespec/world-audit.md
       evidence_required: true
+      invariant: INV-POWER-001
     - name: logic-closure
       spec: ../writespec/state-management.md
       evidence_required: true
+    - name: narrative-thread-integrity
+      spec: ../writespec/foreshadowing-spec.md
+      evidence_required: true
+      invariant: INV-FORESHADOW-001
+    - name: periodic-trigger-classification
+      spec: ../writespec/originality-audit.md
+      evidence_required: true
+    - name: archive-integrity
+      spec: ../writespec/archiving-spec.md
+      evidence_required: true
+      invariant: INV-ARCHIVE-001
   transaction_gates:
     - name: prepared-change-set
       description: 发布前生成无冲突的 World Bible 变更集
       evidence_required: true
+      invariant: INV-TRANSACTION-001
     - name: postflight-consistency
-      description: 校验正式正文、事务日志、World Bible 引用与幂等键
+      description: 校验正式正文、YAML 事务记录、World Bible 引用与幂等键
       evidence_required: true
+      invariant: INV-STATE-001
   periodic_gates:
     - name: originality-cycle
-      spec: ../writespec/originality-audit.md
+      pipeline: audit-originality
       interval_chapters: 10
       triggers:
         - outline_initialized

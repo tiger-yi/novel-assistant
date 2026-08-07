@@ -58,6 +58,7 @@ class ChapterValidationTest(unittest.TestCase):
         errors = validate_chapter(chapter, self.style, target=1)
 
         self.assertTrue(any("forbidden symbol" in error for error in errors))
+        self.assertTrue(any("INV-CHAPTER-001" in error for error in errors))
 
     def test_reports_markdown_blocks(self):
         chapter = self.write_chapter("第一幕。\n- 这是列表\n| 列 | 表 |")
@@ -65,6 +66,9 @@ class ChapterValidationTest(unittest.TestCase):
         errors = validate_chapter(chapter, self.style, target=1)
 
         self.assertEqual(2, sum("Markdown" in error for error in errors))
+        self.assertTrue(
+            all("INV-CHAPTER-001" in error for error in errors if "Markdown" in error)
+        )
 
     def test_reports_blacklisted_terms(self):
         chapter = self.write_chapter("显然，命运齿轮已经转动。")
@@ -81,7 +85,7 @@ class ChapterValidationTest(unittest.TestCase):
         self.assertTrue(any("word count" in error for error in errors))
 
     def test_cli_returns_nonzero_for_invalid_chapter(self):
-        chapter = self.write_chapter("显然太短")
+        chapter = self.write_chapter("显然【太短】")
         env = os.environ.copy()
         env["PYTHONIOENCODING"] = "utf-8"
 
@@ -105,6 +109,7 @@ class ChapterValidationTest(unittest.TestCase):
 
         self.assertEqual(1, result.returncode)
         self.assertIn("[FAIL]", result.stdout)
+        self.assertIn("[FAIL] INV-CHAPTER-001:", result.stdout)
 
 
 if __name__ == "__main__":

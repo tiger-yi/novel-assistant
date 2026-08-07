@@ -1,0 +1,21 @@
+# 事务执行器以此结构创建记录；示例值仅用于展示合法格式。
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0001-R01
+source_command: 创作第 1 章
+command: create-chapter
+mode: full
+pipeline: create-chapter
+arguments:
+  chapter: "1"
+state: PREFLIGHT
+archive_state: NOT_CHECKED
+stages: []
+gates: []
+changes: []
+applied_keys: []
+confirmations: []
+confirmation_nonce: generated-by-executor
+recovery:
+  last_successful_stage: null
+  failed_stage: null
+  message: null

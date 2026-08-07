@@ -10,7 +10,8 @@
 - **输入**: 目标平台、受众、题材边界和观察时间窗；缺失时明确采用的默认值。
 - **时效性**: 报告必须记录检索日期、来源链接和信息发布日期。
 - **失败处理**: 无法联网或缺少近期来源时，标记“无法验证最新趋势”，不得伪造结论。
-- **写入范围**: 仅写入 `analysis/trending-analysis.md`，不得修改 World Bible。
+- **准备写入**: Agent 只写 `analysis/.staging/<transaction-id>/trending-analysis.md`。
+- **正式写入范围**: 事务执行器仅可发布 `analysis/trending-analysis.md`，不得修改 World Bible。
 
 ## 执行流程 (Protocol)
 
@@ -37,10 +38,9 @@
 - **方案 C (极道横推/高武)**: 极致肉身流或寿元加点流。
 
 ### 5. 原创深度分析
-针对推荐方案使用 **originality-audit** 规范进行原创性审计, 按 `templates/trending-analysis-template.md` 格式输出报告至 `analysis/trending-analysis.md`, 重点评估**情绪价值密度**与**爆款创新潜力**。
+针对推荐方案使用 **originality-audit** 规范进行原创性审计, 按 `templates/trending-analysis-template.md` 格式输出报告至事务 staging，重点评估**情绪价值密度**与**爆款创新潜力**。来源与审计门禁通过后，由事务执行器发布正式报告。
 
 ## 相关规范
 - 原创性审计: [../originality-audit.md](../originality-audit.md)
-- 深度审计维度: [../audit-dimensions.md](../audit-dimensions.md)
 - 陈旧桥段黑名单: [../trope-blacklist.md](../trope-blacklist.md)
 - 报告模板: [../../templates/trending-analysis-template.md](../../templates/trending-analysis-template.md)

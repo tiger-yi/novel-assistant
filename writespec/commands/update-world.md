@@ -9,32 +9,35 @@
 
 - **输入**: 明确的章节文件或 `CH-NNNN`。只有一个可识别的未回写章节时才允许自动推断。
 - **前置条件**: 八类 World Bible 齐全，章节已通过确定性门禁与六维审计，并已有无冲突的变更集；独立调用时必须先生成该变更集。
-- **写入范围**: `world/*.md`；不得修改章节正文。
-- **幂等性**: 以章节 ID、事件 ID、伏笔 ID 和物品扣减来源判重，重复执行不得重复追加或扣减。
+- **准备写入**: Agent 只写事务 staging 中的 World Bible 候选文件与结构化变更集。
+- **正式写入范围**: 事务执行器仅可发布 `world/*.md`；不得修改章节正文。
+- **幂等性**: 以章节 ID、事件 ID、叙事线索 ID、状态动作和物品扣减来源判重，重复执行不得重复追加、跃迁或扣减。
 - **冲突处理**: 按 `state-management.md` 输出差异并停止，不得静默覆盖。
 
 ## 执行流程 (Protocol)
 
-### 1. 更新 `world/characters.md`
+Agent 按以下职责准备候选文件，不直接修改正式 World Bible。事务执行器校验基线、门禁和幂等键后，按 `INV-STATE-001` 有序应用。
+
+### `world/chapter-summary.md`
+- 记录每一章节的摘要。
+
+### `world/characters.md`
 - 添加新出现的人物档案、功法技能、天赋属性、人际关系变化或状态更新。
 
-### 2. 更新 `world/inventory.md`
+### `world/inventory.md`
 - 记录新获得的装备与法宝、消耗品与材料、功法/武技、情报与地图。
 - 移除本章已消耗的丹药、符箓等一次性物品、已损毁的装备和法宝等。
 
-### 3. 更新 `world/timeline.md`、`world/geography.md` 与 `world/power.md`
+### `world/timeline.md`、`world/geography.md` 与 `world/power.md`
 - 记录本章发生的重大事件时间节点 (闭关时间、赶路时间等)。
 - 记录地点、势力、通信条件与区域状态变化。
 - 若有境界突破或战力体系扩展, 同步更新 `power.md`。
 
-### 4. 更新 `world/hooks.md`
-- 记录新的核心钩子、伏笔埋设、情绪爆发点。
-- 已回收的钩子标记为 `✅ 已回收`。
+### `world/hooks.md`
+- 按 `foreshadowing-spec.md` 记录 `HOOK-*` 悬念钩子与 `SEED-*` 伏笔。
+- 只有正文证据满足 `INV-FORESHADOW-001` 时，才能应用创建、推进、解决、回收、放弃或取消动作。
 
-### 5. 更新 `world/chapter-summary.md`
-- 记录每一章节的摘要。
-
-### 6. 更新 `world/outline.md`
+### `world/outline.md`
 - 标记当前情节点为 `✅ 已完成`。
 - 更新 **字数规划** 中的当前总字数。
 - 检查**详细章节规划表**, 若后续待创作章节不存在或不足, 自动补充 1-3 个待创作章节标题 (字数随机 2-8 字)。
@@ -45,7 +48,7 @@
 - 用户显式要求修复或重建指定章节的 World Bible 状态时。
 
 ## 相关规范
-- 归档: [../archiving-spec.md](../archiving-spec.md) (满 10 章触发归档)
-- 工作流: [workflow.md](../workflow.md)
+- 归档: [../archiving-spec.md](../archiving-spec.md) (`INV-ARCHIVE-001`)
 - 状态管理: [../state-management.md](../state-management.md)
 - 世界观审计: [../world-audit.md](../world-audit.md)
+- 叙事线索: [../foreshadowing-spec.md](../foreshadowing-spec.md) (`INV-FORESHADOW-001`)

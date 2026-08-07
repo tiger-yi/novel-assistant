@@ -17,6 +17,7 @@ MARKDOWN_BLOCKS = (
     re.compile(r"^\s*\|.*\|\s*$"),
 )
 FORBIDDEN_SYMBOLS = ("【", "】", "[", "]", "（", "）", "**")
+CHAPTER_FORMAT_INV = "INV-CHAPTER-001"
 
 
 def load_blacklist(style_path):
@@ -55,11 +56,15 @@ def validate_chapter(chapter_path, style_path, target=2000):
 
     for symbol in FORBIDDEN_SYMBOLS:
         if symbol in text:
-            errors.append(f"forbidden symbol found: {symbol}")
+            errors.append(
+                f"{CHAPTER_FORMAT_INV}: forbidden symbol found: {symbol}"
+            )
 
     for line_number, line in enumerate(text.splitlines(), start=1):
         if any(pattern.search(line) for pattern in MARKDOWN_BLOCKS):
-            errors.append(f"Markdown block found at line {line_number}")
+            errors.append(
+                f"{CHAPTER_FORMAT_INV}: Markdown block found at line {line_number}"
+            )
 
     for term in load_blacklist(style_path):
         if term in text:

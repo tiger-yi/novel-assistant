@@ -9,7 +9,8 @@
 
 - **输入**: 用户的题材选择、自定义设定和目标平台；信息不足时按阶段 1 交互补齐。
 - **前置条件**: 八类 World Bible 均不存在；存在完整或部分数据时，必须展示影响并取得修复/覆盖确认。
-- **写入范围**: 仅创建 `world/` 八类活跃文件、必要的 `world/archive/` 空目录/文件和 `world/.transactions/` 目录。
+- **准备写入**: Agent 只写 `world/.staging/<transaction-id>/` 下的八类候选文件与事务证据。
+- **正式写入范围**: 仅由事务执行器创建 `world/` 八类活跃文件及必要的 `world/archive/` 目标。
 - **幂等性**: 已存在的 World Bible 不得被默认覆盖。
 - **成功标准**: 八类文件全部存在，字段符合模板，跨文件名称与 ID 一致。
 
@@ -41,25 +42,25 @@
 同时提示: "天道法则已确立, 正在演化世界..."
 
 ### 阶段 3. 生成 World Bible
-读取 `templates/` 目录下模板, 一次性生成完整的八类 World Bible:
+读取 `templates/` 目录下模板, 在事务 staging 中一次性生成完整的八类 World Bible:
 - `outline.md` (大纲与章节规划)
 - `characters.md` (人物档案)
 - `power.md` (力量体系)
 - `geography.md` (地图与势力)
 - `timeline.md` (时间线)
 - `inventory.md` (道具、功法与情报)
-- `hooks.md` (钩子与伏笔回收表)
+- `hooks.md` (悬念钩子与伏笔注册表)
 - `chapter-summary.md` (章节承接缓冲区)
 
 > 模板路由见 `novel-harness/context.manifest.yaml` 的 `templates` 段。
 
-生成后检查八类文件是否齐全。任何文件缺失时不得输出“初始化完成”。
+生成后检查八类候选文件是否齐全，记录目标基线、staging 摘要和幂等键。任何文件缺失时不得进入提交；全部门禁通过后，由事务执行器原子发布正式目标。
 
 ### 阶段 4. 反馈
-输出: `[系统] World Bible 初始化完成。当前主角：[姓名]，境界：[初始境界]。`
+只有事务执行器提交并完成后置校验后，输出: `[系统] World Bible 初始化完成。当前主角：[姓名]，境界：[初始境界]。`
 
 ## 相关规范
-- 工作流: [workflow.md](../workflow.md)
 - 状态管理: [state-management.md](../state-management.md)
+- 叙事线索: [foreshadowing-spec.md](../foreshadowing-spec.md)
 - 模板: [../templates/outline-template.md](../../templates/outline-template.md) 等
-- 后续必需步骤: 在首次执行 `创作第 N 章` 前，按 [create-style.md](create-style.md) 完成一次 `创建写作风格` 并通过风格就绪门禁。
+- 后续必需步骤: 在首次执行 `创作第 N 章` 前，使写作风格满足 `INV-STYLE-001`；推荐按 [create-style.md](create-style.md) 执行 `创建写作风格`。

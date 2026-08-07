@@ -9,6 +9,26 @@ import yaml
 BACKTICK_LITERAL = re.compile(r"`([^`]+)`")
 MARKDOWN_LINK = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 STYLE_SCHEMA = "novel-harness/style/v1"
+STYLE_READY_INV = "INV-STYLE-001"
+INVARIANT_ID = re.compile(r"INV-[A-Z]+-\d{3}")
+MANIFEST_V2 = "novel-harness/context/v2"
+ACTIVATION_TYPES = {
+    "command",
+    "pipeline",
+    "event",
+    "periodic",
+    "profile",
+    "reference",
+}
+PIPELINE_HANDLERS = {
+    "preflight",
+    "agent",
+    "deterministic-gate",
+    "semantic-gate",
+    "transaction-commit",
+    "transaction-archive",
+    "render",
+}
 STYLE_REQUIRED_SECTIONS = (
     "## 2. 核心调性",
     "## 4. 排版规范",
@@ -26,6 +46,7 @@ def _manifest_entries(manifest):
     return [
         *(routes.get("commands") or []),
         *(routes.get("specs") or []),
+        *(routes.get("records") or []),
         *(manifest.get("templates") or []),
     ]
 
@@ -47,6 +68,22 @@ def _display_path(path, repo_root):
         return str(path.relative_to(repo_root))
     except ValueError:
         return str(path)
+
+
+def _invariant_reference_files(repo_root):
+    files = [repo_root / "AGENTS.md", repo_root / "README.md"]
+    for directory, patterns in (
+        (repo_root / "novel-harness", ("*.md", "*.yaml")),
+        (repo_root / "writespec", ("*.md",)),
+        (repo_root / "templates", ("*.md",)),
+        (repo_root / "scripts", ("*.py",)),
+        (repo_root / "tests", ("*.py",)),
+    ):
+        if not directory.is_dir():
+            continue
+        for pattern in patterns:
+            files.extend(directory.rglob(pattern))
+    return {path.resolve() for path in files if path.is_file()}
 
 
 def _agent_markdown_targets(repo_root):
@@ -107,16 +144,22 @@ def _validate_style_guide(style_path):
     errors = []
     frontmatter = _style_frontmatter(text)
     if frontmatter.get("schema") != STYLE_SCHEMA:
-        errors.append(f"style guide schema must be {STYLE_SCHEMA}")
+        errors.append(
+            f"{STYLE_READY_INV}: style guide schema must be {STYLE_SCHEMA}"
+        )
     if frontmatter.get("status") != "ready":
-        errors.append("style guide is not ready: status must be ready")
+        errors.append(
+            f"{STYLE_READY_INV}: style guide is not ready: status must be ready"
+        )
     for section in STYLE_REQUIRED_SECTIONS:
         if section not in text:
-            errors.append(f"style guide section is missing: {section}")
+            errors.append(
+                f"{STYLE_READY_INV}: style guide section is missing: {section}"
+            )
     return errors
 
 
-def validate_repository(repo_root):
+def validate_repository(repo_root, style_override=None):
     repo_root = Path(repo_root).resolve()
     manifest_path = repo_root / "novel-harness" / "context.manifest.yaml"
     errors = []
@@ -133,6 +176,7 @@ def validate_repository(repo_root):
     entries = _manifest_entries(manifest)
     declared_paths = set()
     names = set()
+    invariant_owners = {}
 
     for entry in entries:
         if not isinstance(entry, dict):
@@ -155,10 +199,156 @@ def validate_repository(repo_root):
         if not resolved.is_file():
             errors.append(f"declared route file does not exist: {raw_path}")
 
-    seen_triggers = set()
-    seen_patterns = set()
+        invariants = entry.get("invariants") or []
+        if not isinstance(invariants, list):
+            errors.append(f"route {name} invariants must be a list")
+            continue
+        for invariant in invariants:
+            if (
+                not isinstance(invariant, str)
+                or INVARIANT_ID.fullmatch(invariant) is None
+            ):
+                errors.append(f"invalid invariant ID on route {name}: {invariant}")
+                continue
+            previous_owner = invariant_owners.get(invariant)
+            if previous_owner is not None:
+                errors.append(
+                    f"duplicate invariant owner: {invariant} in "
+                    f"{_display_path(previous_owner, repo_root)} and "
+                    f"{_display_path(resolved, repo_root)}"
+                )
+                continue
+            invariant_owners[invariant] = resolved
+            if resolved.is_file():
+                owner_text = resolved.read_text(encoding="utf-8")
+                if invariant not in owner_text:
+                    errors.append(
+                        f"invariant owner does not define {invariant}: "
+                        f"{_display_path(resolved, repo_root)}"
+                    )
+
     routes = manifest.get("routes", {})
     commands = routes.get("commands", []) if isinstance(routes, dict) else []
+    specs = routes.get("specs", []) if isinstance(routes, dict) else []
+    is_v2 = manifest.get("schema") == MANIFEST_V2
+
+    if is_v2:
+        for entry in [*(commands or []), *(specs or [])]:
+            if not isinstance(entry, dict):
+                continue
+            activation = entry.get("activation")
+            if activation is None:
+                errors.append(f"route {entry.get('name')} activation is required")
+            elif activation not in ACTIVATION_TYPES:
+                errors.append(
+                    f"route {entry.get('name')} has invalid activation: {activation}"
+                )
+        for command in commands or []:
+            if not isinstance(command, dict):
+                continue
+            if command.get("activation") != "command":
+                errors.append(
+                    f"command {command.get('name')} activation must be command"
+                )
+            matchers = command.get("matches") or []
+            if not matchers:
+                errors.append(f"command {command.get('name')} requires a matcher")
+            for matcher in matchers:
+                if not isinstance(matcher, dict):
+                    errors.append(
+                        f"command {command.get('name')} matchers must be mappings"
+                    )
+                    continue
+                keys = {
+                    key for key in ("literal", "pattern") if matcher.get(key)
+                }
+                if len(keys) != 1:
+                    errors.append(
+                        f"command {command.get('name')} matcher requires exactly "
+                        "one of literal or pattern"
+                    )
+                mode = matcher.get("mode")
+                modes = command.get("modes") or {}
+                if mode and mode not in modes:
+                    errors.append(
+                        f"command {command.get('name')} matcher uses unknown mode: "
+                        f"{mode}"
+                    )
+
+        known_routes = {
+            entry.get("name")
+            for entry in [*(commands or []), *(specs or [])]
+            if isinstance(entry, dict) and entry.get("name")
+        }
+        verification = manifest.get("verification") or {}
+        verification_commands = {
+            entry.get("name")
+            for entries in verification.values()
+            if isinstance(entries, list)
+            for entry in entries
+            if isinstance(entry, dict) and entry.get("command")
+        }
+        pipelines = manifest.get("pipelines") or {}
+        if not isinstance(pipelines, dict):
+            errors.append("manifest pipelines must be a mapping")
+        else:
+            for command in commands or []:
+                if not isinstance(command, dict):
+                    continue
+                pipeline_name = command.get("pipeline")
+                if pipeline_name and pipeline_name not in pipelines:
+                    errors.append(
+                        f"command {command.get('name')} uses unknown pipeline "
+                        f"{pipeline_name}"
+                    )
+            for pipeline_name, pipeline in pipelines.items():
+                if not isinstance(pipeline, dict):
+                    errors.append(f"pipeline {pipeline_name} must be a mapping")
+                    continue
+                stage_names = set()
+                stages = pipeline.get("stages") or []
+                if not isinstance(stages, list):
+                    errors.append(f"pipeline {pipeline_name} stages must be a list")
+                    continue
+                for stage in stages:
+                    if not isinstance(stage, dict):
+                        errors.append(
+                            f"pipeline {pipeline_name} stages must be mappings"
+                        )
+                        continue
+                    stage_name = stage.get("name")
+                    if not stage_name:
+                        errors.append(f"pipeline {pipeline_name} stage requires name")
+                    elif stage_name in stage_names:
+                        errors.append(
+                            f"pipeline {pipeline_name} has duplicate stage: "
+                            f"{stage_name}"
+                        )
+                    stage_names.add(stage_name)
+                    route_name = stage.get("uses")
+                    if route_name not in known_routes:
+                        errors.append(
+                            f"pipeline {pipeline_name} uses unknown route "
+                            f"{route_name}"
+                        )
+                    handler = stage.get("handler")
+                    if handler not in PIPELINE_HANDLERS:
+                        errors.append(
+                            f"pipeline {pipeline_name} stage {stage_name} has "
+                            f"invalid handler: {handler}"
+                        )
+                    if (
+                        handler == "deterministic-gate"
+                        and stage.get("required")
+                        and stage_name not in verification_commands
+                    ):
+                        errors.append(
+                            f"pipeline {pipeline_name} deterministic gate "
+                            f"{stage_name} has no verification command"
+                        )
+
+    seen_triggers = set()
+    seen_patterns = set()
     human_doc_paths = [
         repo_root / "AGENTS.md",
         repo_root / "README.md",
@@ -174,10 +364,40 @@ def validate_repository(repo_root):
     for command in commands or []:
         if not isinstance(command, dict):
             continue
-        trigger = command.get("trigger")
-        aliases = command.get("aliases") or []
-        display_patterns = command.get("display_patterns") or []
-        for value in [trigger, *aliases, *display_patterns]:
+        if is_v2:
+            matchers = command.get("matches") or []
+            documented_values = [
+                matcher.get("literal") or matcher.get("display")
+                for matcher in matchers
+                if isinstance(matcher, dict)
+            ]
+            pattern_definitions = [
+                (matcher.get("pattern"), matcher.get("display"))
+                for matcher in matchers
+                if isinstance(matcher, dict) and matcher.get("pattern")
+            ]
+        else:
+            trigger = command.get("trigger")
+            aliases = command.get("aliases") or []
+            display_patterns = command.get("display_patterns") or []
+            documented_values = [trigger, *aliases, *display_patterns]
+            patterns = command.get("patterns") or []
+            pattern_definitions = [
+                (
+                    pattern,
+                    display_patterns[index]
+                    if index < len(display_patterns)
+                    else None,
+                )
+                for index, pattern in enumerate(patterns)
+            ]
+            if patterns and len(patterns) != len(display_patterns):
+                errors.append(
+                    f"command {command.get('name')} patterns require matching "
+                    f"display_patterns"
+                )
+
+        for value in documented_values:
             if not value:
                 continue
             if value in seen_triggers:
@@ -190,20 +410,14 @@ def validate_repository(repo_root):
                         f"{_display_path(doc_path, repo_root)}: {value}"
                     )
 
-        patterns = command.get("patterns") or []
-        if patterns and len(patterns) != len(display_patterns):
-            errors.append(
-                f"command {command.get('name')} patterns require matching "
-                f"display_patterns"
-            )
-        for index, pattern in enumerate(patterns):
+        for pattern, display in pattern_definitions:
             if pattern in seen_patterns:
                 errors.append(f"duplicate command pattern: {pattern}")
             seen_patterns.add(pattern)
             try:
                 compiled = re.compile(pattern)
-                if index < len(display_patterns):
-                    example = display_patterns[index].replace("N", "12")
+                if display:
+                    example = display.replace("N", "12")
                     if compiled.fullmatch(example) is None:
                         errors.append(
                             f"command pattern does not match display example: {pattern}"
@@ -214,12 +428,21 @@ def validate_repository(repo_root):
                 )
 
         raw_path = command.get("path")
-        if not trigger or not raw_path:
+        if not raw_path:
             continue
         command_path = _resolve(manifest_dir, raw_path)
         if command_path.is_file():
             command_text = command_path.read_text(encoding="utf-8")
-            for value in [trigger, *aliases, *display_patterns]:
+            if (
+                is_v2
+                and command.get("side_effect") in {"write", "destructive_move"}
+                and "事务执行器" not in command_text
+            ):
+                errors.append(
+                    f"write command {command.get('name')} must require transaction "
+                    "executor"
+                )
+            for value in documented_values:
                 if value and value not in command_text:
                     errors.append(
                         f"command {command.get('name')} does not declare trigger: "
@@ -266,9 +489,48 @@ def validate_repository(repo_root):
     if len(style_entries) != 1:
         errors.append("manifest requires exactly one style-guide route")
     else:
-        style_path = _resolve(manifest_dir, style_entries[0].get("path", ""))
+        style_path = (
+            Path(style_override).resolve()
+            if style_override is not None
+            else _resolve(manifest_dir, style_entries[0].get("path", ""))
+        )
         if style_path.is_file():
             errors.extend(_validate_style_guide(style_path))
+        elif style_override is not None:
+            errors.append(f"cannot read style guide: {style_path}")
+
+    verification = manifest.get("verification", {})
+    if isinstance(verification, dict):
+        for gates in verification.values():
+            if not isinstance(gates, list):
+                continue
+            for gate in gates:
+                if not isinstance(gate, dict):
+                    continue
+                invariant = gate.get("invariant")
+                raw_spec = gate.get("spec")
+                owner = invariant_owners.get(invariant)
+                if invariant and raw_spec and owner is not None:
+                    gate_spec = _resolve(manifest_dir, raw_spec)
+                    if gate_spec != owner:
+                        errors.append(
+                            f"verification gate {gate.get('name')} spec does not own "
+                            f"{invariant}: {_display_path(gate_spec, repo_root)}"
+                        )
+
+    referenced_invariants = set()
+    for source_path in _invariant_reference_files(repo_root):
+        try:
+            source_text = source_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            errors.append(
+                f"cannot read invariant references from "
+                f"{_display_path(source_path, repo_root)}: {exc}"
+            )
+            continue
+        referenced_invariants.update(INVARIANT_ID.findall(source_text))
+    for invariant in sorted(referenced_invariants - set(invariant_owners)):
+        errors.append(f"invariant reference has no manifest owner: {invariant}")
 
     return errors
 
@@ -281,9 +543,17 @@ def main(argv=None):
         default=Path(__file__).resolve().parents[1],
         help="Repository root (default: inferred from script location)",
     )
+    parser.add_argument(
+        "--style-guide",
+        type=Path,
+        help="Validate this staged style guide instead of the formal target",
+    )
     args = parser.parse_args(argv)
 
-    errors = validate_repository(args.repo_root)
+    if args.style_guide is not None:
+        errors = _validate_style_guide(args.style_guide)
+    else:
+        errors = validate_repository(args.repo_root)
     if errors:
         for error in errors:
             print(f"[FAIL] {error}")
