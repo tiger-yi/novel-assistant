@@ -59,6 +59,7 @@ Novel Assistant 是中文玄幻长篇小说的结构化创作 Harness。项目�
 | 命令入口 | 协议文件 |
 | :--- | :--- |
 | `初始化世界` | `writespec/commands/init-world.md` |
+| `返工初始化世界` | `writespec/commands/rework-init-world.md` |
 | `创建写作风格` | `writespec/commands/create-style.md` |
 | `创作章节`：`创作第 N 章` / `构思第 N 章` | `writespec/commands/draft-chapter.md` |
 | `修订卷规划 ARC-001` | `writespec/commands/revise-arc.md` |
@@ -102,6 +103,7 @@ Novel Assistant 是中文玄幻长篇小说的结构化创作 Harness。项目�
 - 新增规范、模板或技能时，只更新 Manifest 路由和 AGENTS 简要入口；不创建重复的完整索引镜像。
 - 修改风格就绪结构时，同步更新 `create-style.md`、Harness 校验器和测试。
 - 修改 World Bible 初始化字段时，同步更新模板和 `world-audit.md`；修改运行期字段、动作或证据时，同步更新 `world-bible-contract.md`、`world-audit.md`、状态管理和 Manifest 门禁。
+- 修改初始化返工、第一章前原创性放行或长篇展开性审计时，同步更新 `audit-originality.md`、`originality-audit.md`、`rework-init-world.md`、Manifest 路由和 README。
 - 修改悬念钩子或伏笔字段、状态或证据规则时，同步更新 `foreshadowing-spec.md`、模板、状态管理、世界审计与归档规范。
 - 修改事务或归档规则时，同步更新状态规范、YAML 事务记录模板和归档规范。
 - 修改校验脚本时，同步更新 `tests/` 与 Manifest 验证命令。

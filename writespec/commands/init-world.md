@@ -63,8 +63,11 @@
 ### 阶段 4. 反馈
 只有事务执行器提交并完成后置校验后，输出: `[系统] World Bible 初始化完成。当前主角：[姓名]，境界：[初始境界]。`
 
+初始化完成后、第一章发布前，应执行 `审计原创性`。若长篇展开性审计为 `FAIL`，不得开始 `创作第 1 章`；若为 `WARN`，必须由用户明确接受后才可放行。用户不满意当前 World Bible 时，使用 `返工初始化世界` 生成候选预览，经确认后再由事务执行器替换正式八类文件。
+
 ## 相关规范
 - 状态管理: [state-management.md](../state-management.md)
 - 叙事线索: [foreshadowing-spec.md](../foreshadowing-spec.md)
+- 初始化返工: [rework-init-world.md](rework-init-world.md)
 - 模板: [../templates/outline-template.md](../../templates/outline-template.md) 等
 - 后续必需步骤: 在首次执行 `创作第 N 章` 前，使写作风格满足 `INV-STYLE-001`；推荐按 [create-style.md](create-style.md) 执行 `创建写作风格`。

@@ -7,6 +7,7 @@ Novel Assistant 使用结构化 World Bible 管理中文玄幻长篇小说的剧
 | 目的 | 指令 |
 | :--- | :--- |
 | 初始化八类 World Bible | `初始化世界` |
+| 第一章前返工 World Bible | `返工初始化世界` |
 | 一次性定制全书文风 | `创建写作风格` |
 | 创作章节并自动收尾 | `创作第 N 章` |
 | 仅查看受约束执行方案 | `构思第 N 章` |
@@ -41,6 +42,8 @@ Novel Assistant 使用结构化 World Bible 管理中文玄幻长篇小说的剧
 `创作第 N 章` 会绑定冻结的大纲修订与章节执行契约，生成一个不改变既定结果的执行方案，再完成撰写、文本润色、必要的内容补全、验证、发布、更新 World Bible 和到期归档。规划缺失或过期、事实冲突、逻辑死锁、固定卷区间无法完成卷目标或要求修订已发布章节时必须暂停。
 
 初始化时先确认全书卷路线图，再确认当前卷详细规划。全书路线图固定每卷章节闭区间、卷目标和卷间因果；当前卷在开卷前冻结全部里程碑与章节执行契约。后续卷必须先执行 `修订卷规划 ARC-001` 这类明确命令并取得覆盖确认，普通章节事务无权增章、重排或改写未来规划。
+
+初始化完成后、第一章发布前，`审计原创性` 会执行长篇展开性审计，检查金手指生态位、剧情拓扑、分卷承压、势力引入、资源经济、时间压力、信息流、人物驱动和伏笔承诺。`PASS` 可进入第一章；`WARN` 需要用户接受后放行，并只在 `CH-0010` 或 `ARC-001` 卷终二者较早处复查一次；`FAIL` 阻断第一章。若不满意当前 World Bible，使用 `返工初始化世界` 生成候选预览、差异摘要和 ID 映射，确认后再由事务执行器替换八类正式文件。
 
 命令由 `python scripts/novel_harness.py resolve "<原始指令>"` 严格匹配。写命令先通过 `begin` 创建 YAML 事务，Agent 只准备 staging 内容；正式章节、World Bible、归档、风格和报告由事务执行器校验基线与门禁后提交。`审计原创性` 也创建只读执行记录，用于证明每 10 章周期门禁已经生效。
 
@@ -97,6 +100,7 @@ AGENTS 只提供人工入口和跨项目原则；Manifest 管理机器路由、�
 | :--- | :--- |
 | 主工作流 | `python scripts/render_workflow.py create-chapter` |
 | 章节命令 | [writespec/commands/draft-chapter.md](writespec/commands/draft-chapter.md) |
+| 初始化返工 | [writespec/commands/rework-init-world.md](writespec/commands/rework-init-world.md) |
 | 润色命令 | [writespec/commands/polish-chapter.md](writespec/commands/polish-chapter.md) |
 | 章节流程 | [writespec/chapter-creation-spec.md](writespec/chapter-creation-spec.md) |
 | 卷规划修订 | [writespec/commands/revise-arc.md](writespec/commands/revise-arc.md) |

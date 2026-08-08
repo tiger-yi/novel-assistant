@@ -27,6 +27,17 @@ routes:
       writes:
         - ../world/
       requires_confirmation: when_overwriting
+    - name: rework-init-world
+      path: ../writespec/commands/rework-init-world.md
+      activation: command
+      matches:
+        - literal: "返工初始化世界"
+      load: on_command
+      pipeline: rework-init-world
+      side_effect: write
+      writes:
+        - ../world/
+      requires_confirmation: when_overwriting
     - name: update-world
       path: ../writespec/commands/update-world.md
       activation: command
@@ -283,6 +294,45 @@ pipelines:
         uses: state-management
         handler: transaction-commit
         required: true
+  rework-init-world:
+    stages:
+      - name: preflight
+        uses: rework-init-world
+        handler: preflight
+        required: true
+      - name: rework-audit-baseline
+        uses: originality-audit
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+          - WARN
+          - FAIL
+      - name: prepare-rework
+        uses: rework-init-world
+        handler: agent
+        required: true
+      - name: rework-user-approval
+        uses: rework-init-world
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+      - name: longform-readiness
+        uses: originality-audit
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+          - WARN
+      - name: outline-contract
+        uses: chapter-creation-spec
+        handler: deterministic-gate
+        required: true
+      - name: commit
+        uses: state-management
+        handler: transaction-commit
+        required: true
   create-style:
     stages:
       - name: preflight
@@ -307,6 +357,14 @@ pipelines:
         uses: state-management
         handler: preflight
         required: true
+      - name: first-chapter-readiness
+        uses: originality-audit
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+          - WARN
+          - NOT_APPLICABLE
       - name: draft
         uses: chapter-creation-spec
         handler: agent
@@ -678,28 +736,28 @@ transaction:
 templates:
   - name: outline
     path: ../templates/outline-template.md
-    used_by: init-world
+    used_by: init-world, rework-init-world
   - name: characters
     path: ../templates/characters-template.md
-    used_by: init-world
+    used_by: init-world, rework-init-world
   - name: timeline
     path: ../templates/timeline-template.md
-    used_by: init-world
+    used_by: init-world, rework-init-world
   - name: geography
     path: ../templates/geography-template.md
-    used_by: init-world
+    used_by: init-world, rework-init-world
   - name: inventory
     path: ../templates/inventory-template.md
-    used_by: init-world
+    used_by: init-world, rework-init-world
   - name: hooks
     path: ../templates/hooks-template.md
-    used_by: init-world
+    used_by: init-world, rework-init-world
   - name: chapter-summary
     path: ../templates/chapter-summary-template.md
-    used_by: init-world
+    used_by: init-world, rework-init-world
   - name: power-system
     path: ../templates/power-system-template.md
-    used_by: init-world
+    used_by: init-world, rework-init-world
   - name: trending-analysis
     path: ../templates/trending-analysis-template.md
     used_by: trending
@@ -814,6 +872,18 @@ verification:
       evidence_required: true
     - name: plan-approval
       spec: ../writespec/chapter-creation-spec.md
+      evidence_required: true
+    - name: rework-audit-baseline
+      spec: ../writespec/originality-audit.md
+      evidence_required: true
+    - name: rework-user-approval
+      spec: ../writespec/commands/rework-init-world.md
+      evidence_required: true
+    - name: longform-readiness
+      spec: ../writespec/originality-audit.md
+      evidence_required: true
+    - name: first-chapter-readiness
+      spec: ../writespec/originality-audit.md
       evidence_required: true
     - name: world-audit
       spec: ../writespec/world-audit.md
