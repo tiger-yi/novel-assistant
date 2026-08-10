@@ -112,15 +112,54 @@ draft -> polish -> reader-evaluation -> chapter-format -> narrative/world/plot/t
 
 通用扣分项直接作用于聚合分，并必须说明触发证据。若同一问题已在画像维度中扣分，通用扣分只记录一次，避免重复惩罚。
 
-| 扣分项 | 幅度 | 触发条件 | 自动处理 |
+扣分必须先标记严重度，再套用幅度：
+
+| 严重度 | 幅度 | 判定 |
+| :--- | :--- | :--- |
+| `minor` | -0.2 | 局部影响阅读，但不改变本章整体判断 |
+| `moderate` | -0.4 | 明显压低一个画像维度，需要局部重润色 |
+| `major` | -0.7 | 影响本章核心体验或多个维度，需要优先修 |
+| `critical` | -1.0 或阻断 | 破坏核心因果、承诺兑现、世界状态或读者理解 |
+
+以下问题触发硬阻断或人工决策，不得只用扣分抵消：
+
+| 阻断项 | 触发条件 | 处理 |
+| :--- | :--- | :--- |
+| 核心因果断裂 | 读者需要依赖作者解释才能理解胜负、选择、获得、逃脱或揭露 | `STRUCTURAL_SUGGESTION_BLOCKED` |
+| 主角关键失智 | 主角关键选择违背既有人设、目标或已知信息，且不是文本有意呈现的代价 | `STRUCTURAL_SUGGESTION_BLOCKED` |
+| 章节承诺落空 | `chapter_promise` 的核心回报未兑现，章末也没有补偿性牵引 | `MANUAL_DECISION_REQUIRED` |
+| 关键结果靠巧合 | 胜负、获得、逃脱、揭露或重要转折主要依赖未经铺垫的巧合 | `STRUCTURAL_SUGGESTION_BLOCKED` |
+| 爽点必须改剧情才成立 | 需要新增事件、新因果、新死亡、新法宝或改章节结果才能修复 | `STRUCTURAL_SUGGESTION_BLOCKED` |
+| 世界状态冲突 | 战力、资源、伤势、时间线、地理、信息差或伏笔状态与证据冲突 | `WORLD_STATE_BLOCKED` |
+
+常规扣分项必须覆盖读者体验、结构、人物、语言和世界沉浸：
+
+| 扣分项 | 默认严重度 | 触发条件 | 自动处理 |
 | :--- | :--- | :--- | :--- |
-| 致命逻辑漏洞 | -1.0 | 核心矛盾无法自圆其说，且无既有伏笔支撑 | 不自动改，标记 `STRUCTURAL_SUGGESTION_BLOCKED` |
-| 视角混乱 | -0.5 | 单章内无理由切换受限视角，导致读者混淆 | 可局部重润色，若需改事件则阻断 |
-| 过度解释 | -0.3 | 连续说明替代动作展示，明显压低张力 | 可作为 `TEXTUAL_FIX` 或 `PACING_FIX` |
-| 台词失声 | -0.3 | 多个角色说话口吻不可区分 | 可作为 `TEXTUAL_FIX` |
-| 节奏停滞 | -0.5 | 大段描写或说明超过约 500 字且无动作、信息或情绪推进 | 可作为 `PACING_FIX` |
-| 设定悬浮 | -0.5 | 设定只被解释，没有在选择、代价或环境中产生后果 | 可作为 `WORLD_TEXTURE_FIX`，不得新增设定 |
-| 状态漂移 | -0.8 | 资源、伤势、时间或信息差与 World Bible 或前文证据冲突 | 不自动改，标记 `WORLD_STATE_BLOCKED` |
+| 开篇迟滞 | `moderate` | 前 300-500 字无明确问题、压力、目标或可感缺口 | `PACING_FIX` |
+| 翻页钩子钝 | `moderate` | 场景间缺少下一步问题，读者没有追读压力 | `PACING_FIX` |
+| 爽点错位 | `major` | 铺垫的是 A，兑现的是 B，读者预期收益落空 | 轻微可 `PACING_FIX`，涉及结果则阻断 |
+| 压力不足 | `moderate` | 对手、环境、代价或时间压力不足以逼迫主角行动 | `PACING_FIX` 或 `WORLD_TEXTURE_FIX` |
+| 对手降智 | `major` | 反派、阻力或环境为了让主角赢而明显变蠢 | 通常转人工，轻微可局部补压迫证据 |
+| 主角能动性不足 | `major` | 关键推进主要来自外力、巧合或配角安排 | 涉及选择则阻断 |
+| 场景空转 | `moderate` | 场景不推进冲突、信息、情绪、人物关系或伏笔 | `PACING_FIX` |
+| 信息密度失衡 | `moderate` | 连续解释、设定堆叠或低收益信息压低阅读动力 | `TEXTUAL_FIX` 或 `PACING_FIX` |
+| 信息释放失败 | `major` | 关键悬念过早说明、该解释处含糊，或读者无法判断因果 | 轻微可重润色，结构性转人工 |
+| 章末钩子泛化 | `moderate` | 结尾只是“出事了”或事件暂停，没有具体下一章问题 | `PACING_FIX` |
+| 情绪越权 | `moderate` | 旁白替读者宣布感动、愤怒、震撼，而非由动作细节产生 | `EMOTIONAL_FIX` |
+| 情绪回报不足 | `moderate` | 压力、反击、失去或获得之后缺少读者可感回响 | `EMOTIONAL_FIX` |
+| 人物声音同质 | `moderate` | 主角、配角、反派台词和反应可互换 | `TEXTUAL_FIX` |
+| 人物动机悬浮 | `major` | 角色行动缺少欲望、恐惧、利益或代价支撑 | 轻微可补细节，结构性转人工 |
+| 视角混乱 | `moderate` | 单章内无理由切换受限视角，导致读者混淆 | 可局部重润色，若需改事件则阻断 |
+| 过度解释 | `minor` | 连续说明替代动作展示，明显压低张力 | `TEXTUAL_FIX` 或 `PACING_FIX` |
+| 台词失声 | `minor` | 多个角色说话口吻不可区分 | `TEXTUAL_FIX` |
+| 节奏停滞 | `moderate` | 大段描写或说明超过约 500 字且无动作、信息或情绪推进 | `PACING_FIX` |
+| 语言虚浮 | `minor` | 抽象形容、套话、空泛比喻或低价值修饰密集出现 | `TEXTUAL_FIX` |
+| 设定悬浮 | `moderate` | 设定只被解释，没有在选择、代价或环境中产生后果 | `WORLD_TEXTURE_FIX`，不得新增设定 |
+| 环境通用 | `minor` | 换成任意客栈、山洞、街道、战场也不影响阅读 | `WORLD_TEXTURE_FIX` |
+| 战力漂移 | `major` | 攻防、限制、代价或胜负条件缺少 `world/power.md` 支撑 | `WORLD_STATE_BLOCKED` |
+| 资源/伤势松动 | `major` | 道具消耗、伤势延续、时间压力或信息差难以追踪 | `WORLD_STATE_BLOCKED` |
+| 类型期待偏移 | `major` | 目标读者期待的爽、压迫、奇观、升级、解谜或反击长期没有被服务 | 轻微可重润色，结构性转人工 |
 
 ## 评分输出格式
 
@@ -142,7 +181,12 @@ reader_evaluation:
       weighted_score: 0.0
       dimensions: []
   aggregate_score: 0.0
-  deductions: []
+  deductions:
+    - name: ""
+      severity: minor|moderate|major|critical
+      penalty: 0.0
+      evidence_refs: []
+      suggestion_type: TEXTUAL_FIX|PACING_FIX|EMOTIONAL_FIX|WORLD_TEXTURE_FIX|STRUCTURAL_SUGGESTION_BLOCKED|WORLD_STATE_BLOCKED
   chapter_promise:
     core_reader_payoff: ""
     emotional_target: ""
@@ -154,6 +198,8 @@ reader_evaluation:
 ```
 
 每个 `dimensions` 条目必须包含 `name`、`score`、`weight`、`evidence_refs`、`reason` 和 `suggestion_type`。缺少维度分、证据或建议分类时，本门禁不得放行。
+
+每个 `deductions` 条目必须包含 `name`、`severity`、`penalty`、`evidence_refs`、`reason` 和 `suggestion_type`。`severity` 与 `penalty` 必须符合“通用扣分项”的严重度表；若人工调整幅度，必须说明原因。
 
 每个 `dimensions` 条目还必须包含：
 
