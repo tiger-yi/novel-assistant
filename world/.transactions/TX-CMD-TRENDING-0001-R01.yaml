@@ -1,0 +1,59 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CMD-TRENDING-0001-R01
+source_command: 热门话题
+command: trending
+mode: null
+pipeline: trending
+arguments: {}
+state: COMPLETE
+archive_state: NOT_CHECKED
+stages:
+- name: analyze
+  status: PASS
+  summary: 已完成古武+诡异题材的市场扫描、情绪锚点与三组立方案
+gates:
+- gate: originality-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 三组方案均规避黑名单桥段，与近180天主流差异成立
+  evidence:
+  - claim: 方案涉及香火与业态闭环的非撞设定，与近窗主流黑名单桥段（废柴退婚/测试石/无脑打脸）无重合
+    source: world/.transactions/TX-CMD-TRENDING-0001-R01.yaml
+  - claim: 中式克苏鲁→民俗/后克苏鲁演进得到行业媒体证实
+    source: https://www.chinawriter.com.cn/n1/2026/0526/c40a6d-40727703.html
+  - claim: 规则怪谈/诡异复苏在起点番茄双端仍排榜前列
+    source: https://www.toutiao.com/article/76RQ-261/...
+  - claim: 悬疑/灵异/都市高武 tag 均值高于多数都市赛道，属男频上升区
+    source: https://www.toutiao.com/article/7642818535370407433/
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 1 prepared change(s)
+  evidence:
+  - target: analysis/trending-analysis.md
+    staged_hash: sha256:9d1d4e5eebab1a929ce9599a0e9cb6b6264b86f0d197186399807e6d7242eba4
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 1 published target(s)
+  evidence:
+  - target: analysis/trending-analysis.md
+    published_hash: sha256:9d1d4e5eebab1a929ce9599a0e9cb6b6264b86f0d197186399807e6d7242eba4
+changes:
+- target: analysis/trending-analysis.md
+  staged: analysis/.staging/TX-CMD-TRENDING-0001-R01/trending-analysis.md
+  idempotency_key: trending-analysis:TX-CMD-TRENDING-0001-R01
+  baseline_hash: absent
+  staged_hash: sha256:9d1d4e5eebab1a929ce9599a0e9cb6b6264b86f0d197186399807e6d7242eba4
+applied_keys:
+- trending-analysis:TX-CMD-TRENDING-0001-R01
+confirmations: []
+confirmation_nonce: 71bfff01f8cf5d65596f3f178b5f8e9b
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null

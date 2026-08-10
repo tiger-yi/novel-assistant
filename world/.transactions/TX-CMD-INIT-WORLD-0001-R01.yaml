@@ -1,0 +1,139 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CMD-INIT-WORLD-0001-R01
+source_command: 初始化世界
+command: init-world
+mode: null
+pipeline: init-world
+arguments: {}
+state: COMPLETE
+archive_state: NOT_CHECKED
+stages:
+- name: preflight
+  status: PASS
+  summary: 已扫描 world/ 目录，八类 World Bible 均不存在，属全新初始化；无既有数据需覆盖，进入五步登仙引导。
+- name: generate-world
+  status: PASS
+  summary: 已按方案A《拳碎大魏》生成八类 World Bible 候选：outline/characters/power/geography/timeline/inventory/hooks/chapter-summary。
+gates:
+- gate: plan-approval
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 全书卷路线图(第一层冻结)与当前卷 ARC-001 里程碑与章节契约(第二层冻结)均经用户确认；经两次用户反馈修订为"人间焚武、凡武镇世、无神佛、多势力联动"路线图。
+  evidence:
+  - claim: 第一层冻结获用户确认：接受 ARC-001..006 固定章节区间、卷目标、卷间因果与修订终局（重建人间武藏、联合江湖乡社、镇世族军阀北狄妖患，不加天道天庭神佛），并在二次修订中采纳"势力不单一"改为多势力联动格局。
+    source: TX-CMD-INIT-WORLD-0001-R01 用户交互确认记录
+  - claim: 第二层冻结获用户确认：ARC-001(CH-0001..0010)含 MS-ARC-001-01/02/03 三个里程碑，黄金三章角色 inciting/feedback/goal-lock
+      齐备，十章节执行契约覆盖整卷，均通过 outline-contract 校验。
+    source: TX-CMD-INIT-WORLD-0001-R01 用户交互确认记录
+- gate: outline-contract
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] INV-PLOT-001: outline contract is valid and frozen'
+  evidence:
+  - command: python scripts/validate_outline.py <outline_file>
+    exit_code: 0
+    output_hash: sha256:8d13e6664bc4b2aaff79b8f7b673e1656afca7eeac11998809ef2a38530ddd8e
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 8 prepared change(s)
+  evidence:
+  - target: world/chapter-summary.md
+    staged_hash: sha256:28af9b601c0c722b45e83ad809770532304a2b770c0ba697ff7802b44ba96b9b
+  - target: world/characters.md
+    staged_hash: sha256:ca949d005748ec5ca22742476b03a06427e391e1f0bb9ff0684e8df2a549c651
+  - target: world/inventory.md
+    staged_hash: sha256:75e6724dd9e7fbdc1f213119b3a7b4cfc607e1393c220fc0fecc09ebf51479af
+  - target: world/timeline.md
+    staged_hash: sha256:43a93744cac4a2c8446dcd3de4a87ef4ea7daab64bd71435f4da786e405e4190
+  - target: world/geography.md
+    staged_hash: sha256:7e272616a5a796600d2ca43d2908cf275fb5d619c3172570c87f0b24bff9a72b
+  - target: world/power.md
+    staged_hash: sha256:c885bb2b3223c0d7effb0e29d4f8ebac5fe79ca271186e5c37f4116b267c26d3
+  - target: world/hooks.md
+    staged_hash: sha256:9a37b7e67e2312b87d4c2d97933e1be539ce92e5c4b828ec37e0674a8c319c5c
+  - target: world/outline.md
+    staged_hash: sha256:47afb547da8b0d2a8c7e9a91236514e50775dd53f2d2ffee10ae7135a8972df8
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 8 published target(s)
+  evidence:
+  - target: world/chapter-summary.md
+    published_hash: sha256:28af9b601c0c722b45e83ad809770532304a2b770c0ba697ff7802b44ba96b9b
+  - target: world/characters.md
+    published_hash: sha256:ca949d005748ec5ca22742476b03a06427e391e1f0bb9ff0684e8df2a549c651
+  - target: world/inventory.md
+    published_hash: sha256:75e6724dd9e7fbdc1f213119b3a7b4cfc607e1393c220fc0fecc09ebf51479af
+  - target: world/timeline.md
+    published_hash: sha256:43a93744cac4a2c8446dcd3de4a87ef4ea7daab64bd71435f4da786e405e4190
+  - target: world/geography.md
+    published_hash: sha256:7e272616a5a796600d2ca43d2908cf275fb5d619c3172570c87f0b24bff9a72b
+  - target: world/power.md
+    published_hash: sha256:c885bb2b3223c0d7effb0e29d4f8ebac5fe79ca271186e5c37f4116b267c26d3
+  - target: world/hooks.md
+    published_hash: sha256:9a37b7e67e2312b87d4c2d97933e1be539ce92e5c4b828ec37e0674a8c319c5c
+  - target: world/outline.md
+    published_hash: sha256:47afb547da8b0d2a8c7e9a91236514e50775dd53f2d2ffee10ae7135a8972df8
+changes:
+- target: world/outline.md
+  staged: world/.staging/TX-CMD-INIT-WORLD-0001-R01/outline.md
+  idempotency_key: world/outline.md:TX-CMD-INIT-WORLD-0001-R01
+  baseline_hash: absent
+  staged_hash: sha256:47afb547da8b0d2a8c7e9a91236514e50775dd53f2d2ffee10ae7135a8972df8
+- target: world/characters.md
+  staged: world/.staging/TX-CMD-INIT-WORLD-0001-R01/characters.md
+  idempotency_key: world/characters.md:TX-CMD-INIT-WORLD-0001-R01
+  baseline_hash: absent
+  staged_hash: sha256:ca949d005748ec5ca22742476b03a06427e391e1f0bb9ff0684e8df2a549c651
+- target: world/power.md
+  staged: world/.staging/TX-CMD-INIT-WORLD-0001-R01/power.md
+  idempotency_key: world/power.md:TX-CMD-INIT-WORLD-0001-R01
+  baseline_hash: absent
+  staged_hash: sha256:c885bb2b3223c0d7effb0e29d4f8ebac5fe79ca271186e5c37f4116b267c26d3
+- target: world/geography.md
+  staged: world/.staging/TX-CMD-INIT-WORLD-0001-R01/geography.md
+  idempotency_key: world/geography.md:TX-CMD-INIT-WORLD-0001-R01
+  baseline_hash: absent
+  staged_hash: sha256:7e272616a5a796600d2ca43d2908cf275fb5d619c3172570c87f0b24bff9a72b
+- target: world/timeline.md
+  staged: world/.staging/TX-CMD-INIT-WORLD-0001-R01/timeline.md
+  idempotency_key: world/timeline.md:TX-CMD-INIT-WORLD-0001-R01
+  baseline_hash: absent
+  staged_hash: sha256:43a93744cac4a2c8446dcd3de4a87ef4ea7daab64bd71435f4da786e405e4190
+- target: world/inventory.md
+  staged: world/.staging/TX-CMD-INIT-WORLD-0001-R01/inventory.md
+  idempotency_key: world/inventory.md:TX-CMD-INIT-WORLD-0001-R01
+  baseline_hash: absent
+  staged_hash: sha256:75e6724dd9e7fbdc1f213119b3a7b4cfc607e1393c220fc0fecc09ebf51479af
+- target: world/hooks.md
+  staged: world/.staging/TX-CMD-INIT-WORLD-0001-R01/hooks.md
+  idempotency_key: world/hooks.md:TX-CMD-INIT-WORLD-0001-R01
+  baseline_hash: absent
+  staged_hash: sha256:9a37b7e67e2312b87d4c2d97933e1be539ce92e5c4b828ec37e0674a8c319c5c
+- target: world/chapter-summary.md
+  staged: world/.staging/TX-CMD-INIT-WORLD-0001-R01/chapter-summary.md
+  idempotency_key: world/chapter-summary.md:TX-CMD-INIT-WORLD-0001-R01
+  baseline_hash: absent
+  staged_hash: sha256:28af9b601c0c722b45e83ad809770532304a2b770c0ba697ff7802b44ba96b9b
+applied_keys:
+- world/chapter-summary.md:TX-CMD-INIT-WORLD-0001-R01
+- world/characters.md:TX-CMD-INIT-WORLD-0001-R01
+- world/inventory.md:TX-CMD-INIT-WORLD-0001-R01
+- world/timeline.md:TX-CMD-INIT-WORLD-0001-R01
+- world/geography.md:TX-CMD-INIT-WORLD-0001-R01
+- world/power.md:TX-CMD-INIT-WORLD-0001-R01
+- world/hooks.md:TX-CMD-INIT-WORLD-0001-R01
+- world/outline.md:TX-CMD-INIT-WORLD-0001-R01
+confirmations: []
+confirmation_nonce: 9313fca9b2e68a8a5abc8bfca55965cb
+events:
+- outline_initialized
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null

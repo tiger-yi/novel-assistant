@@ -1,0 +1,59 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CMD-CREATE-STYLE-0001-R01
+source_command: 创建写作风格
+command: create-style
+mode: null
+pipeline: create-style
+arguments: {}
+state: COMPLETE
+archive_state: NOT_CHECKED
+stages:
+- name: preflight
+  status: PASS
+  summary: 已读取 world/ 八类 World Bible 与 create-style 协议；确认《观天神相》旧风格指南与《拳碎大魏》世界不匹配，需覆盖重建；create-style
+    路由无覆盖确认门禁，按协议展示变更范围并取得用户确认。
+- name: generate-style
+  status: PASS
+  summary: 已基于《拳碎大魏》基本面（乱世流民武夫·破限加点·无神佛天道·单女主纯爱）生成风格指南候选，frontmatter 含 style_basis
+    六个锚点、必需小节（核心调性/排版规范/受限视角/角色刻画重点/禁忌与避坑/黑名单词）与三组范文；status 置 ready。
+gates:
+- gate: style-ready
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Harness validation passed.'
+  evidence:
+  - command: python scripts/validate_harness.py --style-guide <style_file>
+    exit_code: 0
+    output_hash: sha256:5f8eb46646f5245e64297224e727d3071b65402d3d79796fc7cdf2dd49825a79
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 1 prepared change(s)
+  evidence:
+  - target: writespec/style-guide.md
+    staged_hash: sha256:65ae811288d4c65f24c65e54cfd2c09ce198d0c198d5fc1ffc1089830839033f
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 1 published target(s)
+  evidence:
+  - target: writespec/style-guide.md
+    published_hash: sha256:65ae811288d4c65f24c65e54cfd2c09ce198d0c198d5fc1ffc1089830839033f
+changes:
+- target: writespec/style-guide.md
+  staged: writespec/.staging/TX-CMD-CREATE-STYLE-0001-R01/style-guide.md
+  idempotency_key: writespec/style-guide.md:TX-CMD-CREATE-STYLE-0001-R01
+  baseline_hash: sha256:d92b15b4def17948f8e85a6937fc7db39f35aa4f63da80356944a59d35c51d38
+  staged_hash: sha256:65ae811288d4c65f24c65e54cfd2c09ce198d0c198d5fc1ffc1089830839033f
+applied_keys:
+- writespec/style-guide.md:TX-CMD-CREATE-STYLE-0001-R01
+confirmations: []
+confirmation_nonce: a74848589a320a36d5ead01ae1a444a3
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null

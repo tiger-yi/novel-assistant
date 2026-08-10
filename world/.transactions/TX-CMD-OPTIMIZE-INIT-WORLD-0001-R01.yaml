@@ -1,0 +1,114 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CMD-OPTIMIZE-INIT-WORLD-0001-R01
+source_command: 优化初始化世界
+command: optimize-init-world
+mode: null
+pipeline: optimize-init-world
+arguments: {}
+state: COMPLETE
+archive_state: NOT_CHECKED
+stages:
+- name: preflight
+  status: PASS
+  summary: 八类 World Bible 已由 init-world 创建，chapters/ 无已发布 CH-0001，无在途初始化返工事务；确认优化通道合法。
+- name: prepare-candidate
+  status: PASS
+  summary: '生成八类 World Bible 候选版；本轮唯一变更：world/outline.md frontmatter 增加 book_title:
+    拳碎大魏（机器书名锚，供 _outline_title 提取），其余七类与正式版逐字节一致，无事实变更。'
+gates:
+- gate: full-audit
+  kind: semantic
+  required: true
+  status: WARN
+  summary: 复用 TX-CMD-AUDIT-ORIGINALITY-0001-R01（channel 全量 A-K + L 审计，整体 WARN 已被用户于《拳碎大魏》方案A
+    接受）；本轮候选仅新增 frontmatter 书名锚，不改变任何原创性/长期展开性事实维度。
+  evidence:
+  - claim: 全量审计结果记录于 TX-CMD-AUDIT-ORIGINALITY-0001-R01；K-001（面板加点同构，正文降噪）、D-001（换图密集，卷间因果入场）、L-002（世族幕后信息流，CH-0010
+      卷间衔接补税/禁令/传闻种子）已由用户以方案A接受为 WARN。
+    source: world/.transactions/TX-CMD-AUDIT-ORIGINALITY-0001-R01.yaml
+  - claim: '本轮候选只给 outline.md frontmatter 增加机器书名锚 book_title: 拳碎大魏，未改动任何剧情、人物、力量、地理、时间线、道具、伏笔或章节契约事实，audit
+      维度不受影响，维持 WARN 可接受。'
+    source: world/.staging/TX-CMD-OPTIMIZE-INIT-WORLD-0001-R01/outline.md
+- gate: rework-decision
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 用户选定「优化初始化世界」方案A：最小化差异——仅补 outline.md 书名锚（frontmatter book_title），不重写其他七类，不引入新设定。
+  evidence:
+  - claim: 用户在阻断期内明确选择 optimize-init-world 通道并确认最小修复方向（补书名锚解锁创作第 1 章）。
+    source: 用户命令交互记录 TX-CMD-OPTIMIZE-INIT-WORLD-0001-R01
+- gate: candidate-preview
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 差异预览——修改文件 1 个（world/outline.md）；核心设定变化：无；已解决风险：书名锚缺失；新增代价：无；不变硬约束：卷区间/卷目标/里程碑/章节契约全部未动；ID
+    映射：无新增。
+  evidence:
+  - claim: 'outline.md diff 仅为 frontmatter 新增 book_title: 拳碎大魏，正文与 volumes 契约未变；validate_outline.py
+      对 staging 版 PASS。'
+    source: world/.staging/TX-CMD-OPTIMIZE-INIT-WORLD-0001-R01/outline.md
+  - claim: 其余七类候选文件与正式版哈希一致（未改写）。
+    source: 候选生成比对记录
+- gate: rework-user-approval
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 用户已确认最小书名锚修复候选并授权覆盖 world/outline.md；覆盖确认 proof 将由 confirm-overwrite 交互门禁写入。
+  evidence:
+  - claim: 用户在差异预览确认中接受《拳碎大魏》书名锚最小修复候选（仅 world/outline.md 增 book_title），并授权覆盖 world/outline.md。
+    source: 用户命令交互记录 TX-CMD-OPTIMIZE-INIT-WORLD-0001-R01
+- gate: longform-readiness
+  kind: semantic
+  required: true
+  status: WARN
+  summary: 长篇展开性维持既有结论：本书有跨卷旧账（世族血田/人间焚武/武圣薪火）、力量天花板锚定与多势力联动，可支撑长篇；L-002 信息流风险按方案A在
+    CH-0010 卷间衔接处理。
+  evidence:
+  - claim: 与 TX-CMD-AUDIT-ORIGINALITY-0001-R01 的 L 维结论一致；候选变更不触及长篇展开性维度。
+    source: world/.transactions/TX-CMD-AUDIT-ORIGINALITY-0001-R01.yaml
+- gate: outline-contract
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] INV-PLOT-001: outline contract is valid and frozen'
+  evidence:
+  - command: python scripts/validate_outline.py <outline_file>
+    exit_code: 0
+    output_hash: sha256:8d13e6664bc4b2aaff79b8f7b673e1656afca7eeac11998809ef2a38530ddd8e
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 1 prepared change(s)
+  evidence:
+  - target: world/outline.md
+    staged_hash: sha256:2a2b76b86fe2e4fffc7443c3d3d5107a3d0f54eb4cf62b741ab500269d620e10
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 1 published target(s)
+  evidence:
+  - target: world/outline.md
+    published_hash: sha256:2a2b76b86fe2e4fffc7443c3d3d5107a3d0f54eb4cf62b741ab500269d620e10
+changes:
+- target: world/outline.md
+  staged: world/.staging/TX-CMD-OPTIMIZE-INIT-WORLD-0001-R01/outline.md
+  idempotency_key: world/outline.md:TX-CMD-OPTIMIZE-INIT-WORLD-0001-R01
+  baseline_hash: sha256:47afb547da8b0d2a8c7e9a91236514e50775dd53f2d2ffee10ae7135a8972df8
+  staged_hash: sha256:2a2b76b86fe2e4fffc7443c3d3d5107a3d0f54eb4cf62b741ab500269d620e10
+applied_keys:
+- world/outline.md:TX-CMD-OPTIMIZE-INIT-WORLD-0001-R01
+confirmations:
+- type: overwrite
+  target: world/outline.md
+  status: CONFIRMED
+  source: user
+  method: interactive-cli
+  proof: sha256:43c94aa72c0b160814f8ae8b3a5603483eaadf7f52ac6a9610e10bcca46c77af
+confirmation_nonce: 0e852800c849496f88ca4bfec0c261b7
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null

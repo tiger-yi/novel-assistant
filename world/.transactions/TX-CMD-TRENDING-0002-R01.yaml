@@ -1,0 +1,59 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CMD-TRENDING-0002-R01
+source_command: 热门话题
+command: trending
+mode: null
+pipeline: trending
+arguments: {}
+state: COMPLETE
+archive_state: NOT_CHECKED
+stages:
+- name: analyze
+  status: PASS
+  summary: 已完成古典世界+极道流题材的近180天市场扫描、情绪锚点与三组立方案
+gates:
+- gate: originality-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 三组方案均规避黑名单桥段，金手指各有代价与盲区，与近窗主流差异成立
+  evidence:
+  - claim: 开局未使用废柴退婚/测试石/无脑挑衅等 trope-blacklist 桥段；三方案金手指(寿元加点/抗性吞噬/观想推演)均有明确弱点与代价，非全能面板
+    source: analysis/.staging/TX-CMD-TRENDING-0002-R01/trending-analysis.md
+  - claim: 古典武道肉身形与加点路径得到平台级证据：起点2026-08书单十二天王预测含《苟在武道世界成圣》，QQ阅读飙升榜《从佛门练武成圣》，创世《苟在武道乱世肝熟练度》均在观察窗内在榜
+    source: https://www.qidian.com/booklist/latest/page2/
+  - claim: 古典低武仙侠文明碰撞为番茄2026-04巅峰榜风向之一；玄幻修仙短剧2026规模化增长提供改编潜力参考
+    source: https://www.toutiao.com/article/7627404813638894122/
+  - claim: 极道流前期精彩后期乏力(虎头蛇尾/数值膨胀)是既有主流失败模式，报告以"有成本的胜利+秩序级敌人+换图携带旧账"作为三方案预设对策
+    source: https://www.163.com/dy/article/IB81AJIG0553JUR8.html
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 1 prepared change(s)
+  evidence:
+  - target: analysis/trending-analysis.md
+    staged_hash: sha256:22057cfc45f5fdf04a6d4564249a0b8c5dddf0cca3ab3359f10dc1cc84d0bdf2
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 1 published target(s)
+  evidence:
+  - target: analysis/trending-analysis.md
+    published_hash: sha256:22057cfc45f5fdf04a6d4564249a0b8c5dddf0cca3ab3359f10dc1cc84d0bdf2
+changes:
+- target: analysis/trending-analysis.md
+  staged: analysis/.staging/TX-CMD-TRENDING-0002-R01/trending-analysis.md
+  idempotency_key: trending-analysis:TX-CMD-TRENDING-0002-R01
+  baseline_hash: sha256:9d1d4e5eebab1a929ce9599a0e9cb6b6264b86f0d197186399807e6d7242eba4
+  staged_hash: sha256:22057cfc45f5fdf04a6d4564249a0b8c5dddf0cca3ab3359f10dc1cc84d0bdf2
+applied_keys:
+- trending-analysis:TX-CMD-TRENDING-0002-R01
+confirmations: []
+confirmation_nonce: d301fc5d07d84d2e059610727427ebbb
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null

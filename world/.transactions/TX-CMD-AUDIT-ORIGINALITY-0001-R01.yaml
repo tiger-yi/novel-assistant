@@ -1,0 +1,58 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CMD-AUDIT-ORIGINALITY-0001-R01
+source_command: 审计原创性
+command: audit-originality
+mode: null
+pipeline: audit-originality
+arguments: {}
+state: COMPLETE
+archive_state: NOT_CHECKED
+stages: []
+gates:
+- gate: audit
+  kind: semantic
+  required: true
+  status: WARN
+  summary: 全书 A-K 维审计总体 WARN：开局桥段/代价与人性锚点/多势力资源逻辑通过，金手指同质化(K)与换图节奏(D)、世族生日渗透/信息流(L)存在需在正文与卷间衔接中控制的风险；L
+    维长篇展开性审计 WARN，first-chapter-readiness = WARN。
+  evidence:
+  - claim: A-K 维审计通过项：世界观无神佛且底层冲突(世族/消耗政策 vs 凡武)成立，金手指以气血寿元为薪不消除挑战，人物动机三段链完整，开局避开
+      trope-blacklist 全部模板，三方异类体系人间手段且互有克制，七势力目标/资源/领地/敌友齐备，粮妖丹药日常化。
+    source: world/outline.md, world/characters.md, world/power.md, world/geography.md,
+      world/timeline.md, world/inventory.md, world/hooks.md
+  - claim: L 维长篇展开性审计 9/11 项 PASS，主线支线回流、金手指生态位、分卷承压、反派路线图、资源经济、时间压力、人物驱动、伏笔密度齐备。
+    source: world/outline.md, world/timeline.md, world/hooks.md
+  - claim: 风险项1(K-001)：金手指"面板加点"与红海"深蓝加点横推"表面同构，差异化依赖以血肉买命的可见成本+禁神佛纯度+系统极简，正文需持续降噪。风险项2(D-001)：卷二至卷六换图密集，需保证卷间入场由因果/线索驱动而非升级推动。
+    source: world/power.md, analysis/trending-analysis.md, writespec/trope-blacklist.md
+  - claim: 风险项3(L-002 势力渗透/信息流)：世族正式登场在卷三，此前仅账本残页单通道引线，需在 CH-0010 后卷间衔接补充税/禁令/传闻/通缉等生活化渗透种子；复查点在
+      CH-0010 或 ARC-001 卷终较早者。
+    source: world/geography.md, world/hooks.md
+  - claim: first-chapter-readiness 结论 = WARN：L 维 FAIL 不成立，但存在需用户在创作第 1 章前明确接受的两类可控风险(K
+      维正文降噪 + L 维卷间衔接补种)；复查点 CH-0010 或 ARC-001 卷终较早者。
+    source: writespec/commands/audit-originality.md, writespec/originality-audit.md
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: NOT_APPLICABLE
+  summary: read-only pipeline has no formal changes
+  evidence: []
+  reason: read-only pipeline has no formal changes
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 0 published target(s)
+  evidence: []
+changes: []
+applied_keys: []
+confirmations: []
+confirmation_nonce: fb51ff3478c5a5335871e0d59aaef2b3
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null
+coverage:
+  through_chapter: 0
+  events:
+  - TX-CMD-INIT-WORLD-0001-R01

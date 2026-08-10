@@ -1,0 +1,20 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CMD-INIT-WORLD-0002-R01
+source_command: 初始化世界
+command: init-world
+mode: null
+pipeline: init-world
+arguments: {}
+state: PREFLIGHT
+archive_state: NOT_CHECKED
+stages: []
+gates: []
+changes: []
+applied_keys: []
+confirmations: []
+confirmation_nonce: 297e5e60c88d05b8467cd526a4731aa1
+events: []
+recovery:
+  last_successful_stage: null
+  failed_stage: null
+  message: null
