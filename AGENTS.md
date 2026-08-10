@@ -23,6 +23,7 @@ Novel Assistant 是中文玄幻长篇小说的结构化创作 Harness。项目�
 | 状态与事务 | `writespec/state-management.md` |
 | World Bible 运行期契约 | `writespec/world-bible-contract.md` |
 | 文本润色 | `writespec/chapter-polish.md` |
+| 读者评价 | `writespec/reader-evaluation.md` |
 | 风格与物理化 | `writespec/style-guide.md`, `writespec/chapter-polish.md` |
 | 世界观审计 | `writespec/world-audit.md` |
 | 归档 | `writespec/commands/archive-world.md`, `writespec/archiving-spec.md` |

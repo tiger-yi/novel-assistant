@@ -37,7 +37,7 @@ Novel Assistant 使用结构化 World Bible 管理中文玄幻长篇小说的剧
 创作第 2 章
 ```
 
-`创作第 N 章` 会绑定冻结的大纲修订与章节执行契约，生成一个不改变既定结果的执行方案，再完成撰写、文本润色、必要的内容补全、验证、发布、更新 World Bible 和到期归档。规划缺失或过期、事实冲突、逻辑死锁、固定卷区间无法完成卷目标或要求修订已发布章节时必须暂停。
+`创作第 N 章` 会绑定冻结的大纲修订与章节执行契约，生成一个不改变既定结果的执行方案，再完成撰写、文本润色、读者评价、必要的内容补全、验证、发布、更新 World Bible 和到期归档。规划缺失或过期、事实冲突、逻辑死锁、固定卷区间无法完成卷目标、读者评价暴露结构性阻断或要求修订已发布章节时必须暂停。
 
 ### 修复与高级维护
 
@@ -72,7 +72,7 @@ Novel Assistant 使用结构化 World Bible 管理中文玄幻长篇小说的剧
 1. **准备阶段**：在 staging 中完成正文、文本润色、最终门禁和 World Bible 候选文件，不修改正式章节或 World Bible。
 2. **提交阶段**：事务执行器校验 YAML 证据与目标基线，发布正文、更新 World Bible、执行后置一致性校验，再按条件决定是否归档。
 
-文本润色只处理语言、节奏、感官描写、物理化和去 AI 味。字数判断、内容补全、世界观审计和状态回写由外层事务负责。
+文本润色只处理语言、节奏、感官描写、物理化和去 AI 味。读者评价只用于新章 staging 正文的多读者画像评分和受限重润色建议，不写入正式 World Bible。字数判断、内容补全、世界观审计和状态回写由外层事务负责。
 
 已发布章节需要多次语言优化时使用 `润色章节 CH-0001`。该命令创建新的等义呈现修订事务，先做原文基线审计，再把候选正文写入 staging；通过字数、格式、等义、叙事完整性、世界观和线索门禁后，才由事务执行器覆盖正式章节。若只想处理当前活跃章节事务内的 staging，使用 `润色当前章节`；找不到活跃 staging 时返回 `STAGING_NOT_FOUND`。
 
@@ -108,6 +108,7 @@ AGENTS 只提供人工入口和跨项目原则；Manifest 管理机器路由、�
 | 初始化返工 | [writespec/commands/rework-init-world.md](writespec/commands/rework-init-world.md) |
 | 润色命令 | [writespec/commands/polish-chapter.md](writespec/commands/polish-chapter.md) |
 | 章节流程 | [writespec/chapter-creation-spec.md](writespec/chapter-creation-spec.md) |
+| 读者评价 | [writespec/reader-evaluation.md](writespec/reader-evaluation.md) |
 | 卷规划修订 | [writespec/commands/revise-arc.md](writespec/commands/revise-arc.md) |
 | 叙事线索 | [writespec/foreshadowing-spec.md](writespec/foreshadowing-spec.md) |
 | 状态事务 | [writespec/state-management.md](writespec/state-management.md) |

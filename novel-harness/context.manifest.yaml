@@ -247,6 +247,10 @@ routes:
       path: ../writespec/chapter-polish.md
       activation: pipeline
       purpose: 纯文本润色协议，不包含补字数、审计或回写
+    - name: reader-evaluation
+      path: ../writespec/reader-evaluation.md
+      activation: pipeline
+      purpose: 新章 staging 正文的多读者画像评分、阻断和受限重润色证据
     - name: continuous-improvement
       path: ../writespec/continuous-improvement.md
       activation: event
@@ -443,6 +447,15 @@ pipelines:
         uses: chapter-polish
         handler: agent
         required: true
+      - name: reader-evaluation
+        uses: reader-evaluation
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+          - PASS_WITH_TARGET_MISS
+        delegable: true
+        worker: reader-gate-worker
       - name: chapter-format
         uses: chapter-creation-spec
         handler: deterministic-gate
@@ -775,6 +788,12 @@ delegation:
       may_write:
         - ../world/.transactions/
       may_return: evidence_artifact_pointer
+    - name: reader-gate-worker
+      purpose: 新章 staging 正文的读者画像评分、扣分证据和受限重润色建议
+      may_read: full_repository
+      may_write:
+        - ../world/.transactions/
+      may_return: evidence_artifact_pointer
     - name: archive-worker
       purpose: 归档触发、迁移预览和歧义判断
       may_read: full_repository
@@ -965,6 +984,9 @@ verification:
       spec: ../writespec/world-audit.md
       evidence_required: true
       invariant: INV-POWER-001
+    - name: reader-evaluation
+      spec: ../writespec/reader-evaluation.md
+      evidence_required: true
     - name: logic-closure
       spec: ../writespec/state-management.md
       evidence_required: true
