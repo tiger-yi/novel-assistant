@@ -33,6 +33,38 @@ draft -> polish -> reader-evaluation -> chapter-format -> narrative/world/plot/t
 
 每个画像内部先按维度权重得到画像分。若单个维度触发结构性或世界状态阻断，不得用其他高分抵消。
 
+## 毒蛇校准
+
+读者评价默认从 7.0 起评，而不是从 8.5 起评。评分者必须先找扣分点，再确认亮点是否足以抬分。
+
+- `7.0-7.9` 表示可发布但有明确伤口，是常见好章区间。
+- `8.0-8.4` 表示强章，必须同时具备清晰亮点和可说明的小缺口。
+- `8.5-8.9` 表示同类题材显著优秀，必须给出同维度反证审查。
+- `9.0+` 表示近乎无可替代的标杆表现；单章内不得轻易给出，且同一报告最多允许 2 个维度达到 `9.0+`，除非提供强证据说明。
+
+以下情况必须压分或判为评价证据不足：
+
+- 所有维度都 `>= 8.5`，但没有逐维负面证据。
+- 写出“无扣分项”“无建议”后直接 `PASS`。
+- 只引用亮点，不引用任何问题段落或弱点定位。
+- 高分理由只复述剧情事实，没有说明为什么高于普通合格章。
+- 世界观、战力或伏笔分数高于 8.5，却没有引用对应 World Bible 或前文承接证据。
+
+高分上限规则：
+
+- 没有负面短引或明确弱点定位时，聚合分不得高于 `7.9`。
+- 没有 `auto_actionable_suggestions` 时，聚合分不得高于 `8.0`；若确实无需重润色，必须说明至少 3 个“保留但不修”的轻微问题。
+- 任一画像缺少逐维证据时，该画像分不得高于 `7.5`。
+- 任一维度只有亮点、没有扣分依据时，该维度分不得高于 `8.0`。
+- 若报告声称没有任何扣分项，本门禁状态必须为 `MANUAL_DECISION_REQUIRED`，要求重评。
+
+评价报告必须包含“毒蛇反证审查”小节，至少回答：
+
+1. 本章最该被扣分的三处在哪里。
+2. 哪些问题不能自动改，因为会触碰结构或世界状态。
+3. 哪些亮点必须保护，但不能因此掩盖弱点。
+4. 为什么最终分数不是更低，也为什么不是更高。
+
 ### 目标类型读者
 
 目标类型读者判断章节是否让目标网文读者愿意继续读下去。
@@ -111,10 +143,45 @@ reader_evaluation:
       dimensions: []
   aggregate_score: 0.0
   deductions: []
+  chapter_promise:
+    core_reader_payoff: ""
+    emotional_target: ""
+    information_release: ""
+    ending_pull: ""
+  scene_diagnostics: []
+  likely_drop_points: []
   status: PASS|PASS_WITH_TARGET_MISS|BLOCKED|MANUAL_DECISION_REQUIRED
 ```
 
 每个 `dimensions` 条目必须包含 `name`、`score`、`weight`、`evidence_refs`、`reason` 和 `suggestion_type`。缺少维度分、证据或建议分类时，本门禁不得放行。
+
+每个 `dimensions` 条目还必须包含：
+
+- `negative_evidence_refs`: 扣分或压分定位；没有则该维度最高 8.0。
+- `score_ceiling_reason`: 若分数 `>= 8.0`，说明为什么没有被压到 7.x。
+- `improvement_hint`: 至少一个可执行或不可执行的改进方向。
+
+## 章节承诺与场景诊断
+
+评分前必须先提炼本章的读者承诺，避免评价漂移为泛泛审稿：
+
+- `core_reader_payoff`: 本章承诺兑现的核心爽点、压力反击、揭露、选择或获得。
+- `emotional_target`: 本章希望读者最终留下的主要情绪。
+- `information_release`: 本章释放、遮蔽或反转的关键信息。
+- `ending_pull`: 章末牵引下一章的具体问题。
+
+若正文无法支撑上述任一项，必须在对应画像和 `likely_drop_points` 中扣分或标记证据不足。
+
+`scene_diagnostics` 用于把评分转化为可执行改稿意见。每个场景诊断至少包含：
+
+- `scene_ref`: 场景或段落定位，不复制完整正文。
+- `scene_function`: 该场景在本章中的功能，例如推进冲突、兑现爽点、沉淀情绪、释放信息或承接伏笔。
+- `reader_expectation`: 读者进入该场景时自然期待什么。
+- `quality_issue`: 若有问题，说明掉速、失真、失声、悬浮或回报不足的位置。
+- `fix_path`: 可执行修法或不可自动修的原因。
+- `protected_element`: 重润色时必须保护的锋利句、人物选择、信息差或情绪落点。
+
+评价报告必须列出 `likely_drop_points`，预判目标读者最可能跳读、出戏、觉得水、觉得假或觉得不爽的位置。每个流失点必须包含定位、触发原因、影响画像和建议类型。
 
 ## 分数与阻断
 
@@ -145,12 +212,30 @@ reader_evaluation:
 
 禁止项只能记录为人工决策建议，按需转入原创性审计、大纲修订或其他授权流程。
 
+## 改稿建议结构
+
+`auto_actionable_suggestions` 中每条建议必须能被 `draft-worker` 局部执行，且至少包含：
+
+- `id`: 稳定建议编号。
+- `priority`: `P0`、`P1` 或 `P2`；`P0` 表示影响放行或明显流失，必须优先处理。
+- `suggestion_type`: 必须属于允许自动执行的建议类型。
+- `target_dimension`: 对应画像和维度。
+- `rewrite_span`: 建议影响的段落或场景范围。
+- `expected_gain`: 预期改善的质量收益，使用 `low`、`medium` 或 `high`。
+- `risk_level`: 自动改写风险，使用 `low`、`medium` 或 `high`。
+- `instruction`: 面向重润色的具体动作，不得写成抽象评价。
+- `must_preserve`: 不得误伤的剧情事实、人物选择、设定状态、伏笔和高光表达。
+
+`manual_decision_suggestions` 中每条建议必须说明为什么不能自动执行，并标记建议转入的授权流程，例如原创性审计、大纲修订、更新世界或人工放弃。
+
 ## 复评规则
 
 - 复评只覆盖触发扣分或阻断的读者画像与维度。
 - 复评必须重新计算聚合分，并记录哪些维度沿用首评结果。
 - 复评不得扩大为全新自由审稿；若发现新引入硬伤，可记录为后续常规门禁风险，但不得开启无限评价循环。
 - 自动重润色轮次必须计入章节事务的自动修正上限；超过上限时停止。
+- 复评必须包含 `revision_delta`：原问题是否解决、是否引入新问题、聚合分变化、目标维度变化和保留高光是否受损。
+- 若重润色解决了扣分点但磨平人物声音、情绪重量或章末钩子，必须在复评中重新扣分，不得只按原建议完成度放行。
 
 ## 证据与引用
 
@@ -162,6 +247,8 @@ reader_evaluation:
 - 三个读者画像的维度分、归一分、聚合分和阻断状态。
 - 扣分依据、段落或场景定位、前后文摘要。
 - `auto_actionable_suggestions` 和 `manual_decision_suggestions` 两个清单。
+- `chapter_promise`、`scene_diagnostics` 和 `likely_drop_points`。
+- 复评轮次的 `revision_delta`。
 - `forbidden_changes`: 不得自动修改的事实、状态、设定和伏笔。
 - `protected_highlights`: 高分亮点，重润色时不得误伤。
 - 最终状态：`PASS`、`PASS_WITH_TARGET_MISS`、`BLOCKED` 或 `MANUAL_DECISION_REQUIRED`。
