@@ -1,0 +1,151 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CMD-OPTIMIZE-INIT-WORLD-0002-R01
+source_command: 优化初始化世界
+command: optimize-init-world
+mode: null
+pipeline: optimize-init-world
+arguments: {}
+state: COMPLETE
+archive_state: NOT_CHECKED
+stages:
+- name: preflight
+  status: PASS
+  summary: 八类 world/*.md 已完全就位；chapters/ 不存在，无已发布 CH-0001；无在途初始化/优化返工事务；当前版本与上一轮 COMPLETE
+    事务一致，优化通道合法。
+- name: prepare-candidate
+  status: PASS
+  summary: 根据用户选定的方案 A（稳健微调）生成两文件候选：outline.md 在 ARC-002 entry_cause/required_causality
+    补世族渗透种子（税令/禁武告示/通缉悬赏/粮价传闻沿商道军驿进入边关日常）；hooks.md 新增 SEED-0005 记录该渗透种子（arc-level，卷二末至卷三回收）。其余六类与正式版逐字节一致。
+gates:
+- gate: full-audit
+  kind: semantic
+  required: true
+  status: WARN
+  summary: 全书 A-K 维审计总体 WARN，L 维长篇展开性审计 WARN（first-chapter-readiness = WARN）。世界观/人物/力量/资源/时间/势力六类硬件维度
+    PASS；风险集中在 K-001 金手指表达同构、D-001 换图节奏、L-002 世族渗透信息流三处可控项，均需在正文与卷间衔接中持续降噪。
+  evidence:
+  - claim: A(世界观底层)/I(社会运行)/J(势力资源) PASS：无神佛体系，底层冲突为"世族/消耗政策 vs 凡武"有经济政治因果（outline
+      novel_goal、ARC-001..006 required_causality）；gas-admin 粮=硬通货、妖丹=战利品、血/药=医疗、驿马/烽燧通信均落地（geography#1、inventory#4）。
+    source: world/outline.md, world/geography.md, world/inventory.md
+  - claim: B(战力平衡)/H(规则兼容) PASS：十阶体系每一阶都有具象战力刻度（一阶碎木..十阶镇世）与晋升代价/失败代价（power#3），天花板"武圣之上不可言"锚定（power#1、PWR-RULE），越级必须有底牌+代价+证据（PWR-OVR-001..003）。
+    source: world/power.md
+  - claim: C(人设)/G(代价人性锚点) PASS：主角欲望链护妹->守乡->镇不平、石禾/罗幺/温白人性锚点与"寿元倒扣老得快"可感代价齐备（characters#2、style-guide#6
+      兑现节奏、MAT-reward）。
+    source: world/characters.md, writespec/style-guide.md
+  - claim: D(节奏)/F(桥段降噪) 部分 PASS：开局卖血被骗/濒死觉醒避开 trope-blacklist 全部模板（无退婚/测验石/二世祖/拍卖捡漏）；风险
+      D-001 卷二至卷六换图密集，须保证卷间入场由因果/线索驱动而非升级推动（outline ARC-002..006 entry_cause）。
+    source: world/outline.md, writespec/trope-blacklist.md
+  - claim: K-001 金手指表达同构：red ocean "深蓝加点横推"与本书面板加点表面同构（analysis/trending-analysis.md
+      一类结论）；差异化依赖以血肉买命的可见成本+禁神佛纯度+面板极简，正文需持续降噪。
+    source: world/power.md, analysis/trending-analysis.md, writespec/style-guide.md
+  - claim: L 维长篇展开 9/11 项 PASS（主线支线回流、金手指生态位、分卷承压、反派路线图、资源经济、时间压力、人物驱动、伏笔密度齐备）；风险
+      L-002 世族正式登场在卷三，此前仅账本残页单通道引线，需 CH-0010 后卷间衔接补税/禁令/传闻/通缉生活化渗透种子（geography#4 FAC-0003、hooks
+      SEED-0001）。
+    source: world/outline.md, world/geography.md, world/hooks.md, world/timeline.md
+  - claim: first-chapter-readiness 结论 = WARN：L 维 FAIL 不成立，但存在需在创作第 1 章前由用户明确接受的两类可控风险（K
+      维正文降噪 + L 维卷间衔接补种）；复查点 CH-0010 或 ARC-001 卷终较早者。
+    source: writespec/commands/audit-originality.md, writespec/originality-audit.md
+- gate: rework-decision
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 用户明确选择方案 A（稳健微调）：不重写核心体系，只在卷间衔接埋设世族渗透种子 + K 维降噪留由正文执行；确认本轮不采用方案 B 底层革新。
+  evidence:
+  - claim: 用户在 rework-decision 交互中选定"方案 A：稳健微调 (Recommended)"；full-audit 维持 WARN，用户接受三类可控风险进入候选生成。
+    source: 用户命令交互记录 TX-CMD-OPTIMIZE-INIT-WORLD-0002-R01
+- gate: candidate-preview
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 差异预览——修改文件 2 个（world/outline.md、world/hooks.md）；核心设定变化：ARC-002 卷间衔接补世族渗透种子（税令/禁武/通缉/粮价传闻），hooks
+    新增 SEED-0005；已解决风险：L-002（世族渗透信息流）开始进入生活化引线；新增代价：暂无，伏笔密度略增；不变硬约束：卷区间/卷目标/里程碑/章节契约（CH-0001..0010、ARC-002..006
+    全部冻结区间与目标）未动；ID 映射：新增 SEED-0005（取 hooks 下一顺序号）。
+  evidence:
+  - claim: outline.md 候选 diff 仅触及 ARC-002 entry_cause 与 required_causality 两行，未改动任何
+      CH-NNNN 契约、卷目标、里程碑或 forbidden_outcomes；validate_outline.py 对 staging 版 PASS（INV-PLOT-001）。
+    source: world/.staging/TX-CMD-OPTIMIZE-INIT-WORLD-0002-R01/outline.md
+  - claim: hooks.md 候选仅追加 SEED-0005 一行（arc-level 渗透种子，预计卷二末至卷三回收），未改动既有 HOOK/SEED
+      生命周期与状态。
+    source: world/.staging/TX-CMD-OPTIMIZE-INIT-WORLD-0002-R01/hooks.md
+- gate: longform-readiness
+  kind: semantic
+  required: true
+  status: WARN
+  summary: 长篇展开性维持既有结论：跨卷旧账（世族血田/人间焚武/武圣薪火）、力量天花板锚定与多势力联动可支撑长篇；L-002 信息流风险按方案 A 在
+    ARC-002 卷间衔接处理，审查点提前到卷二。
+  evidence:
+  - claim: 与 TX-CMD-AUDIT-ORIGINALITY-0001-R01 的 L 维结论一致；新增 SEED-0005 使世族渗透从单通道（账本残页）扩展为税/禁/缉/价多通道生活化引线，L-002
+      风险缓解而非恶化。
+    source: world/.transactions/TX-CMD-AUDIT-ORIGINALITY-0001-R01.yaml, world/.staging/TX-CMD-OPTIMIZE-INIT-WORLD-0002-R01/hooks.md
+- gate: rework-user-approval
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 用户已查看差异预览并确认覆盖 world/outline.md 与 world/hooks.md；confirm-overwrite 交互记录
+    proof 已由 CLI 写入 confirmations。
+  evidence:
+  - claim: 用户在候选差异预览中确认方案 A 候选，并授权覆盖 world/outline.md 与 world/hooks.md 两个正式目标；两个 overwrite
+      confirmation 均成功应答（CONFIRM 文本匹配）。
+    source: 用户命令交互记录 TX-CMD-OPTIMIZE-INIT-WORLD-0002-R01
+- gate: outline-contract
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] INV-PLOT-001: outline contract is valid and frozen'
+  evidence:
+  - command: python scripts/validate_outline.py <outline_file>
+    exit_code: 0
+    output_hash: sha256:8d13e6664bc4b2aaff79b8f7b673e1656afca7eeac11998809ef2a38530ddd8e
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 2 prepared change(s)
+  evidence:
+  - target: world/hooks.md
+    staged_hash: sha256:84e2aa45ed8f9daf35f90fe9adb6c2ee5b5fd5e52a0028f0bf87f7a503acecf2
+  - target: world/outline.md
+    staged_hash: sha256:839abaa76566826dbe9e4419a23ed721c63cecba611030d94d5ec12e60f70b4f
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 2 published target(s)
+  evidence:
+  - target: world/hooks.md
+    published_hash: sha256:84e2aa45ed8f9daf35f90fe9adb6c2ee5b5fd5e52a0028f0bf87f7a503acecf2
+  - target: world/outline.md
+    published_hash: sha256:839abaa76566826dbe9e4419a23ed721c63cecba611030d94d5ec12e60f70b4f
+changes:
+- target: world/outline.md
+  staged: world/.staging/TX-CMD-OPTIMIZE-INIT-WORLD-0002-R01/outline.md
+  baseline_hash: sha256:2a2b76b86fe2e4fffc7443c3d3d5107a3d0f54eb4cf62b741ab500269d620e10
+  staged_hash: sha256:839abaa76566826dbe9e4419a23ed721c63cecba611030d94d5ec12e60f70b4f
+  idempotency_key: world/outline.md:TX-CMD-OPTIMIZE-INIT-WORLD-0002-R01
+- target: world/hooks.md
+  staged: world/.staging/TX-CMD-OPTIMIZE-INIT-WORLD-0002-R01/hooks.md
+  baseline_hash: sha256:9a37b7e67e2312b87d4c2d97933e1be539ce92e5c4b828ec37e0674a8c319c5c
+  staged_hash: sha256:84e2aa45ed8f9daf35f90fe9adb6c2ee5b5fd5e52a0028f0bf87f7a503acecf2
+  idempotency_key: world/hooks.md:TX-CMD-OPTIMIZE-INIT-WORLD-0002-R01
+applied_keys:
+- world/hooks.md:TX-CMD-OPTIMIZE-INIT-WORLD-0002-R01
+- world/outline.md:TX-CMD-OPTIMIZE-INIT-WORLD-0002-R01
+confirmations:
+- type: overwrite
+  target: world/outline.md
+  status: CONFIRMED
+  source: user
+  method: interactive-cli
+  proof: sha256:05a276cc065920d6d0c9dc5e7c48ec4a5c89400fd9587b22835c8810a6d5ade9
+- type: overwrite
+  target: world/hooks.md
+  status: CONFIRMED
+  source: user
+  method: interactive-cli
+  proof: sha256:a585e99d2a5a9f9ffa54eae3f2deae82930959638ea36234ae2576671b3caa38
+confirmation_nonce: fea5b10b88e4dd8932db282037dc84ae
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null
