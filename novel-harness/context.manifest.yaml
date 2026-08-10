@@ -38,6 +38,17 @@ routes:
       writes:
         - ../world/
       requires_confirmation: when_overwriting
+    - name: optimize-init-world
+      path: ../writespec/commands/optimize-init-world.md
+      activation: command
+      matches:
+        - literal: "优化初始化世界"
+      load: on_command
+      pipeline: optimize-init-world
+      side_effect: write
+      writes:
+        - ../world/
+      requires_confirmation: when_overwriting
     - name: update-world
       path: ../writespec/commands/update-world.md
       activation: command
@@ -333,6 +344,65 @@ pipelines:
         uses: state-management
         handler: transaction-commit
         required: true
+  optimize-init-world:
+    stages:
+      - name: preflight
+        uses: optimize-init-world
+        handler: preflight
+        required: true
+      - name: full-audit
+        uses: originality-audit
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+          - WARN
+          - FAIL
+      - name: rework-decision
+        uses: optimize-init-world
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+      - name: prepare-candidate
+        uses: optimize-init-world
+        handler: agent
+        required: true
+      - name: candidate-preview
+        uses: optimize-init-world
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+      - name: rework-user-approval
+        uses: optimize-init-world
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+      - name: longform-readiness
+        uses: originality-audit
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+          - WARN
+      - name: outline-contract
+        uses: chapter-creation-spec
+        handler: deterministic-gate
+        required: true
+      - name: commit
+        uses: state-management
+        handler: transaction-commit
+        required: true
+      - name: full-reaudit
+        uses: originality-audit
+        handler: semantic-gate
+        required: false
+        allowed_statuses:
+          - PASS
+          - WARN
+          - FAIL
   create-style:
     stages:
       - name: preflight
@@ -878,6 +948,12 @@ verification:
       evidence_required: true
     - name: rework-user-approval
       spec: ../writespec/commands/rework-init-world.md
+      evidence_required: true
+    - name: rework-decision
+      spec: ../writespec/commands/optimize-init-world.md
+      evidence_required: true
+    - name: candidate-preview
+      spec: ../writespec/commands/optimize-init-world.md
       evidence_required: true
     - name: longform-readiness
       spec: ../writespec/originality-audit.md

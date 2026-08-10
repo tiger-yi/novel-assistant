@@ -39,6 +39,33 @@ class WorkflowRendererTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unknown pipeline"):
             render_pipeline({"pipelines": {}}, "missing")
 
+    def test_renders_optimize_init_world_pipeline(self):
+        manifest = {
+            "pipelines": {
+                "optimize-init-world": {
+                    "stages": [
+                        {
+                            "name": "full-audit",
+                            "uses": "originality-audit",
+                            "handler": "semantic-gate",
+                            "required": True,
+                        },
+                        {
+                            "name": "full-reaudit",
+                            "uses": "originality-audit",
+                            "handler": "semantic-gate",
+                            "required": False,
+                        },
+                    ]
+                }
+            }
+        }
+
+        output = render_pipeline(manifest, "optimize-init-world")
+
+        self.assertLess(output.index("full-audit"), output.index("full-reaudit"))
+        self.assertIn("originality-audit", output)
+
 
 if __name__ == "__main__":
     unittest.main()

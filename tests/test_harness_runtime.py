@@ -121,6 +121,11 @@ class HarnessRepositoryRoutesTest(unittest.TestCase):
 
         self.assertEqual("audit-originality", match.name)
 
+    def test_resolves_optimize_init_world(self):
+        match = self.manifest.resolve("优化初始化世界")
+
+        self.assertEqual("optimize-init-world", match.name)
+
     def test_resolves_explicit_metadata_generation(self):
         match = self.manifest.resolve("生成小说元数据")
 

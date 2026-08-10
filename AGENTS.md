@@ -59,6 +59,7 @@ Novel Assistant 是中文玄幻长篇小说的结构化创作 Harness。项目�
 | 命令入口 | 协议文件 |
 | :--- | :--- |
 | `初始化世界` | `writespec/commands/init-world.md` |
+| `优化初始化世界` | `writespec/commands/optimize-init-world.md` |
 | `返工初始化世界` | `writespec/commands/rework-init-world.md` |
 | `创建写作风格` | `writespec/commands/create-style.md` |
 | `创作章节`：`创作第 N 章` / `构思第 N 章` | `writespec/commands/draft-chapter.md` |

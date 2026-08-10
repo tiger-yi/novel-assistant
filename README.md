@@ -2,37 +2,35 @@
 
 Novel Assistant 使用结构化 World Bible 管理中文玄幻长篇小说的剧情、人物、力量、时间、道具、地理、伏笔与章节摘要。Agent 从 [AGENTS.md](AGENTS.md) 进入，机器路由以 `novel-harness/context.manifest.yaml` 为准。
 
-## 核心指令
+## 核心入口
 
-| 目的 | 指令 |
+日常只需要记住开书、日更和修复三类入口；完整命令仍由 Manifest 严格匹配。
+
+| 场景 | 常用指令 |
 | :--- | :--- |
-| 初始化八类 World Bible | `初始化世界` |
-| 第一章前返工 World Bible | `返工初始化世界` |
-| 一次性定制全书文风 | `创建写作风格` |
-| 创作章节并自动收尾 | `创作第 N 章` |
-| 仅查看受约束执行方案 | `构思第 N 章` |
-| 修订未发布卷规划 | `修订卷规划 ARC-001` |
-| 扫描已发布正文呈现违规 | `迁移正文呈现` |
-| 执行已授权单章迁移 | `迁移正文呈现 CH-0001` |
-| 润色已发布正式章节 | `润色章节 CH-0001` |
-| 润色当前活跃 staging | `润色当前章节` |
-| 独立修复状态回写 | `更新世界` |
-| 独立执行归档维护 | `归档世界` |
-| 查看当前世界状态 | `查看世界状态` |
-| 分析热门题材 | `热门话题` |
-| 执行完整原创性审计 | `审计原创性` |
-| 生成发布元数据方案 | `生成小说元数据` |
+| 开书 | `热门话题` -> `初始化世界` -> `优化初始化世界` -> `创建写作风格` |
+| 日更 | `创作第 N 章` |
+| 只看方案 | `构思第 N 章` |
+| 修复状态 | `更新世界` / `归档世界` / `查看世界状态` |
+| 修订规划 | `修订卷规划 ARC-001` |
+| 正文等义优化 | `润色章节 CH-0001` / `润色当前章节` |
+| 历史呈现迁移 | `迁移正文呈现` / `迁移正文呈现 CH-0001` |
+| 发布准备 | `审计原创性` / `生成小说元数据` |
 
 ## 推荐流程
 
-新项目只需先执行：
+### 开书
 
 ```text
+热门话题
 初始化世界
+优化初始化世界
 创建写作风格
 ```
 
-随后每章只需一条指令：
+`热门话题` 是可选选题入口；已有题材时可直接从 `初始化世界` 开始。`优化初始化世界` 用于第一章前质量闭环，`返工初始化世界` 保留为底层修复命令，不作为日常推荐入口。
+
+### 日更
 
 ```text
 创作第 1 章
@@ -41,9 +39,15 @@ Novel Assistant 使用结构化 World Bible 管理中文玄幻长篇小说的剧
 
 `创作第 N 章` 会绑定冻结的大纲修订与章节执行契约，生成一个不改变既定结果的执行方案，再完成撰写、文本润色、必要的内容补全、验证、发布、更新 World Bible 和到期归档。规划缺失或过期、事实冲突、逻辑死锁、固定卷区间无法完成卷目标或要求修订已发布章节时必须暂停。
 
+### 修复与高级维护
+
+`更新世界` 和 `归档世界` 已包含在 `创作第 N 章` 的提交闭环内，只在恢复失败事务、补做状态回写或处理待归档项时单独使用。`润色章节 CH-0001` 用于已发布正文的等义语言优化；`修订卷规划 ARC-001` 用于修改未发布卷规划；迁移、元数据和独立审计属于专项维护入口。
+
 初始化时先确认全书卷路线图，再确认当前卷详细规划。全书路线图固定每卷章节闭区间、卷目标和卷间因果；当前卷在开卷前冻结全部里程碑与章节执行契约。后续卷必须先执行 `修订卷规划 ARC-001` 这类明确命令并取得覆盖确认，普通章节事务无权增章、重排或改写未来规划。
 
-初始化完成后、第一章发布前，`审计原创性` 会执行长篇展开性审计，检查金手指生态位、剧情拓扑、分卷承压、势力引入、资源经济、时间压力、信息流、人物驱动和伏笔承诺。`PASS` 可进入第一章；`WARN` 需要用户接受后放行，并只在 `CH-0010` 或 `ARC-001` 卷终二者较早处复查一次；`FAIL` 阻断第一章。若不满意当前 World Bible，使用 `返工初始化世界` 生成候选预览、差异摘要和 ID 映射，确认后再由事务执行器替换八类正式文件。
+`热门话题` 可重复执行；用户不满意候选题材、想换平台、受众、时间窗或题材边界时可重跑。一旦用户选定题材并进入 `初始化世界`，热门话题退出当前闭环；后续 `优化初始化世界` 只围绕已选题材打磨 World Bible。只有用户明确推翻题材，或连续返工仍 `FAIL` 且确认底层机制不成立时，才回到 `热门话题`。
+
+初始化完成后、第一章发布前，推荐使用 `优化初始化世界` 执行质量闭环：全量 `审计原创性`、用户选择返工方向、生成 World Bible 候选版、展示差异摘要、用户确认提交、执行器替换正式八类文件，再次全量复审。`PASS` 可进入第一章；`WARN` 需要用户重新接受后放行，并只在 `CH-0010` 或 `ARC-001` 卷终二者较早处复查一次；`FAIL` 阻断第一章。`返工初始化世界` 保留为单轮底层命令；用户选择方案不等于确认覆盖，正式替换前必须看候选差异摘要。
 
 命令由 `python scripts/novel_harness.py resolve "<原始指令>"` 严格匹配。写命令先通过 `begin` 创建 YAML 事务，Agent 只准备 staging 内容；正式章节、World Bible、归档、风格和报告由事务执行器校验基线与门禁后提交。`审计原创性` 也创建只读执行记录，用于证明每 10 章周期门禁已经生效。
 
@@ -100,6 +104,7 @@ AGENTS 只提供人工入口和跨项目原则；Manifest 管理机器路由、�
 | :--- | :--- |
 | 主工作流 | `python scripts/render_workflow.py create-chapter` |
 | 章节命令 | [writespec/commands/draft-chapter.md](writespec/commands/draft-chapter.md) |
+| 初始化优化 | [writespec/commands/optimize-init-world.md](writespec/commands/optimize-init-world.md) |
 | 初始化返工 | [writespec/commands/rework-init-world.md](writespec/commands/rework-init-world.md) |
 | 润色命令 | [writespec/commands/polish-chapter.md](writespec/commands/polish-chapter.md) |
 | 章节流程 | [writespec/chapter-creation-spec.md](writespec/chapter-creation-spec.md) |
@@ -129,6 +134,7 @@ python scripts/validate_outline.py <outline_file>
 python scripts/check_count.py <chapter_file> --target 2300 --max 2800 --segments
 python scripts/validate_chapter.py <chapter_file> --target 2300 --max 2800
 python scripts/novel_harness.py resolve "创作第 1 章"
+python scripts/novel_harness.py resolve "优化初始化世界"
 python scripts/render_workflow.py create-chapter
 python -m unittest discover -s tests -v
 ```
