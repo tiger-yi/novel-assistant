@@ -79,7 +79,7 @@ class NovelHarnessCliTest(unittest.TestCase):
     def tearDown(self):
         self.temp_dir.cleanup()
 
-    def run_cli(self, *args):
+    def run_cli(self, *args, input_text=None):
         env = os.environ.copy()
         env["PYTHONIOENCODING"] = "utf-8"
         return subprocess.run(
@@ -92,6 +92,7 @@ class NovelHarnessCliTest(unittest.TestCase):
             ],
             cwd=REPO_ROOT,
             env=env,
+            input=input_text,
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -133,6 +134,21 @@ class NovelHarnessCliTest(unittest.TestCase):
             ).is_file()
         )
 
+    def test_begin_reads_command_text_from_utf8_file(self):
+        command_file = self.root / "command.txt"
+        command_file.write_text("创建写作风格\n", encoding="utf-8")
+
+        result = self.run_cli(
+            "begin",
+            "--text-file",
+            str(command_file),
+            "--repo-root",
+            str(self.root),
+        )
+
+        self.assertEqual(0, result.returncode)
+        self.assertIn("TX-CMD-CREATE-STYLE-0001-R01.yaml", result.stdout)
+
     def test_resolve_returns_pipeline_and_ordered_stages(self):
         result = self.run_cli("resolve", "创建写作风格")
 
@@ -140,6 +156,13 @@ class NovelHarnessCliTest(unittest.TestCase):
         payload = yaml.safe_load(result.stdout)
         self.assertEqual("create-style", payload["pipeline"])
         self.assertEqual(["generate-style"], payload["stages"])
+
+    def test_resolve_reads_command_text_from_utf8_stdin(self):
+        result = self.run_cli("resolve", "--text-stdin", input_text="创建写作风格\n")
+
+        self.assertEqual(0, result.returncode)
+        payload = yaml.safe_load(result.stdout)
+        self.assertEqual("create-style", payload["command"])
 
     def test_invariants_renders_manifest_owner_and_related_gates(self):
         manifest = yaml.safe_load(self.manifest.read_text(encoding="utf-8"))

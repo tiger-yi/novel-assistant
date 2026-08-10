@@ -49,7 +49,7 @@ Novel Assistant 使用结构化 World Bible 管理中文玄幻长篇小说的剧
 
 初始化完成后、第一章发布前，推荐使用 `优化初始化世界` 执行质量闭环：全量 `审计原创性`、用户选择返工方向、生成 World Bible 候选版、展示差异摘要、用户确认提交、执行器替换正式八类文件，再次全量复审。`PASS` 可进入第一章；`WARN` 需要用户重新接受后放行，并只在 `CH-0010` 或 `ARC-001` 卷终二者较早处复查一次；`FAIL` 阻断第一章。`返工初始化世界` 保留为单轮底层命令；用户选择方案不等于确认覆盖，正式替换前必须看候选差异摘要。
 
-命令由 `python scripts/novel_harness.py resolve "<原始指令>"` 严格匹配。写命令先通过 `begin` 创建 YAML 事务，Agent 只准备 staging 内容；正式章节、World Bible、归档、风格和报告由事务执行器校验基线与门禁后提交。`审计原创性` 也创建只读执行记录，用于证明每 10 章周期门禁已经生效。
+命令由 `python scripts/novel_harness.py resolve "<原始指令>"` 严格匹配。写命令先通过 `begin` 创建 YAML 事务，Agent 只准备 staging 内容；正式章节、World Bible、归档、风格和报告由事务执行器校验基线与门禁后提交。`审计原创性` 也创建只读执行记录，用于证明每 10 章周期门禁已经生效。Windows 控制台传中文参数不稳定时，可把原始指令保存为 UTF-8 文件，并使用 `--text-file <command.txt>`；也可用 `--text-stdin` 从 UTF-8 stdin 读取。
 
 八类 World Bible 初始化模板只用于 `初始化世界` 或修复缺失文件；章节后回写和 `更新世界` 依据 `writespec/world-bible-contract.md`、当前 `world/*.md`、正文证据和事务变更集执行。
 
@@ -134,6 +134,7 @@ python scripts/validate_outline.py <outline_file>
 python scripts/check_count.py <chapter_file> --target 2300 --max 2800 --segments
 python scripts/validate_chapter.py <chapter_file> --target 2300 --max 2800
 python scripts/novel_harness.py resolve "创作第 1 章"
+python scripts/novel_harness.py resolve --text-file <utf8-command-file>
 python scripts/novel_harness.py resolve "优化初始化世界"
 python scripts/render_workflow.py create-chapter
 python -m unittest discover -s tests -v

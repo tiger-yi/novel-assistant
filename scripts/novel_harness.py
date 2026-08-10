@@ -29,9 +29,9 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(dest="action", required=True)
     resolve_parser = subparsers.add_parser("resolve")
-    resolve_parser.add_argument("text")
+    _add_command_text_arguments(resolve_parser)
     begin_parser = subparsers.add_parser("begin")
-    begin_parser.add_argument("text")
+    _add_command_text_arguments(begin_parser)
     begin_parser.add_argument(
         "--repo-root",
         type=Path,
@@ -58,6 +58,38 @@ def _build_parser() -> argparse.ArgumentParser:
     status_parser.add_argument("transaction", type=Path)
     subparsers.add_parser("invariants")
     return parser
+
+
+def _add_command_text_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("text", nargs="?")
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument(
+        "--text-file",
+        type=Path,
+        help="Read the raw command text from a UTF-8 file.",
+    )
+    source.add_argument(
+        "--text-stdin",
+        action="store_true",
+        help="Read the raw command text from stdin as UTF-8.",
+    )
+
+
+def _read_command_text(args) -> str:
+    sources = [
+        args.text is not None,
+        getattr(args, "text_file", None) is not None,
+        bool(getattr(args, "text_stdin", False)),
+    ]
+    if sum(sources) != 1:
+        raise CommandResolutionError(
+            "provide exactly one command text source: text, --text-file, or --text-stdin"
+        )
+    if getattr(args, "text_file", None) is not None:
+        return args.text_file.read_text(encoding="utf-8-sig").strip()
+    if getattr(args, "text_stdin", False):
+        return sys.stdin.buffer.read().decode("utf-8-sig").strip()
+    return args.text
 
 
 def _invariant_index(manifest: HarnessManifest) -> list[dict]:
@@ -107,7 +139,8 @@ def main(argv=None):
             return 0
         if args.action == "resolve":
             manifest = HarnessManifest.load(args.manifest)
-            match = manifest.resolve(args.text)
+            command_text = _read_command_text(args)
+            match = manifest.resolve(command_text)
             pipeline_name = match.route.get("pipeline")
             pipeline = manifest.data.get("pipelines", {}).get(pipeline_name, {})
             print(
@@ -127,8 +160,9 @@ def main(argv=None):
             )
             return 0
         if args.action == "begin":
+            command_text = _read_command_text(args)
             transaction_path = begin_transaction(
-                args.repo_root, args.manifest, args.text
+                args.repo_root, args.manifest, command_text
             )
             print(f"[PASS] transaction created: {transaction_path}")
             return 0
