@@ -194,7 +194,12 @@ reader_evaluation:
     ending_pull: ""
   scene_diagnostics: []
   likely_drop_points: []
-  status: PASS|PASS_WITH_TARGET_MISS|BLOCKED|MANUAL_DECISION_REQUIRED
+  auto_actionable_suggestions: []
+  manual_decision_suggestions:
+    auto_escalatable_manual: []
+    auto_safe_structural_fix: []
+    hard_manual_required: []
+  status: PASS|PASS_WITH_AUTO_FIX|PASS_WITH_TARGET_MISS|BLOCKED|MANUAL_DECISION_REQUIRED
 ```
 
 每个 `dimensions` 条目必须包含 `name`、`score`、`weight`、`evidence_refs`、`reason` 和 `suggestion_type`。缺少维度分、证据或建议分类时，本门禁不得放行。
@@ -235,10 +240,14 @@ reader_evaluation:
 - 聚合分 = 目标类型读者分数 x 0.40 + 世界观沉浸读者分数 x 0.30 + 毒蛇文本读者分数 x 0.30。
 - 聚合分 `< 7.0`: 阻断，最多 2 轮局部受限重润色和复评。
 - 聚合分 `7.0-7.9`: 自动局部受限重润色 1 次；复评后只要仍 `>= 7.0`，不阻断最终发布。
-- 聚合分 `>= 8.0`: 达成目标线，直接进入后续门禁。
+- 聚合分 `>= 8.0` 且没有自动建议、流失点或未修目标缺口：`PASS`，直接进入后续门禁。
+- 聚合分 `>= 8.0` 且存在低/中风险自动建议：`PASS_WITH_AUTO_FIX`，默认授权局部受限重润色 1 次并复评。
+- 聚合分 `>= 8.0` 且仅存在保留性目标缺口、不可自动修但不影响发布的问题：`PASS_WITH_TARGET_MISS`，记录原因后进入后续门禁。
 - 任一读者画像 `< 6.0`: 硬阻断，即使聚合分达标也不得放行。
 
 两轮低分修正后仍 `< 7.0`，或任一画像仍 `< 6.0`，事务保持未完成，保留 staging、评价报告、失败项和恢复点，等待人工决策。
+
+报告存在 `likely_drop_points`、`negative_evidence_refs` 或 `auto_actionable_suggestions` 时，不得写“无通用扣分项”后直接 `PASS`。存在可自动修的低/中风险问题时必须使用 `PASS_WITH_AUTO_FIX`；存在越权问题时才使用 `MANUAL_DECISION_REQUIRED`。
 
 ## 自动重润色边界
 
@@ -258,6 +267,13 @@ reader_evaluation:
 
 禁止项只能记录为人工决策建议，按需转入原创性审计、大纲修订或其他授权流程。
 
+默认自动修复授权：
+
+- `PASS_WITH_AUTO_FIX` 默认授权 `draft-worker` 按 `auto_actionable_suggestions` 局部受限重润色 1 次。
+- 自动修复只允许 `risk_level` 为 `low` 或 `medium`，且 `suggestion_type` 属于允许自动执行的建议类型。
+- 自动修复不得新增事件、新因果、新角色、新死亡、新法宝，不得改变章节 `task/outcome/conflict/closing_pull`、人物关键选择、World Bible 事实、伏笔状态或后续章节契约。
+- `risk_level: high`、`STRUCTURAL_SUGGESTION_BLOCKED`、`WORLD_STATE_BLOCKED` 和 `hard_manual_required` 一律不得自动执行。
+
 ## 改稿建议结构
 
 `auto_actionable_suggestions` 中每条建议必须能被 `draft-worker` 局部执行，且至少包含：
@@ -272,7 +288,13 @@ reader_evaluation:
 - `instruction`: 面向重润色的具体动作，不得写成抽象评价。
 - `must_preserve`: 不得误伤的剧情事实、人物选择、设定状态、伏笔和高光表达。
 
-`manual_decision_suggestions` 中每条建议必须说明为什么不能自动执行，并标记建议转入的授权流程，例如原创性审计、大纲修订、更新世界或人工放弃。
+`manual_decision_suggestions` 必须拆分为三类，减少不必要人工介入：
+
+- `auto_escalatable_manual`: 可自动生成候选修法，但候选不得直接提交；用于需要比较方案但不改变事实的问题。
+- `auto_safe_structural_fix`: 允许自动修复的低风险结构问题；前提是不改变章节结果、人物选择、World Bible、伏笔状态或后续契约。
+- `hard_manual_required`: 必须人工确认的问题；只用于新增事件、新因果、新死亡、新法宝、改章节结果、改人物选择、改 World Bible、改伏笔状态、改后续章节契约等越权项。
+
+`auto_safe_structural_fix` 的建议必须同时写明 `allowed_scope` 和 `forbidden_scope`。例如可增强现有战斗压迫感、混乱、险象和动作因果，但不得新增强敌、改变胜负结果或挪用下一章升级契约。
 
 ## 复评规则
 
@@ -282,6 +304,7 @@ reader_evaluation:
 - 自动重润色轮次必须计入章节事务的自动修正上限；超过上限时停止。
 - 复评必须包含 `revision_delta`：原问题是否解决、是否引入新问题、聚合分变化、目标维度变化和保留高光是否受损。
 - 若重润色解决了扣分点但磨平人物声音、情绪重量或章末钩子，必须在复评中重新扣分，不得只按原建议完成度放行。
+- `PASS_WITH_AUTO_FIX` 的复评后若无新风险且分数不降，进入后续门禁；若修坏高光、引入事实风险或越权风险，转 `MANUAL_DECISION_REQUIRED`。
 
 ## 证据与引用
 
@@ -292,12 +315,12 @@ reader_evaluation:
 - 事务 ID、章节 ID、评价轮次和被评正文 hash。
 - 三个读者画像的维度分、归一分、聚合分和阻断状态。
 - 扣分依据、段落或场景定位、前后文摘要。
-- `auto_actionable_suggestions` 和 `manual_decision_suggestions` 两个清单。
+- `auto_actionable_suggestions` 和拆分后的 `manual_decision_suggestions` 清单。
 - `chapter_promise`、`scene_diagnostics` 和 `likely_drop_points`。
 - 复评轮次的 `revision_delta`。
 - `forbidden_changes`: 不得自动修改的事实、状态、设定和伏笔。
 - `protected_highlights`: 高分亮点，重润色时不得误伤。
-- 最终状态：`PASS`、`PASS_WITH_TARGET_MISS`、`BLOCKED` 或 `MANUAL_DECISION_REQUIRED`。
+- 最终状态：`PASS`、`PASS_WITH_AUTO_FIX`、`PASS_WITH_TARGET_MISS`、`BLOCKED` 或 `MANUAL_DECISION_REQUIRED`。
 
 短引用规则：
 
