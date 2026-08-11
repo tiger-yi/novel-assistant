@@ -3,7 +3,7 @@ schema: novel-harness/geography-template/v1
 revision: 1
 status: init-template
 world_file: world/geography.md
-template_role: init-world
+template_role: init-world, rework-init-world, optimize-init-world
 ---
 
 # 地理与势力

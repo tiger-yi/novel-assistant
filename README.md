@@ -47,11 +47,11 @@ Novel Assistant 使用结构化 World Bible 管理中文玄幻长篇小说的剧
 
 `热门话题` 可重复执行；用户不满意候选题材、想换平台、受众、时间窗或题材边界时可重跑。一旦用户选定题材并进入 `初始化世界`，热门话题退出当前闭环；后续 `优化初始化世界` 只围绕已选题材打磨 World Bible。只有用户明确推翻题材，或连续返工仍 `FAIL` 且确认底层机制不成立时，才回到 `热门话题`。
 
-初始化完成后、第一章发布前，推荐使用 `优化初始化世界` 执行质量闭环：全量 `审计原创性`、用户选择返工方向、生成 World Bible 候选版、展示差异摘要、用户确认提交、执行器替换正式八类文件，再次全量复审。`PASS` 可进入第一章；`WARN` 需要用户重新接受后放行，并只在 `CH-0010` 或 `ARC-001` 卷终二者较早处复查一次；`FAIL` 阻断第一章。`返工初始化世界` 保留为单轮底层命令；用户选择方案不等于确认覆盖，正式替换前必须看候选差异摘要。
+初始化完成后、第一章发布前，推荐使用 `优化初始化世界` 执行质量闭环：全量 `审计原创性`、用户选择返工方向、生成 World Bible 候选版、展示差异摘要、用户确认提交、执行器替换正式八类文件，再次全量复审。该闭环必须检查故事力基线：主角主动目标、主题透镜、有效冲突、情理内反转、角色功能和黄金三章牵引。`PASS` 可进入第一章；`WARN` 需要用户重新接受后放行，并只在 `CH-0010` 或 `ARC-001` 卷终二者较早处复查一次；`FAIL` 阻断第一章。`返工初始化世界` 保留为单轮底层命令；用户选择方案不等于确认覆盖，正式替换前必须看候选差异摘要。
 
 命令由 `python scripts/novel_harness.py resolve "<原始指令>"` 严格匹配。写命令先通过 `begin` 创建 YAML 事务，Agent 只准备 staging 内容；正式章节、World Bible、归档、风格和报告由事务执行器校验基线与门禁后提交。`审计原创性` 也创建只读执行记录，用于证明每 10 章周期门禁已经生效。Windows 控制台传中文参数不稳定时，可把原始指令保存为 UTF-8 文件，并使用 `--text-file <command.txt>`；也可用 `--text-stdin` 从 UTF-8 stdin 读取。
 
-八类 World Bible 初始化模板只用于 `初始化世界` 或修复缺失文件；章节后回写和 `更新世界` 依据 `writespec/world-bible-contract.md`、当前 `world/*.md`、正文证据和事务变更集执行。
+八类 World Bible 初始化模板用于 `初始化世界`、第一章前 `返工初始化世界` / `优化初始化世界` 候选和修复缺失文件；章节后回写和 `更新世界` 依据 `writespec/world-bible-contract.md`、当前 `world/*.md`、正文证据和事务变更集执行。
 
 覆盖已有风格、元数据或初始化目标时，用户需运行 `python scripts/novel_harness.py confirm-overwrite <transaction.yaml> <target>` 并按提示输入精确目标；直接编辑 YAML 不会形成有效确认。
 
@@ -112,6 +112,7 @@ AGENTS 只提供人工入口和跨项目原则；Manifest 管理机器路由、�
 | 章节命令 | [writespec/commands/draft-chapter.md](writespec/commands/draft-chapter.md) |
 | 初始化优化 | [writespec/commands/optimize-init-world.md](writespec/commands/optimize-init-world.md) |
 | 初始化返工 | [writespec/commands/rework-init-world.md](writespec/commands/rework-init-world.md) |
+| 原创性审计 | [writespec/originality-audit.md](writespec/originality-audit.md) |
 | 润色命令 | [writespec/commands/polish-chapter.md](writespec/commands/polish-chapter.md) |
 | 章节流程 | [writespec/chapter-creation-spec.md](writespec/chapter-creation-spec.md) |
 | 读者评价 | [writespec/reader-evaluation.md](writespec/reader-evaluation.md) |

@@ -3,7 +3,7 @@ schema: novel-harness/power-template/v1
 revision: 1
 status: init-template
 world_file: world/power.md
-template_role: init-world
+template_role: init-world, rework-init-world, optimize-init-world
 ---
 
 # 力量体系

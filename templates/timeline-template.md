@@ -3,7 +3,7 @@ schema: novel-harness/timeline-template/v1
 revision: 1
 status: init-template
 world_file: world/timeline.md
-template_role: init-world
+template_role: init-world, rework-init-world, optimize-init-world
 ---
 
 # 时间线记录
