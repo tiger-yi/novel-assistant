@@ -481,6 +481,10 @@ pipelines:
         uses: foreshadowing-spec
         handler: semantic-gate
         required: true
+        evidence:
+          - narrative_thread_handling_table
+          - active_thread_due_audit
+          - foreshadowing_change_set_evidence
       - name: periodic-trigger-classification
         uses: originality-audit
         handler: semantic-gate
