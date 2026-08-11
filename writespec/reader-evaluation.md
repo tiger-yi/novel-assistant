@@ -199,7 +199,15 @@ reader_evaluation:
     auto_escalatable_manual: []
     auto_safe_structural_fix: []
     hard_manual_required: []
-  status: PASS|PASS_WITH_AUTO_FIX|PASS_WITH_TARGET_MISS|BLOCKED|MANUAL_DECISION_REQUIRED
+  risk_resolution_plan:
+    mode: null
+    priority_order: []
+    immediate_action: ""
+    safe_auto_fixes: []
+    deferred_auto_fixes: []
+    required_routes: []
+    user_decisions: []
+  status: PASS|PASS_WITH_AUTO_FIX|PASS_WITH_TARGET_MISS|BLOCKED|BLOCKED_WITH_REPAIR_PLAN|MANUAL_DECISION_REQUIRED
 ```
 
 每个 `dimensions` 条目必须包含 `name`、`score`、`weight`、`evidence_refs`、`reason` 和 `suggestion_type`。缺少维度分、证据或建议分类时，本门禁不得放行。
@@ -244,10 +252,13 @@ reader_evaluation:
 - 聚合分 `>= 8.0` 且存在低/中风险自动建议：`PASS_WITH_AUTO_FIX`，默认授权局部受限重润色 1 次并复评。
 - 聚合分 `>= 8.0` 且仅存在保留性目标缺口、不可自动修但不影响发布的问题：`PASS_WITH_TARGET_MISS`，记录原因后进入后续门禁。
 - 任一读者画像 `< 6.0`: 硬阻断，即使聚合分达标也不得放行。
+- 多种高权限风险同时存在，且不能在读者评价门禁内安全自动修复时：`BLOCKED_WITH_REPAIR_PLAN`。
 
 两轮低分修正后仍 `< 7.0`，或任一画像仍 `< 6.0`，事务保持未完成，保留 staging、评价报告、失败项和恢复点，等待人工决策。
 
 报告存在 `likely_drop_points`、`negative_evidence_refs` 或 `auto_actionable_suggestions` 时，不得写“无通用扣分项”后直接 `PASS`。存在可自动修的低/中风险问题时必须使用 `PASS_WITH_AUTO_FIX`；存在越权问题时才使用 `MANUAL_DECISION_REQUIRED`。
+
+`BLOCKED_WITH_REPAIR_PLAN` 表示已一键完成风险归并、修复排序和安全部分执行建议，但事务不得继续进入后续门禁。它不能直接提交章节、World Bible、伏笔或大纲变更。
 
 ## 自动重润色边界
 
@@ -274,6 +285,8 @@ reader_evaluation:
 - 自动修复不得新增事件、新因果、新角色、新死亡、新法宝，不得改变章节 `task/outcome/conflict/closing_pull`、人物关键选择、World Bible 事实、伏笔状态或后续章节契约。
 - `risk_level: high`、`STRUCTURAL_SUGGESTION_BLOCKED`、`WORLD_STATE_BLOCKED` 和 `hard_manual_required` 一律不得自动执行。
 
+当多种风险同时存在时，可一键生成 `risk_resolution_plan`，并只执行不依赖高权限结论的安全文本修复。若低/中风险文本修复所在段落受 `WORLD_STATE_BLOCKED`、`STRUCTURAL_SUGGESTION_BLOCKED` 或 `hard_manual_required` 影响，必须放入 `deferred_auto_fixes`，等待上游风险处理后再执行。
+
 ## 改稿建议结构
 
 `auto_actionable_suggestions` 中每条建议必须能被 `draft-worker` 局部执行，且至少包含：
@@ -296,6 +309,36 @@ reader_evaluation:
 
 `auto_safe_structural_fix` 的建议必须同时写明 `allowed_scope` 和 `forbidden_scope`。例如可增强现有战斗压迫感、混乱、险象和动作因果，但不得新增强敌、改变胜负结果或挪用下一章升级契约。
 
+## 综合修复计划
+
+当报告同时存在 `WORLD_STATE_BLOCKED`、`STRUCTURAL_SUGGESTION_BLOCKED`、`hard_manual_required`、`risk_level: high` 或多个低/中风险建议时，必须输出 `risk_resolution_plan`。
+
+风险处理优先级固定为：
+
+1. `WORLD_STATE_BLOCKED`
+2. `STRUCTURAL_SUGGESTION_BLOCKED`
+3. `hard_manual_required`
+4. `risk_level: high`
+5. `auto_safe_structural_fix`
+6. `auto_actionable_suggestions`
+
+`risk_resolution_plan` 必须包含：
+
+- `mode`: `BLOCKED_WITH_REPAIR_PLAN` 或 `AUTO_FIX_THEN_REVIEW`。
+- `priority_order`: 实际命中的风险类型排序。
+- `immediate_action`: 当前轮应执行的动作，例如 `generate_repair_plan`、`safe_auto_fix_only`、`manual_route_required`。
+- `safe_auto_fixes`: 可立即自动执行且不依赖高权限结论的建议 ID。
+- `deferred_auto_fixes`: 暂缓执行的自动建议 ID，并说明被哪个高权限风险阻断。
+- `required_routes`: 后续应转入的命令路由和触发条件。
+- `user_decisions`: 必须由用户选择的分歧点；每项最多给 2-3 个候选方向。
+
+推荐路由规则：
+
+- `WORLD_STATE_BLOCKED`: 若正文需要依赖新的世界事实，建议 `更新世界`；若正文违反既有世界事实，建议重新执行 `创作第 N 章`。
+- `STRUCTURAL_SUGGESTION_BLOCKED`: 若只影响当前章结构，建议重新执行 `创作第 N 章`；若影响卷目标或后续章节契约，建议 `修订卷规划 ARC-001`。
+- `hard_manual_required`: 必须列出候选方向和影响，等待用户选择。
+- `risk_level: high`: 可生成候选修法和影响评估，但不得提交正文或状态变更。
+
 ## 复评规则
 
 - 复评只覆盖触发扣分或阻断的读者画像与维度。
@@ -317,10 +360,11 @@ reader_evaluation:
 - 扣分依据、段落或场景定位、前后文摘要。
 - `auto_actionable_suggestions` 和拆分后的 `manual_decision_suggestions` 清单。
 - `chapter_promise`、`scene_diagnostics` 和 `likely_drop_points`。
+- 多风险或阻断场景下的 `risk_resolution_plan`。
 - 复评轮次的 `revision_delta`。
 - `forbidden_changes`: 不得自动修改的事实、状态、设定和伏笔。
 - `protected_highlights`: 高分亮点，重润色时不得误伤。
-- 最终状态：`PASS`、`PASS_WITH_AUTO_FIX`、`PASS_WITH_TARGET_MISS`、`BLOCKED` 或 `MANUAL_DECISION_REQUIRED`。
+- 最终状态：`PASS`、`PASS_WITH_AUTO_FIX`、`PASS_WITH_TARGET_MISS`、`BLOCKED`、`BLOCKED_WITH_REPAIR_PLAN` 或 `MANUAL_DECISION_REQUIRED`。
 
 短引用规则：
 
