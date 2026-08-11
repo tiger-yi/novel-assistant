@@ -844,28 +844,28 @@ transaction:
 templates:
   - name: outline
     path: ../templates/outline-template.md
-    used_by: init-world, rework-init-world
+    used_by: init-world, rework-init-world, optimize-init-world
   - name: characters
     path: ../templates/characters-template.md
-    used_by: init-world, rework-init-world
+    used_by: init-world, rework-init-world, optimize-init-world
   - name: timeline
     path: ../templates/timeline-template.md
-    used_by: init-world, rework-init-world
+    used_by: init-world, rework-init-world, optimize-init-world
   - name: geography
     path: ../templates/geography-template.md
-    used_by: init-world, rework-init-world
+    used_by: init-world, rework-init-world, optimize-init-world
   - name: inventory
     path: ../templates/inventory-template.md
-    used_by: init-world, rework-init-world
+    used_by: init-world, rework-init-world, optimize-init-world
   - name: hooks
     path: ../templates/hooks-template.md
-    used_by: init-world, rework-init-world
+    used_by: init-world, rework-init-world, optimize-init-world
   - name: chapter-summary
     path: ../templates/chapter-summary-template.md
-    used_by: init-world, rework-init-world
+    used_by: init-world, rework-init-world, optimize-init-world
   - name: power-system
     path: ../templates/power-system-template.md
-    used_by: init-world, rework-init-world
+    used_by: init-world, rework-init-world, optimize-init-world
   - name: trending-analysis
     path: ../templates/trending-analysis-template.md
     used_by: trending
