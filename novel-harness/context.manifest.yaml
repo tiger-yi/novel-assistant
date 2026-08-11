@@ -453,6 +453,7 @@ pipelines:
         required: true
         allowed_statuses:
           - PASS
+          - PASS_WITH_AUTO_FIX
           - PASS_WITH_TARGET_MISS
         delegable: true
         worker: reader-gate-worker
