@@ -467,10 +467,16 @@ pipelines:
         required: true
         allowed_statuses:
           - PASS
+        evidence:
+          - chapter_title_uniqueness
       - name: world-audit
         uses: world-audit
         handler: semantic-gate
         required: true
+        evidence:
+          - six_dimension_world_audit
+          - power_balance_evidence
+          - world_bible_change_risk
       - name: plot-alignment
         uses: chapter-creation-spec
         handler: semantic-gate
@@ -545,6 +551,10 @@ pipelines:
         required: true
         delegable: true
         worker: gate-worker
+        evidence:
+          - six_dimension_world_audit
+          - power_balance_evidence
+          - world_bible_change_risk
       - name: thread-integrity
         uses: foreshadowing-spec
         handler: semantic-gate
@@ -679,6 +689,10 @@ pipelines:
         uses: world-audit
         handler: semantic-gate
         required: true
+        evidence:
+          - six_dimension_world_audit
+          - power_balance_evidence
+          - world_bible_change_risk
       - name: narrative-thread-integrity
         uses: foreshadowing-spec
         handler: semantic-gate
