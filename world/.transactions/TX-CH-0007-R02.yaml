@@ -1,0 +1,166 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0007-R02
+source_command: 创作第 7 章
+command: create-chapter
+mode: full
+pipeline: create-chapter
+arguments:
+  chapter: '7'
+state: COMPLETE
+archive_state: NOT_DUE
+stages:
+- name: preflight
+  status: PASS
+  summary: style-guide INV-STYLE-001 PASS（validate_harness.py）；八类 World Bible 齐全；CH-0007
+    已发布（R01 COMPLETE），用户明确授权创建 R02 修订事务（针对 R1 读者评价三处保留缺口）；plan_contract 绑定当前 outline
+    revision 1 + ARC-001 + CH-0007 契约 hash，与当前 outline 一致。
+- name: draft
+  status: PASS
+  summary: 按授权执行三处局部受限重润色：蹲守段压缩时间跳转冗余并补药铺伙计盯梢低压细节（PACING_FIX）、对质场补伙计短棒被青壮堵门与拍条子喝退的武力节拍以与公审差异化（TEXTUAL_FIX）、
+    章末插入罗幺余韵对话缓冲情绪急转弯（EMOTIONAL_FIX）；修订正文 chapters/.staging/TX-CH-0007-R02/CH-0007-追粮.txt。
+- name: polish
+  status: PASS
+  summary: 修订后 2794 字，超出上限后压缩既有低价值表述（时间跳转冗余、重复副词）至区间内，validate_chapter PASS；未改变任何事实、信息差或伏笔状态。
+gates:
+- gate: first-chapter-readiness
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: 目标为 CH-0007，非第一章；第一章就绪性已由 CH-0001 事务覆盖。
+  summary: 非首次创作，first-chapter-readiness 不适用。
+- gate: reader-evaluation
+  kind: semantic
+  required: true
+  status: PASS
+  summary: R2 复评聚合分 8.2（>=8.0）：目标类型读者 8.3、世界观沉浸读者 8.1、毒蛇文本读者 8.0；任一画像 >= 6.0；报告终态
+    PASS——R1 三处保留缺口（蹲守段节奏、两场破局同构、章末情绪急转弯）全部解决，无新引入硬伤，保留高光未受损。
+  evidence:
+  - claim: reader-evaluation-R2 报告记录三画像维度分、聚合分 8.2、revision_delta（原三缺口已解决、无新问题、聚合分
+      8.0→8.2）与最终状态 PASS；artifact 路径 world/.transactions/TX-CH-0007-R02/reader-evaluation-R2.md，正文
+      hash beea01f5… 引用一致。
+    source: world/.transactions/TX-CH-0007-R02/reader-evaluation-R2.md, chapters/.staging/TX-CH-0007-R02/CH-0007-追粮.txt
+  - claim: 复评仅覆盖 R1 触发缺口所在画像与维度（翻页欲、情绪回报、结构骨架），其余维度沿用首评结果；revision_delta 证明无新问题且 protected_highlights
+      未受损。
+    source: world/.transactions/TX-CH-0007-R02/reader-evaluation-R2.md
+- gate: narrative-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 修订后正文无叙事层泄漏：validate_chapter.py 返回 PASS（INV-CHAPTER-001），无禁用符号、无 Harness
+    ID、无章节结构引用、无黑名单词；全章仍为石横受限视角。
+  evidence:
+  - claim: validate_chapter.py --style writespec/style-guide.md --target 2300 --max
+      2800 对修订正文返回 PASS；禁用符号与黑名单扫描无命中。
+    source: scripts/validate_chapter.py, chapters/.staging/TX-CH-0007-R02/CH-0007-追粮.txt
+  - claim: 修订为纯文本呈现调整，未改变事件、因果、信息差与叙事视角。
+    source: chapters/.staging/TX-CH-0007-R02/CH-0007-追粮.txt, writespec/style-guide.md
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 六维审计全 PASS：修订为等义呈现（presentation-equivalent），无新设定；新增伙计短棒节拍延续灭口局既有打手设定， 被青壮堵门未交手，战力结论不变（INV-POWER-001）；时间/物品/地理/人物结论与
+    R01 一致。
+  evidence:
+  - claim: 新增节拍仅强化既有冲突质感，未改变胜负、境界或代价；石横皮肉力对凡人打手仍无越级。
+    source: world/power.md, world/characters.md, chapters/.staging/TX-CH-0007-R02/CH-0007-追粮.txt
+  - claim: 修订未改变时间线（EVT-0004）、物品状态、地理跨度与人物状态，六维结论沿用 R01 且仍成立。
+    source: world/timeline.md, world/inventory.md, world/geography.md, world/characters.md
+- gate: plot-alignment
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 修订不改变契约：task/conflict/outcome/arc_contribution/closing_pull 仍逐项兑现；新增节拍不引入未授权
+    重大叙事事实；账本仍由齐管事持有（CH-0009 契约保留）。
+  evidence:
+  - claim: 正文仍兑现契约五项；三处修订均为文本层调整，未新增剧情事实或改变信息边界。
+    source: world/outline.md, chapters/.staging/TX-CH-0007-R02/CH-0007-追粮.txt
+  - claim: plan_contract 绑定当前 outline revision 1 + CH-0007 契约 hash 有效（INV-PLOT-001）。
+    source: world/.transactions/TX-CH-0007-R02.yaml, scripts/validate_outline.py
+- gate: thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 修订未改变叙事线索生命周期：SEED-0001 埋设证据不变、"命被抽走"仍为章末牵引，hooks.md 无状态动作。
+  evidence:
+  - claim: 修订为呈现层调整，未新增/推进/回收 HOOK 或 SEED，INV-FORESHADOW-001 满足。
+    source: world/hooks.md, chapters/.staging/TX-CH-0007-R02/CH-0007-追粮.txt
+- gate: periodic-trigger-classification
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: 目标章节 CH-0007 未达到 originality-cycle 周期边界（interval_chapters=10），且无 arc_completed
+    / premise_changed 触发事件；单章套路黑名单由 validate_chapter.py 已覆盖（PASS）。
+  summary: 周期原创性审计不适用于第 7 章；单章套路扫描通过。
+- gate: archive-integrity
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: NOT_DUE：ARC-001 完成 7/10 章，未到 10 章周期触发，卷未完成，无强制归档授权；archive_state=NOT_DUE，变更集不含归档目标。
+  summary: 条件归档未到期（INV-ARCHIVE-001 周期/卷终/强制均不满足）。
+- gate: chapter-format
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Chapter validation passed.'
+  evidence:
+  - command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max
+      2800
+    exit_code: 0
+    output_hash: sha256:90d62eeed08c71994a63282bbe587d18703e64a68b23427722450b0040fe5c45
+- gate: outline-contract
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] INV-PLOT-001: outline contract is valid and frozen'
+  evidence:
+  - command: python scripts/validate_outline.py <outline_file>
+    exit_code: 0
+    output_hash: sha256:8d13e6664bc4b2aaff79b8f7b673e1656afca7eeac11998809ef2a38530ddd8e
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 2 prepared change(s)
+  evidence:
+  - target: chapters/CH-0007-追粮.txt
+    staged_hash: sha256:beea01f55452b5b344502bac63972d09101ab66467c20fb5d39b882f91d8faa7
+  - target: world/outline.md
+    staged_hash: sha256:99e6527a1676dbf06c3b31cad24b6635f90d144d7993c74c0af866c67d12e245
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 2 published target(s)
+  evidence:
+  - target: chapters/CH-0007-追粮.txt
+    published_hash: sha256:beea01f55452b5b344502bac63972d09101ab66467c20fb5d39b882f91d8faa7
+  - target: world/outline.md
+    published_hash: sha256:99e6527a1676dbf06c3b31cad24b6635f90d144d7993c74c0af866c67d12e245
+changes:
+- target: chapters/CH-0007-追粮.txt
+  staged: chapters/.staging/TX-CH-0007-R02/CH-0007-追粮.txt
+  baseline_hash: sha256:64287aaa2cb56e990a32e71e1f76d4a177702d4353429e8e4290dbe1104ae0b0
+  staged_hash: sha256:beea01f55452b5b344502bac63972d09101ab66467c20fb5d39b882f91d8faa7
+  idempotency_key: chapters/CH-0007-追粮.txt:TX-CH-0007-R02
+- target: world/outline.md
+  staged: world/.staging/TX-CH-0007-R02/outline.md
+  baseline_hash: sha256:99e6527a1676dbf06c3b31cad24b6635f90d144d7993c74c0af866c67d12e245
+  staged_hash: sha256:99e6527a1676dbf06c3b31cad24b6635f90d144d7993c74c0af866c67d12e245
+  idempotency_key: world/outline.md:TX-CH-0007-R02
+applied_keys:
+- chapters/CH-0007-追粮.txt:TX-CH-0007-R02
+- world/outline.md:TX-CH-0007-R02
+confirmations: []
+confirmation_nonce: 9e76c55ef6b22741e9a3567e5def5aec
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null
+plan_contract:
+  outline_revision: 1
+  outline_hash: sha256:99e6527a1676dbf06c3b31cad24b6635f90d144d7993c74c0af866c67d12e245
+  arc_id: ARC-001
+  arc_goal_id: GOAL-ARC-001
+  chapter_id: CH-0007
+  chapter_contract_hash: sha256:a38afa50ac12f835c2a971d648b6f2dcf1523b0f03a024f5f0e979018ec8c352

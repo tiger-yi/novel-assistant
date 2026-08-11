@@ -1,0 +1,247 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0009-R01
+source_command: 创作第 9 章
+command: create-chapter
+mode: full
+pipeline: create-chapter
+arguments:
+  chapter: '9'
+state: COMPLETE
+archive_state: NOT_DUE
+stages:
+- name: preflight
+  status: PASS
+  summary: style-guide INV-STYLE-001 PASS（validate_harness.py --style-guide 通过）；八类
+    World Bible 齐全；CH-0009 无已发布正文、无在途同章事务；begin 成功创建 TX-CH-0009-R01，plan_contract
+    绑定 outline revision 1 + ARC-001 + GOAL-ARC-001 + CH-0009 契约 hash（79b5d89f…），与当前
+    outline hash（c4dc6953…）一致。
+- name: draft
+  status: PASS
+  summary: 按冻结 CH-0009 执行契约撰写初稿：刺客夜入灭口周满山与麻六、石横村口独斗筋骨阶刺客（破限透支气血寿元一拳击杀、杀伐偿还予筋骨阶参悟种子）、携窄刀夜赴山口庄击杀雇凶主使山口氏、账房缴获账本残页露京中世族与武威营两条线交集、赵却送武威营招揽文书为章末牵引；标题《清算》；初稿写入
+    chapters/.staging/TX-CH-0009-R01/CH-0009-清算.txt。
+- name: polish
+  status: PASS
+  summary: 执行一次 chapter-polish 纯文本润色：去除"像猫戏老鼠"成语化比喻改为碾血绕行动作、压缩感叹号至 2 个、改"半晌没动"为观察动作、补承接与战斗感官细节；润色后
+    2568 字，validate_chapter PASS，未改变任何事实、信息差或伏笔状态。
+gates:
+- gate: first-chapter-readiness
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: 目标为 CH-0009，非第一章；第一章就绪性已由 CH-0001 事务覆盖，preflight 已确认 style_basis 与八类 Bible
+    齐全。
+  summary: 非第一章，first-chapter-readiness 不适用。
+- gate: reader-evaluation
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 三读者画像评价聚合分 8.0（>=8.0）：目标类型读者 8.0、世界观沉浸读者 8.0、毒蛇文本读者 8.0；任一画像 >= 6.0，无阻断；报告终态
+    PASS_WITH_TARGET_MISS——仅 3 处保留性目标缺口（三夜守候开篇偏静、蒙面刺客形象功能化、清算段节奏快于夜战），不可自动修且不影响发布，记录后进入后续门禁。
+  evidence:
+  - claim: reader-evaluation-R1 报告记录三画像维度分、归一聚合分 8.0、保留性目标缺口与最终状态 PASS_WITH_TARGET_MISS；artifact
+      路径 world/.transactions/TX-CH-0009-R01/reader-evaluation-R1.md，正文 hash 470b5592…
+      引用一致。
+    source: world/.transactions/TX-CH-0009-R01/reader-evaluation-R1.md, chapters/.staging/TX-CH-0009-R01/CH-0009-清算.txt
+  - claim: 报告无 WORLD_STATE_BLOCKED / STRUCTURAL_SUGGESTION_BLOCKED 阻断项；auto_actionable_suggestions
+      为空，仅记录保留性缺口（开篇迟滞、刺客功能化、清算段节奏）与毒蛇反证审查（最该扣分三处、不可自动改问题、必保护高光）。
+    source: world/.transactions/TX-CH-0009-R01/reader-evaluation-R1.md
+- gate: narrative-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 正文无叙事层泄漏：validate_chapter.py 返回 PASS（INV-CHAPTER-001），无禁用符号、无 Harness ID、无章节结构引用、无
+    Markdown 块；黑名单词扫描无命中；全章为石横第三人称受限视角，无作者/读者/剧情安排/外部镜头调度表达。
+  evidence:
+  - claim: validate_chapter.py --style writespec/style-guide.md --target 2300 --max
+      2800 返回 PASS；禁用符号与黑名单扫描无命中（确定性扫描 CH-*/ARC-*/HOOK-*/SEED-*/EVT-*/TX-*/CHAR-*/ITEM-*/LOC-*/FAC-*/GOAL-*/MS-*、
+      【】、[]、（）、《》、第X章、上一章等均无命中）。
+    source: scripts/validate_chapter.py, chapters/.staging/TX-CH-0009-R01/CH-0009-清算.txt
+  - claim: 京中世族与武威营两条线交集以账房残页的暗红小印与粮草戳记漏出，未开上帝视角；章末赵却送文书为石横可闻可见，符合 style-guide 受限视角。
+    source: chapters/.staging/TX-CH-0009-R01/CH-0009-清算.txt, writespec/style-guide.md
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 六维审计全 PASS：体系纯度（气血/寿元/皮肉力/筋骨阶/破限/杀伐偿还白名单，无仙佛天道）；战力平衡（皮肉力初成对筋骨阶刺客，差 1 完整大境界，破限底牌+双肩刀伤+寿元倒扣+吐黑血代价，INV-POWER-001
+    满足，杀伐偿还仅予参悟种子不正式突破）；时间线（靖宁十七年冬末，承 CH-0008 布防后第三夜，EVT-0006 反杀落地）；物品消耗（条子/脉案续持、账本残页
+    INTEL-0001 缴获、窄刀 ITEM-0012 新增，无道具无中生有）；地理跨度（血铺街-云乡-山口庄乡道连夜可达）；人物 OOC（石横独挑不滥杀、山口氏体面话求饶、村人观望均符合人设）。
+  evidence:
+  - claim: 正文名词均属 power.md 白名单（气血/寿元/皮肉力/筋骨阶），无体系污染；石横皮肉力初成对筋骨阶刺客取胜，差距为 1 个完整大境界（未跨
+      INV-POWER-001 两阶上限），底牌为已建立的破限加点（PWR-MECH-001），正文支付双肩刀伤翻肉、吐黑血、寿元倒扣（鬓角白发增）、指骨露白代价，且刺客以"筋骨都还没换"自证境界，胜负条件闭合。
+    source: world/power.md, world/characters.md, chapters/.staging/TX-CH-0009-R01/CH-0009-清算.txt
+  - claim: 时间线 PASS：承 CH-0008 布防后第三夜（靖宁十七年冬末），timeline.md EVT-0006（反杀豪强）落地、TMR-0004（雇凶反扑）转已解决，与正文一致。
+    source: world/timeline.md, chapters/.staging/TX-CH-0009-R01/CH-0009-清算.txt
+  - claim: 物品消耗 PASS：灭口条子与温白脉案（ITEM-0005）由石横续持、账本残页（INTEL-0001）于山口庄账房缴获、刺客窄刀（ITEM-0012）新增缴获、吊命药剩四副延续；无道具无中生有。
+    source: world/inventory.md, chapters/.staging/TX-CH-0009-R01/CH-0009-清算.txt
+  - claim: 地理跨度 PASS：云乡（LOC-0001）—血铺街（LOC-0002）—山口庄（LOC-0007）均在北疆流民地，乡道官道连夜可达，商旅传讯无情报超时。
+    source: world/geography.md, chapters/.staging/TX-CH-0009-R01/CH-0009-清算.txt
+  - claim: 人物 OOC PASS：石横外冷内热、独挑强敌、以命换命、不滥杀（放陈管事）；山口氏体面话藏刀求饶、手摸袖中凶器；村人观望呼应 CH-0003；温白守禾续治，均与
+      characters.md 一致。
+    source: world/characters.md, chapters/.staging/TX-CH-0009-R01/CH-0009-清算.txt
+- gate: plot-alignment
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 与 CH-0009 执行契约逐项一致：task（反杀雇凶主使乡社豪强、清算里正与血铺、完成今卷仇怨闭环）、preconditions（豪强雇凶反扑已启动、武威营招揽文书将至）、conflict（主使联手足处江湖的刺客、村人再度观望、石横独挑强敌）、outcome（石横击杀雇凶主使与刺客、里正与血铺掌柜伏诛、卖血骗局在今卷层面清算）、arc_contribution（完成
+    MS-ARC-001-03 主链）、closing_pull（账本残页露京中世族与武威营两条线交集）全部兑现；未引入未授权重大叙事事实。
+  evidence:
+  - claim: 正文兑现契约五项：刺客灭口使里正与血铺掌柜伏诛、石横击杀刺客与山口氏、账本残页两条线交集、武威营文书将至；里程碑 MS-ARC-001-03
+      主链完成（因雇凶反扑在 CH-0009，到期章 CH-0010 内达成），未越过 CH-0010 卷终契约。
+    source: world/outline.md, chapters/.staging/TX-CH-0009-R01/CH-0009-清算.txt
+  - claim: 未解开石禾病根（回收范围卷三）、未让石横正式突破筋骨阶（留 CH-0010 卷目标）、未引入新势力；plan_contract 绑定 outline
+      revision 1 + CH-0009 契约 hash 有效（INV-PLOT-001）。
+    source: world/outline.md, world/.transactions/TX-CH-0009-R01.yaml, scripts/validate_outline.py
+- gate: thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: SEED-0001（走私粮链账本残页"京中世族"）于 CH-0009 推进——山口庄账房账本残页露出京中世族与武威营两条线交集，坐实世族血田-粮道-军中消耗同链，幂等键
+    SEED-0001+推进+CH-0009；SEED-0002 与 HOOK-0001/0002/0003 保持不动（未到期/非本章）；卖血骗局清算由章节 outcome
+    落地，不登记新 HOOK；武威营文书为章末牵引。无越权跃迁（INV-FORESHADOW-001）。
+  evidence:
+  - claim: SEED-0001 推进有正文证据（账房暗格残页：暗红"京中世族"小印与"武威营收讫"粮草戳记同页），hooks.md 推进记录更新为卷一 CH-0009，状态保持活跃，合法前置（已埋设）满足。
+    source: world/hooks.md, chapters/.staging/TX-CH-0009-R01/CH-0009-清算.txt
+  - claim: SEED-0002（回收范围卷三）、HOOK-0002（卷三-卷四）、HOOK-0001/0003（卷四-卷六）均未到期，本章不涉及，保持不动；新候选（武威营文书、世族清洗）仅存在于构思输出，未写入
+      hooks.md。
+    source: world/hooks.md, world/outline.md
+- gate: periodic-trigger-classification
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: 目标章节 CH-0009 未达到 originality-cycle 周期边界（interval_chapters=10），且无 arc_completed
+    / premise_changed 触发事件；单章套路黑名单由 validate_chapter.py 已覆盖（PASS）。
+  summary: 周期原创性审计不适用于第 9 章；单章套路扫描通过。
+- gate: archive-integrity
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: NOT_DUE：ARC-001 完成 9/10 章，未到 10 章周期触发，卷未完成，无强制归档授权；archive_state=NOT_DUE，变更集不含归档目标。已死亡人物（周满山/麻六/山口氏/刺客）状态已更新，归档迁移留待
+    CH-0010 周期触发。
+  summary: 条件归档未到期（INV-ARCHIVE-001 周期/卷终/强制均不满足）。
+- gate: chapter-format
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Chapter validation passed.'
+  evidence:
+  - command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max
+      2800
+    exit_code: 0
+    output_hash: sha256:90d62eeed08c71994a63282bbe587d18703e64a68b23427722450b0040fe5c45
+- gate: outline-contract
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] INV-PLOT-001: outline contract is valid and frozen'
+  evidence:
+  - command: python scripts/validate_outline.py <outline_file>
+    exit_code: 0
+    output_hash: sha256:8d13e6664bc4b2aaff79b8f7b673e1656afca7eeac11998809ef2a38530ddd8e
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 8 prepared change(s)
+  evidence:
+  - target: chapters/CH-0009-清算.txt
+    staged_hash: sha256:470b559256ab308d72915d2e6162aeb69338dcdc7eabd006b9c952b0ca791859
+  - target: world/chapter-summary.md
+    staged_hash: sha256:4494972348898ad780251ac034711f9c5d25a6243ec34a8660b0048f5a165559
+  - target: world/characters.md
+    staged_hash: sha256:d9cc47de40dbd10a8f6103c145654a06f3748ce6cf204dee184fd18438ce3f4f
+  - target: world/inventory.md
+    staged_hash: sha256:f20d16aae2871190773e5ef5231b1eb6788b7b49cddd3cc3b2a7299ae68f0c84
+  - target: world/timeline.md
+    staged_hash: sha256:ec599d243f0c1bfaefe1fddbe0ccc688c4ad9360c6c31fa995b1d115934ccace
+  - target: world/geography.md
+    staged_hash: sha256:9b6774e624c6069e784a931033b29578d55b5fc3312f1d527ec10687112387f1
+  - target: world/hooks.md
+    staged_hash: sha256:37ce6d36926debac4d535316ca3e247aca0d99a13e874a73bc8b95769d7f735a
+  - target: world/outline.md
+    staged_hash: sha256:5a8f85004093921773f994aac92d71c1e1d4976d30784469e13ab8d911c15789
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 8 published target(s)
+  evidence:
+  - target: chapters/CH-0009-清算.txt
+    published_hash: sha256:470b559256ab308d72915d2e6162aeb69338dcdc7eabd006b9c952b0ca791859
+  - target: world/chapter-summary.md
+    published_hash: sha256:4494972348898ad780251ac034711f9c5d25a6243ec34a8660b0048f5a165559
+  - target: world/characters.md
+    published_hash: sha256:d9cc47de40dbd10a8f6103c145654a06f3748ce6cf204dee184fd18438ce3f4f
+  - target: world/inventory.md
+    published_hash: sha256:f20d16aae2871190773e5ef5231b1eb6788b7b49cddd3cc3b2a7299ae68f0c84
+  - target: world/timeline.md
+    published_hash: sha256:ec599d243f0c1bfaefe1fddbe0ccc688c4ad9360c6c31fa995b1d115934ccace
+  - target: world/geography.md
+    published_hash: sha256:9b6774e624c6069e784a931033b29578d55b5fc3312f1d527ec10687112387f1
+  - target: world/hooks.md
+    published_hash: sha256:37ce6d36926debac4d535316ca3e247aca0d99a13e874a73bc8b95769d7f735a
+  - target: world/outline.md
+    published_hash: sha256:5a8f85004093921773f994aac92d71c1e1d4976d30784469e13ab8d911c15789
+changes:
+- target: chapters/CH-0009-清算.txt
+  staged: chapters/.staging/TX-CH-0009-R01/CH-0009-清算.txt
+  baseline_hash: absent
+  staged_hash: sha256:470b559256ab308d72915d2e6162aeb69338dcdc7eabd006b9c952b0ca791859
+  idempotency_key: chapters/CH-0009-清算.txt:TX-CH-0009-R01
+- target: world/chapter-summary.md
+  staged: world/.staging/TX-CH-0009-R01/chapter-summary.md
+  baseline_hash: sha256:79c228eae689deb27a33f27421e0c1a2322cc4916b79fedeb9d08b030100ddf0
+  staged_hash: sha256:4494972348898ad780251ac034711f9c5d25a6243ec34a8660b0048f5a165559
+  idempotency_key: world/chapter-summary.md:TX-CH-0009-R01
+- target: world/characters.md
+  staged: world/.staging/TX-CH-0009-R01/characters.md
+  baseline_hash: sha256:2eb3374d581fdd731169d0126811efe0ca40c45fe652af7725c5919f6acb4eb0
+  staged_hash: sha256:d9cc47de40dbd10a8f6103c145654a06f3748ce6cf204dee184fd18438ce3f4f
+  idempotency_key: world/characters.md:TX-CH-0009-R01
+- target: world/inventory.md
+  staged: world/.staging/TX-CH-0009-R01/inventory.md
+  baseline_hash: sha256:312d8c5c93c6ade4d3a47d7b89d3200d31d1e4d87a8746d1220eb3c68b0c3849
+  staged_hash: sha256:f20d16aae2871190773e5ef5231b1eb6788b7b49cddd3cc3b2a7299ae68f0c84
+  idempotency_key: world/inventory.md:TX-CH-0009-R01
+- target: world/timeline.md
+  staged: world/.staging/TX-CH-0009-R01/timeline.md
+  baseline_hash: sha256:275b3e7d5cf4f58f676dcdd3de4b89aafbe509315810488b0603782a72dce0d3
+  staged_hash: sha256:ec599d243f0c1bfaefe1fddbe0ccc688c4ad9360c6c31fa995b1d115934ccace
+  idempotency_key: world/timeline.md:TX-CH-0009-R01
+- target: world/geography.md
+  staged: world/.staging/TX-CH-0009-R01/geography.md
+  baseline_hash: sha256:05f951f8e19268d15b5011dbba9649ee33ab337b6c667d794bd84d39d2f82c5c
+  staged_hash: sha256:9b6774e624c6069e784a931033b29578d55b5fc3312f1d527ec10687112387f1
+  idempotency_key: world/geography.md:TX-CH-0009-R01
+- target: world/hooks.md
+  staged: world/.staging/TX-CH-0009-R01/hooks.md
+  baseline_hash: sha256:84e2aa45ed8f9daf35f90fe9adb6c2ee5b5fd5e52a0028f0bf87f7a503acecf2
+  staged_hash: sha256:37ce6d36926debac4d535316ca3e247aca0d99a13e874a73bc8b95769d7f735a
+  idempotency_key: world/hooks.md:TX-CH-0009-R01
+- target: world/outline.md
+  staged: world/.staging/TX-CH-0009-R01/outline.md
+  baseline_hash: sha256:c4dc6953f2357f0c90ac46fb0bdd68925143b0d763d0b1a3cb6f43007f5b70ba
+  staged_hash: sha256:5a8f85004093921773f994aac92d71c1e1d4976d30784469e13ab8d911c15789
+  idempotency_key: world/outline.md:TX-CH-0009-R01
+applied_keys:
+- chapters/CH-0009-清算.txt:TX-CH-0009-R01
+- world/chapter-summary.md:TX-CH-0009-R01
+- world/characters.md:TX-CH-0009-R01
+- world/inventory.md:TX-CH-0009-R01
+- world/timeline.md:TX-CH-0009-R01
+- world/geography.md:TX-CH-0009-R01
+- world/hooks.md:TX-CH-0009-R01
+- world/outline.md:TX-CH-0009-R01
+confirmations: []
+confirmation_nonce: caac1533f7d6498b229f31b7265164b9
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null
+plan_contract:
+  outline_revision: 1
+  outline_hash: sha256:c4dc6953f2357f0c90ac46fb0bdd68925143b0d763d0b1a3cb6f43007f5b70ba
+  arc_id: ARC-001
+  arc_goal_id: GOAL-ARC-001
+  chapter_id: CH-0009
+  chapter_contract_hash: sha256:79b5d89f71fcf123f8147b1a9f20d3edf4898b8eae2a377cf21d4ad42b9d12e3

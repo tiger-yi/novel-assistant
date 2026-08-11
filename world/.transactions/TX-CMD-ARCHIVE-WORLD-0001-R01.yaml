@@ -1,0 +1,183 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CMD-ARCHIVE-WORLD-0001-R01
+source_command: 归档世界
+command: archive-world
+mode: null
+pipeline: archive-world
+arguments: {}
+state: COMPLETE
+archive_state: COMPLETE
+stages:
+- name: preflight
+  status: PASS
+  summary: 人工指令授权满足 INV-ARCHIVE-001；触发条件核查：卷终（ARC-001 完成 CH-0001..0010 全部 published）与
+    10 章周期均满足；章节主体事务（TX-CH-0010-R01）发布、回写与 Postflight 均已通过；迁移预览无事实冲突、无重复判重问题、范围明确。
+- name: preview
+  status: PASS
+  summary: 生成 6 对象迁移预览：outline（ARC-001 人类可读视图）、chapter-summary（CH-0001..0007）、characters（CHAR-0003/0005/0010/0012）、timeline（EVT-0001/0004/0005/0007/0008
+    非里程碑）、inventory（ITEM-0002/0003/0010、INTEL-0004/0005/0006）、geography（LOC-0002/0007）；hooks
+    无已解决/已回收线索，不迁移；全部迁移目标与活跃索引在事务 staging 备齐。
+gates:
+- gate: archive-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 迁移预览逐项无歧义：来源 ID/章节区间已列明，目标为新建归档文件（无重复追加风险），活跃索引保留 ID 与归档链接（相对 world/ 解析，执行器将校验链接目标存在）；主文件均按
+    archiving-spec 保留轻量索引；frontmatter 机器契约（outline YAML）不迁移，validate_outline.py 对
+    staging outline 返回 PASS；hooks 因无终态线索记 NOT_DUE 子项。
+  evidence:
+  - claim: outline_history.md 归档 ARC-001 黄金三章/章节执行契约/情绪爆发点（人类可读视图）；主 outline.md 保留
+      YAML frontmatter 机器契约与分卷路线图/核心设定/创作统计，validate_outline.py PASS（INV-PLOT-001
+      契约完整）。
+    source: world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/archive/outline_history.md,
+      world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/outline.md, scripts/validate_outline.py
+  - claim: chapter_summary_history.md 归档 CH-0001..0007（7 行），主文件保留最近 3 章（CH-0008..0010）与区间索引链接；characters_registry.md
+      归档已死亡人物 CHAR-0003/0005/0010/0012（含完整背景），主注册表/重要人物表/能力表移除对应行并留历史人物索引；timeline_chronicles.md
+      归档非里程碑 EVT-0001/0004/0005/0007/0008，主文件保留里程碑 EVT-0002/0003/0006/0009 与活跃倒计时/多线对齐；inventory_logs.md
+      归档已消耗（ITEM-0002/0003/0010）与过期情报（INTEL-0004/0005/0006），主文件保留持有物证并加历史索引；world_atlas.md
+      归档 LOC-0002/0007 详情，主文件保留状态行与链接。
+    source: world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/archive/, world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/
+  - claim: hooks.md 无已解决/已回收/已放弃/已取消线索（HOOK-0001/0002/0003 与 SEED-0001..0005 均活跃），hooks
+      归档 NOT_DUE，不迁移；重复执行判重：所有归档目标为新建文件、实体 ID/章节区间均为首次归档，无重复追加。
+    source: world/hooks.md, world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 12 prepared change(s)
+  evidence:
+  - target: world/archive/chapter_summary_history.md
+    staged_hash: sha256:7b294b6ebae1190a7d74cef3461420519587d6147501e2683b0f828088dfed3c
+  - target: world/archive/characters_registry.md
+    staged_hash: sha256:e9f3a929bd9eb432f3003ff446e485aec79ce16d5629408fe7e687865c59d71f
+  - target: world/archive/inventory_logs.md
+    staged_hash: sha256:38f2d0d30c868670fa7f921484341282f9faffb58c32c69d9cc4d0c7e02300f3
+  - target: world/archive/outline_history.md
+    staged_hash: sha256:ef040ecdfe2cfbf761dc3c22a28a2bff2f7a473c8773701f2f1152085635247a
+  - target: world/archive/timeline_chronicles.md
+    staged_hash: sha256:7e91dbb7437389521afaf2fb71be3c70c2e64b33c63c6d913bec3bfbe1418394
+  - target: world/archive/world_atlas.md
+    staged_hash: sha256:c8e8b42fe69356d7be833595ef371833580c5fb77fa3fc7d5151b1813991babb
+  - target: world/chapter-summary.md
+    staged_hash: sha256:0179b3092016cfb09eb20fece58b43c2ce144d82470c188f11d261cd2d15713a
+  - target: world/characters.md
+    staged_hash: sha256:388a5235e7e9230f4582bae06a790e9793eb997100a17b54bf8a3b04c9bad19d
+  - target: world/inventory.md
+    staged_hash: sha256:5a66cd27bd9f3df50c46c535305eb94e3d8b7dcc453407b9a87e366295a30af0
+  - target: world/timeline.md
+    staged_hash: sha256:94a004519a061311da039eb9ed9fca8203511cba48586acf192d25bb6fcd4e4b
+  - target: world/geography.md
+    staged_hash: sha256:34bde6c028910d11698a0bc39b51e9851ed40d23e71dbbcd8fd71946273bd907
+  - target: world/outline.md
+    staged_hash: sha256:092f243c7d9755e72bb6f78d293b90c4f37686ef282d7e1219e78c2419c9dffe
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 12 published target(s)
+  evidence:
+  - target: world/archive/chapter_summary_history.md
+    published_hash: sha256:7b294b6ebae1190a7d74cef3461420519587d6147501e2683b0f828088dfed3c
+  - target: world/archive/characters_registry.md
+    published_hash: sha256:e9f3a929bd9eb432f3003ff446e485aec79ce16d5629408fe7e687865c59d71f
+  - target: world/archive/inventory_logs.md
+    published_hash: sha256:38f2d0d30c868670fa7f921484341282f9faffb58c32c69d9cc4d0c7e02300f3
+  - target: world/archive/outline_history.md
+    published_hash: sha256:ef040ecdfe2cfbf761dc3c22a28a2bff2f7a473c8773701f2f1152085635247a
+  - target: world/archive/timeline_chronicles.md
+    published_hash: sha256:7e91dbb7437389521afaf2fb71be3c70c2e64b33c63c6d913bec3bfbe1418394
+  - target: world/archive/world_atlas.md
+    published_hash: sha256:c8e8b42fe69356d7be833595ef371833580c5fb77fa3fc7d5151b1813991babb
+  - target: world/chapter-summary.md
+    published_hash: sha256:0179b3092016cfb09eb20fece58b43c2ce144d82470c188f11d261cd2d15713a
+  - target: world/characters.md
+    published_hash: sha256:388a5235e7e9230f4582bae06a790e9793eb997100a17b54bf8a3b04c9bad19d
+  - target: world/inventory.md
+    published_hash: sha256:5a66cd27bd9f3df50c46c535305eb94e3d8b7dcc453407b9a87e366295a30af0
+  - target: world/timeline.md
+    published_hash: sha256:94a004519a061311da039eb9ed9fca8203511cba48586acf192d25bb6fcd4e4b
+  - target: world/geography.md
+    published_hash: sha256:34bde6c028910d11698a0bc39b51e9851ed40d23e71dbbcd8fd71946273bd907
+  - target: world/outline.md
+    published_hash: sha256:092f243c7d9755e72bb6f78d293b90c4f37686ef282d7e1219e78c2419c9dffe
+changes:
+- target: world/archive/outline_history.md
+  staged: world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/archive/outline_history.md
+  baseline_hash: absent
+  staged_hash: sha256:ef040ecdfe2cfbf761dc3c22a28a2bff2f7a473c8773701f2f1152085635247a
+  idempotency_key: world/archive/outline_history.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- target: world/archive/chapter_summary_history.md
+  staged: world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/archive/chapter_summary_history.md
+  baseline_hash: absent
+  staged_hash: sha256:7b294b6ebae1190a7d74cef3461420519587d6147501e2683b0f828088dfed3c
+  idempotency_key: world/archive/chapter_summary_history.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- target: world/archive/characters_registry.md
+  staged: world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/archive/characters_registry.md
+  baseline_hash: absent
+  staged_hash: sha256:e9f3a929bd9eb432f3003ff446e485aec79ce16d5629408fe7e687865c59d71f
+  idempotency_key: world/archive/characters_registry.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- target: world/archive/timeline_chronicles.md
+  staged: world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/archive/timeline_chronicles.md
+  baseline_hash: absent
+  staged_hash: sha256:7e91dbb7437389521afaf2fb71be3c70c2e64b33c63c6d913bec3bfbe1418394
+  idempotency_key: world/archive/timeline_chronicles.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- target: world/archive/inventory_logs.md
+  staged: world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/archive/inventory_logs.md
+  baseline_hash: absent
+  staged_hash: sha256:38f2d0d30c868670fa7f921484341282f9faffb58c32c69d9cc4d0c7e02300f3
+  idempotency_key: world/archive/inventory_logs.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- target: world/archive/world_atlas.md
+  staged: world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/archive/world_atlas.md
+  baseline_hash: absent
+  staged_hash: sha256:c8e8b42fe69356d7be833595ef371833580c5fb77fa3fc7d5151b1813991babb
+  idempotency_key: world/archive/world_atlas.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- target: world/outline.md
+  staged: world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/outline.md
+  baseline_hash: sha256:14deedb0b1a97f7c0d38bdcf010eda82f7dbcf58a95a5ca696dfecd147d61a29
+  staged_hash: sha256:092f243c7d9755e72bb6f78d293b90c4f37686ef282d7e1219e78c2419c9dffe
+  idempotency_key: world/outline.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- target: world/chapter-summary.md
+  staged: world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/chapter-summary.md
+  baseline_hash: sha256:fb17bc2df5c40e9e258bf6ab64eb27569202c16c48e83343be1e61f8bdce8826
+  staged_hash: sha256:0179b3092016cfb09eb20fece58b43c2ce144d82470c188f11d261cd2d15713a
+  idempotency_key: world/chapter-summary.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- target: world/characters.md
+  staged: world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/characters.md
+  baseline_hash: sha256:f33a70067a50b4a234bb2191359dc5d7a30694e36532c9954f9f7251340c8132
+  staged_hash: sha256:388a5235e7e9230f4582bae06a790e9793eb997100a17b54bf8a3b04c9bad19d
+  idempotency_key: world/characters.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- target: world/timeline.md
+  staged: world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/timeline.md
+  baseline_hash: sha256:8002164e617356c9c6d98d72532b893320b7c432fea770ba1078685b174f9d16
+  staged_hash: sha256:94a004519a061311da039eb9ed9fca8203511cba48586acf192d25bb6fcd4e4b
+  idempotency_key: world/timeline.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- target: world/inventory.md
+  staged: world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/inventory.md
+  baseline_hash: sha256:99cfbabf8d6c8e506feef0873f0084229a13291f134b69294df0e0ea54f3e6ec
+  staged_hash: sha256:5a66cd27bd9f3df50c46c535305eb94e3d8b7dcc453407b9a87e366295a30af0
+  idempotency_key: world/inventory.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- target: world/geography.md
+  staged: world/.staging/TX-CMD-ARCHIVE-WORLD-0001-R01/geography.md
+  baseline_hash: sha256:69e31a4436f499b93c2321255ff3bae8f98566dd72d15c25e4bf97a4fe8467bf
+  staged_hash: sha256:34bde6c028910d11698a0bc39b51e9851ed40d23e71dbbcd8fd71946273bd907
+  idempotency_key: world/geography.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+applied_keys:
+- world/archive/chapter_summary_history.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- world/archive/characters_registry.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- world/archive/inventory_logs.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- world/archive/outline_history.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- world/archive/timeline_chronicles.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- world/archive/world_atlas.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- world/chapter-summary.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- world/characters.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- world/inventory.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- world/timeline.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- world/geography.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+- world/outline.md:TX-CMD-ARCHIVE-WORLD-0001-R01
+confirmations: []
+confirmation_nonce: f06cd7f2fbe9b9aefcf2f8b1f2a76d5e
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null

@@ -1,0 +1,74 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CMD-UPDATE-WORLD-0001-R01
+source_command: 更新世界
+command: update-world
+mode: null
+pipeline: update-world
+arguments: {}
+state: COMPLETE
+archive_state: NOT_CHECKED
+stages:
+- name: preflight
+  status: PASS
+  summary: 八类 World Bible 齐全；差异审计确认唯一未回写项为 outline.md section 5 表格 CH-0003 状态（frontmatter
+    已 published，表格仍 planned，与 CH-0003 已发布事实不一致）；CH-0003 已通过确定性门禁与六维审计；begin 成功创建 TX-CMD-UPDATE-WORLD-0001-R01。
+- name: prepare-changes
+  status: PASS
+  summary: 生成 outline.md 候选，仅将 section 5 表格 CH-0003 行状态 planned 改为 published 与 frontmatter
+    一致；world/.staging/TX-CMD-UPDATE-WORLD-0001-R01/outline.md，validate_outline PASS（INV-PLOT-001），未改动任何契约、卷区间、里程碑或统计字段。
+gates:
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 六维审计全 PASS：本次变更仅修正 outline 表格 CH-0003 状态回写（与 frontmatter 及已发布正文事实一致），不改变任何世界观事实；体系纯度、战力平衡、时间线、物品消耗、地理跨度、人物行为六维均无变化。
+  evidence:
+  - claim: 变更只触及 outline.md 人类可读表格的 CH-0003 状态列（planned→published），frontmatter 契约与其余表格行未动，未新增或改写任何剧情、设定或契约事实。
+    source: world/outline.md, world/.staging/TX-CMD-UPDATE-WORLD-0001-R01/outline.md
+  - claim: CH-0003 已发布事实由 chapters/CH-0003-镇不平.txt 与 TX-CH-0003 事务记录支持，六维审计结论沿用既有发布证据，无新风险。
+    source: chapters/CH-0003-镇不平.txt, world/outline.md
+- gate: narrative-thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 本次变更不涉及任何 HOOK/SEED 状态动作；hooks.md 无变更，无越权跃迁，INV-FORESHADOW-001 满足。
+  evidence:
+  - claim: outline 表格状态回写不触碰叙事线索注册表，hooks.md 保持不动，CH-0003 无新增或推进线索。
+    source: world/hooks.md, world/outline.md
+- gate: periodic-trigger-classification
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: 变更仅修正已发布章节的 outline 表格状态回写，不产生 arc_completed / premise_changed 触发事件；无周期原创性审计需求。
+  summary: 周期原创性审计不适用（无 outline_initialized/arc_completed/premise_changed 事件）。
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 1 prepared change(s)
+  evidence:
+  - target: world/outline.md
+    staged_hash: sha256:c4dc6953f2357f0c90ac46fb0bdd68925143b0d763d0b1a3cb6f43007f5b70ba
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 1 published target(s)
+  evidence:
+  - target: world/outline.md
+    published_hash: sha256:c4dc6953f2357f0c90ac46fb0bdd68925143b0d763d0b1a3cb6f43007f5b70ba
+changes:
+- target: world/outline.md
+  staged: world/.staging/TX-CMD-UPDATE-WORLD-0001-R01/outline.md
+  baseline_hash: sha256:049a1a3f62d765dcc4e4a4cbd2259bb4728975513155540db7c4095cf1bab982
+  staged_hash: sha256:c4dc6953f2357f0c90ac46fb0bdd68925143b0d763d0b1a3cb6f43007f5b70ba
+  idempotency_key: world/outline.md:TX-CMD-UPDATE-WORLD-0001-R01
+applied_keys:
+- world/outline.md:TX-CMD-UPDATE-WORLD-0001-R01
+confirmations: []
+confirmation_nonce: 41c1e2bc650b58efdfc973778ff54639
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null

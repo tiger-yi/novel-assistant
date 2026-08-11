@@ -1,0 +1,190 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0002-R04
+source_command: 创作第 2 章
+command: create-chapter
+mode: full
+pipeline: create-chapter
+arguments:
+  chapter: '2'
+state: COMPLETE
+archive_state: NOT_DUE
+stages:
+- name: preflight
+  status: PASS
+  summary: style-guide INV-STYLE-001 PASS；八类 World Bible 齐全；CH-0002 已发布，用户明确授权重写（修复顿悟套路化、规则独白落地扣分点），按已发布章节修订通道创建
+    R04；plan_contract 绑定 outline revision 1 + ARC-001 + GOAL-ARC-001 + CH-0002 契约
+    hash。
+- name: draft
+  status: PASS
+  summary: 重写 CH-0002：顿悟触发改为透支晕厥+求生意志死战触发；规则由独白改为劈柴动作验证与鱼汤补体验证；2731 字。
+- name: polish
+  status: PASS
+  summary: 按 chapter-polish 润色：无黑名单词、无重复意象；润色后 2731 字，格式 PASS。
+gates:
+- gate: first-chapter-readiness
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: 重写已发布 CH-0002，非首次创作；第一章就绪性已由 CH-0001 事务覆盖。
+  summary: 非首次创作，first-chapter-readiness 不适用。
+- gate: reader-evaluation
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 三读者画像评价聚合分 8.6（>=8.0）：目标类型读者 8.7、世界观沉浸读者 8.4、毒蛇文本读者 8.5；任一画像 >= 6.0，无阻断，最终状态
+    PASS。
+  evidence:
+  - claim: reader-evaluation-R1 报告记录三画像维度分、聚合分 8.6 与最终状态 PASS；artifact 路径 world/.transactions/TX-CH-0002-R04/reader-evaluation-R1.md，正文
+      hash 引用一致。
+    source: world/.transactions/TX-CH-0002-R04/reader-evaluation-R1.md, chapters/.staging/TX-CH-0002-R04/CH-0002-破限.txt
+  - claim: 无 auto_actionable_suggestions 阻断；protected_highlights 已列明。
+    source: world/.transactions/TX-CH-0002-R04/reader-evaluation-R1.md
+- gate: narrative-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 重写后正文无叙事层泄漏，validate_chapter PASS（INV-CHAPTER-001），无黑名单词。
+  evidence:
+  - claim: validate_chapter.py --style writespec/style-guide.md --target 2300 --max
+      2800 返回 PASS；黑名单扫描无命中。
+    source: scripts/validate_chapter.py, chapters/.staging/TX-CH-0002-R04/CH-0002-破限.txt
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 六维审计全 PASS：体系纯度（气血/寿元/破限白名单）；战力平衡（死战触发符合 PWR-RULE-002，皮肉力初成未越阶，INV-POWER-001
+    满足）；时间线（靖宁十七年秋末，EVT-0002）；物品消耗（让粮、柴鱼温饱闭合）；地理（云乡-村后野地）；人物 OOC。
+  evidence:
+  - claim: 死战求生触发参悟符合 power.md PWR-RULE-002（真实苦练/死战触发），未违反规则白名单。
+    source: world/power.md, chapters/.staging/TX-CH-0002-R04/CH-0002-破限.txt
+  - claim: 时间、物品、地理、人物六维与 world/ 一致。
+    source: world/timeline.md, world/inventory.md, world/geography.md, world/characters.md
+- gate: plot-alignment
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 重写仍兑现 CH-0002 契约：task（第一次加点、气血入体具象变化、明确规则与代价）、conflict（拿命赌命、病儿偷粮）、outcome（皮肉力初成、徒手碎柴木、温饱暂解）、arc_contribution（金手指第一课、消耗可见、勤战补血）、closing_pull（里正带侯三上门）全部兑现；触发方式改为死战求生属
+    outcome 内的表现重写，未引入未授权事实。
+  evidence:
+  - claim: 正文兑现 task/conflict/outcome/arc_contribution/closing_pull，死战触发为 outcome"刻意晋升"的合理表现。
+    source: world/outline.md, chapters/.staging/TX-CH-0002-R04/CH-0002-破限.txt
+  - claim: plan_contract 绑定 outline revision 1 + CH-0002 契约 hash 有效（INV-PLOT-001），validate_outline.py
+      对 staging outline PASS。
+    source: world/.transactions/TX-CH-0002-R04.yaml, scripts/validate_outline.py
+- gate: thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 叙事线索状态与证据不变：破限加点规则（ITEM-0001）更新不改变生命周期，hooks.md 无新增 HOOK/SEED。
+  evidence:
+  - claim: 重写未改变线索生命周期，hooks.md 无状态动作。
+    source: world/hooks.md, world/inventory.md
+- gate: periodic-trigger-classification
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: CH-0002 重写不触发 originality-cycle（未到 10 章边界）。
+  summary: 周期原创性不适用。
+- gate: archive-integrity
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: NOT_DUE：ARC-001 完成 3/10 章，未到归档触发。
+  summary: 条件归档未到期。
+- gate: chapter-format
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Chapter validation passed.'
+  evidence:
+  - command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max
+      2800
+    exit_code: 0
+    output_hash: sha256:90d62eeed08c71994a63282bbe587d18703e64a68b23427722450b0040fe5c45
+- gate: outline-contract
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] INV-PLOT-001: outline contract is valid and frozen'
+  evidence:
+  - command: python scripts/validate_outline.py <outline_file>
+    exit_code: 0
+    output_hash: sha256:8d13e6664bc4b2aaff79b8f7b673e1656afca7eeac11998809ef2a38530ddd8e
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 5 prepared change(s)
+  evidence:
+  - target: chapters/CH-0002-破限.txt
+    staged_hash: sha256:1a6c49500fa3c1bcd45cdd299793c25e56717ccfbcb560096b825efcc331447a
+  - target: world/chapter-summary.md
+    staged_hash: sha256:802ee0ad76f244a19bbafc34fc073f237696c81b98a3f5ed6b4d53273e5dbf01
+  - target: world/characters.md
+    staged_hash: sha256:faf590febc1e2854df849b7c21c6a5ed9c413364aaddab81009e5cb2cdcc7f48
+  - target: world/timeline.md
+    staged_hash: sha256:a3521805be757f409c527666cb0708723f23373f2138611f0b72b069e34452bb
+  - target: world/outline.md
+    staged_hash: sha256:d49da6a4686eeca4f8290eace41a6e253854658a802277174bdd87007203b32e
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 5 published target(s)
+  evidence:
+  - target: chapters/CH-0002-破限.txt
+    published_hash: sha256:1a6c49500fa3c1bcd45cdd299793c25e56717ccfbcb560096b825efcc331447a
+  - target: world/chapter-summary.md
+    published_hash: sha256:802ee0ad76f244a19bbafc34fc073f237696c81b98a3f5ed6b4d53273e5dbf01
+  - target: world/characters.md
+    published_hash: sha256:faf590febc1e2854df849b7c21c6a5ed9c413364aaddab81009e5cb2cdcc7f48
+  - target: world/timeline.md
+    published_hash: sha256:a3521805be757f409c527666cb0708723f23373f2138611f0b72b069e34452bb
+  - target: world/outline.md
+    published_hash: sha256:d49da6a4686eeca4f8290eace41a6e253854658a802277174bdd87007203b32e
+changes:
+- target: chapters/CH-0002-破限.txt
+  staged: chapters/.staging/TX-CH-0002-R04/CH-0002-破限.txt
+  baseline_hash: sha256:46aaba5bb851ef266f62859eb99e25c23224e66e70224301e19918e5be0076c4
+  staged_hash: sha256:1a6c49500fa3c1bcd45cdd299793c25e56717ccfbcb560096b825efcc331447a
+  idempotency_key: chapters/CH-0002-破限.txt:TX-CH-0002-R04
+- target: world/chapter-summary.md
+  staged: world/.staging/TX-CH-0002-R04/chapter-summary.md
+  baseline_hash: sha256:e65a74dade82d51588bf7b8d8f3a6be8e304ebe695859485e0a280d2d33ad0d4
+  staged_hash: sha256:802ee0ad76f244a19bbafc34fc073f237696c81b98a3f5ed6b4d53273e5dbf01
+  idempotency_key: world/chapter-summary.md:TX-CH-0002-R04
+- target: world/characters.md
+  staged: world/.staging/TX-CH-0002-R04/characters.md
+  baseline_hash: sha256:b00f0f7760463640cb7205d64df84ae8279a541b2166e88ca3a684575f3f6fe9
+  staged_hash: sha256:faf590febc1e2854df849b7c21c6a5ed9c413364aaddab81009e5cb2cdcc7f48
+  idempotency_key: world/characters.md:TX-CH-0002-R04
+- target: world/timeline.md
+  staged: world/.staging/TX-CH-0002-R04/timeline.md
+  baseline_hash: sha256:96cf43204992bf44d6a620b2bb7dab2563b676bd0c7f6e04e1897e427cb78ce9
+  staged_hash: sha256:a3521805be757f409c527666cb0708723f23373f2138611f0b72b069e34452bb
+  idempotency_key: world/timeline.md:TX-CH-0002-R04
+- target: world/outline.md
+  staged: world/.staging/TX-CH-0002-R04/outline.md
+  baseline_hash: sha256:f80cac6b19fbc25c3b9298544a0a89f81cb3c05fa87fd870fa2129522d9c587e
+  staged_hash: sha256:d49da6a4686eeca4f8290eace41a6e253854658a802277174bdd87007203b32e
+  idempotency_key: world/outline.md:TX-CH-0002-R04
+applied_keys:
+- chapters/CH-0002-破限.txt:TX-CH-0002-R04
+- world/chapter-summary.md:TX-CH-0002-R04
+- world/characters.md:TX-CH-0002-R04
+- world/timeline.md:TX-CH-0002-R04
+- world/outline.md:TX-CH-0002-R04
+confirmations: []
+confirmation_nonce: 339a1525330cf82eceb163687b7ffdb2
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null
+plan_contract:
+  outline_revision: 1
+  outline_hash: sha256:f80cac6b19fbc25c3b9298544a0a89f81cb3c05fa87fd870fa2129522d9c587e
+  arc_id: ARC-001
+  arc_goal_id: GOAL-ARC-001
+  chapter_id: CH-0002
+  chapter_contract_hash: sha256:c7328b1b35deae4b858b5e3f953ea169c3bc1a880352a0b84623e599b381144d

@@ -1,0 +1,111 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0001-R03
+source_command: 润色章节 CH-0001
+command: polish-chapter
+mode: published
+pipeline: polish-chapter
+arguments:
+  chapter: '0001'
+state: COMPLETE
+archive_state: NOT_DUE
+stages:
+- name: source-baseline
+  status: PASS
+  summary: 正式正文 CH-0001-血价.txt 基线审计通过：chapter-length 2546 字（2300-2800）、chapter-format
+    PASS（INV-CHAPTER-001）、无叙事层泄漏；world-audit 与 thread-integrity 无既存硬伤，允许进入等义润色。
+- name: polish
+  status: PASS
+  summary: 按重评报告扣分点执行等义修复：习见比喻物理化（被手攥住喉咙→湿棉絮堵喉）、背景段标点衔接；润色后 2543 字，格式 PASS。
+gates:
+- gate: source-baseline
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 原文基线有效，无 PREEXISTING_WORLD_ISSUE。
+  evidence:
+  - claim: 正式正文字数 2546、validate_chapter PASS；world-audit 六维无既存硬伤；thread-integrity
+      无 HOOK/SEED 异常状态。
+    source: scripts/check_count.py, scripts/validate_chapter.py, world/power.md, world/hooks.md
+- gate: presentation-equivalence
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 新旧正文等义：diff 仅 2 处语言层调整，事件顺序、卖血换粮、欠账、破限半激活、石禾病情均不变。
+  evidence:
+  - claim: diff 显示修改点限于（1）"剩下的是走不动的"→"剩下走不动的"（去"的"冗余）（2）"觉得自己像被一只手攥住了喉咙，攥得发不出声"→"喉咙里像塞了团湿棉絮，堵着，咽不下，也喊不出"（习见比喻物理化，情绪等价）。
+    source: chapters/CH-0001-血价.txt, chapters/.staging/TX-CH-0001-R03/CH-0001-血价.txt
+  - claim: 无事件、因果、人物决策、物品消耗、伤势、信息差与线索状态变化，满足等义呈现修订边界。
+    source: world/chapter-summary.md, world/hooks.md
+- gate: narrative-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 润色后正文无叙事层泄漏，validate_chapter PASS（INV-CHAPTER-001）。
+  evidence:
+  - claim: validate_chapter.py --style writespec/style-guide.md --target 2300 --max
+      2800 返回 PASS。
+    source: scripts/validate_chapter.py, chapters/.staging/TX-CH-0001-R03/CH-0001-血价.txt
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 润色未引入新世界观事实：体系、战力、时间线、物品、地理、人物行为均与 world/ 一致。
+  evidence:
+  - claim: diff 仅语言层，无新增设定名词、道具、地点或战力表述；六维结论与 CH-0001 创作事务一致。
+    source: world/power.md, world/timeline.md, world/inventory.md, world/geography.md,
+      world/characters.md
+- gate: thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 叙事线索状态与证据不变：破限加点半激活（ITEM-0001）与血铺骗局记账线索未改，hooks.md 无变化。
+  evidence:
+  - claim: 润色未改动与线索相关的措辞含义，hooks.md 无状态动作。
+    source: world/hooks.md, world/.transactions/TX-CH-0001-R03.yaml
+- gate: chapter-format
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Chapter validation passed.'
+  evidence:
+  - command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max
+      2800
+    exit_code: 0
+    output_hash: sha256:90d62eeed08c71994a63282bbe587d18703e64a68b23427722450b0040fe5c45
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 1 prepared change(s)
+  evidence:
+  - target: chapters/CH-0001-血价.txt
+    staged_hash: sha256:f5c4353a2532461ea37406368199721ffaebee9dd4c420b9909fc13af8f8032b
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 1 published target(s)
+  evidence:
+  - target: chapters/CH-0001-血价.txt
+    published_hash: sha256:f5c4353a2532461ea37406368199721ffaebee9dd4c420b9909fc13af8f8032b
+changes:
+- target: chapters/CH-0001-血价.txt
+  staged: chapters/.staging/TX-CH-0001-R03/CH-0001-血价.txt
+  baseline_hash: sha256:d4c823dfda5b6549a0014d5dcfd1643181d26945a8bcc76cc14792731dd86f46
+  staged_hash: sha256:f5c4353a2532461ea37406368199721ffaebee9dd4c420b9909fc13af8f8032b
+  idempotency_key: chapters/CH-0001-血价.txt:TX-CH-0001-R03
+applied_keys:
+- chapters/CH-0001-血价.txt:TX-CH-0001-R03
+confirmations:
+- type: overwrite
+  target: chapters/CH-0001-血价.txt
+  status: CONFIRMED
+  source: user
+  method: interactive-cli
+  proof: sha256:f5f865eefdd081af54a0770edd85bb5a32f7cb69b5b01d03b1c9f5478c618673
+confirmation_nonce: 85331ddf67f44475b3a685686b7790cc
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null

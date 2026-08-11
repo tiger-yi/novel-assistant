@@ -1,0 +1,210 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0003-R01
+source_command: 创作第 3 章
+command: create-chapter
+mode: full
+pipeline: create-chapter
+arguments:
+  chapter: '3'
+state: COMPLETE
+archive_state: NOT_DUE
+stages:
+- name: preflight
+  status: PASS
+  summary: style-guide INV-STYLE-001 PASS（validate_harness.py）；八类 World Bible 齐全；CH-0003
+    无已发布正文；begin 成功创建 TX-CH-0003-R01，plan_contract 绑定 outline revision 1 + ARC-001
+    + GOAL-ARC-001 + CH-0003 契约 hash，与当前 outline hash 一致。
+- name: draft
+  status: PASS
+  summary: 按冻结 CH-0003 执行契约撰写初稿：空手击倒持刀侯三、逼退里正、村人改观、立"镇不平自己上"誓言、里正放"买粮链"狠话；初稿写入 chapters/.staging/TX-CH-0003-R01/CH-0003-镇不平.txt，标题《镇不平》。
+- name: polish
+  status: PASS
+  summary: 执行一次 chapter-polish 纯文本润色：清除黑名单词"一下子"、去语义重复（血珠/影子意象）、修正引号使用；润色后字数 2303，在
+    2300-2800 区间。
+gates:
+- gate: first-chapter-readiness
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: 目标为 CH-0003，非第一章；第一章就绪性已在 CH-0001 事务 first-chapter-readiness PASS 时覆盖，本章
+    preflight 已确认 style_basis 书名锚点与八类 Bible 齐全。
+  summary: 非第一章，first-chapter-readiness 不适用。
+- gate: reader-evaluation
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 三读者画像评价聚合分 8.9（>=8.0）：目标类型读者 9.0、世界观沉浸读者 8.6、毒蛇文本读者 8.9；任一画像 >= 6.0，无阻断，最终状态
+    PASS，直接进入后续门禁。
+  evidence:
+  - claim: reader-evaluation-R1 报告记录三画像维度分、归一聚合分 8.9 与最终状态 PASS；artifact 路径 world/.transactions/TX-CH-0003-R01/reader-evaluation-R1.md，正文
+      hash 引用一致。
+    source: world/.transactions/TX-CH-0003-R01/reader-evaluation-R1.md, chapters/.staging/TX-CH-0003-R01/CH-0003-镇不平.txt
+  - claim: 无 auto_actionable_suggestions 与 manual_decision_suggestions；protected_highlights
+      与 forbidden_changes 已列明。
+    source: world/.transactions/TX-CH-0003-R01/reader-evaluation-R1.md
+- gate: narrative-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 正文无叙事层泄漏：无【】[]（）《》、无 Markdown 标记、无 Harness ID（CH-/ARC-/HOOK- 等）、无第X章/上一章/本章等结构引用；引号均用于对话，无镜头调度或读者/作者身份暴露；禁用符号与黑名单词全检通过。
+  evidence:
+  - claim: grep 扫描无 forbidden 符号、Markdown 标记、章节结构引用与 Harness ID；语义层无"镜头""读者""剧情需要"等泄漏。
+    source: chapters/.staging/TX-CH-0003-R01/CH-0003-镇不平.txt
+  - claim: validate_chapter.py --style writespec/style-guide.md --target 2300 --max
+      2800 返回 PASS（INV-CHAPTER-001）。
+    source: scripts/validate_chapter.py
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 六维审计全 PASS：体系纯度（气血/寿元/破限白名单，无仙佛天道）；战力平衡（皮肉力初成空手对持刀凡人，两拳击倒，无跨阶，INV-POWER-001
+    满足）；时间线（靖宁十七年秋末，CH-0002..0003 共 2 日，EVT-0002）；物品消耗（弯刀拾起后还回不持有，无消耗；村人赠野菜窝头入账温饱）；地理跨度（云乡石横家与院内外，无越境）；人物
+    OOC（石横护妹立誓、周满山色厉内荏、侯三仗势被击，与 characters.md 一致）。
+  evidence:
+  - claim: 体系纯度 PASS：正文无仙道词，皮肉力实战符合 power.md 一阶碎木刻度，未引入新规则。
+    source: world/power.md, writespec/style-guide.md
+  - claim: 战力平衡 PASS：侯三为凡人匹夫，石横皮肉力初成空手对刀，两拳击倒，单阶内取胜，满足 INV-POWER-001。
+    source: world/power.md, chapters/.staging/TX-CH-0003-R01/CH-0003-镇不平.txt
+  - claim: 时间线 PASS：EVT-0002 覆盖 CH-0002..0003（首次加点与击倒侯三），共 2 日，与 timeline.md 一致。
+    source: world/timeline.md
+  - claim: 物品消耗 PASS：弯刀拾起后还回墙根，不新增持有；村人赠野菜窝头为温饱收入，无重复扣减。
+    source: world/inventory.md, chapters/.staging/TX-CH-0003-R01/CH-0003-镇不平.txt
+  - claim: 地理跨度 PASS：活动范围仅云乡石横家及院门内外（LOC-0001），无越境或无根新地点。
+    source: world/geography.md
+  - claim: 人物 OOC PASS：石横护妹立誓、周满山色厉内荏、侯三持刀仗势，与 characters.md CHAR-0001/0003/0004 及
+      REL-0001/0002 一致。
+    source: world/characters.md
+- gate: plot-alignment
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 与 CH-0003 执行契约逐项一致：task（一拳打穿恶霸、逼退里正、确立守护目标）、conflict（恶霸持刀相逼、村人不敢相帮）、outcome（空手两拳击倒侯三、震慑里正、村人暗中改观、立誓）、arc_contribution（从被压迫者变为能自持武力的守护者）、closing_pull（里正放"买粮链"狠话）全部兑现；完成
+    MS-ARC-001-01，未引入未授权重大叙事事实。
+  evidence:
+  - claim: 正文兑现 task/conflict/outcome/arc_contribution/closing_pull 五项契约，侯三被击倒未死、刀还回与契约
+      outcome 一致；"买粮链"狠话承接血铺骗局上游引线。
+    source: world/outline.md, chapters/.staging/TX-CH-0003-R01/CH-0003-镇不平.txt
+  - claim: plan_contract 绑定 outline revision 1 + ARC-001 + GOAL-ARC-001 + CH-0003
+      契约 hash 有效（INV-PLOT-001），validate_outline.py 对 staging outline PASS。
+    source: world/.transactions/TX-CH-0003-R01.yaml, scripts/validate_outline.py
+- gate: thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 本章完成 MS-ARC-001-01（里程碑落地），不新增正式 HOOK/SEED；"买粮链"为 closing_pull 章末牵引，由 outline
+    CH-0007 走私粮链契约承接，不登记 HOOK；hooks.md 活跃注册表无越权跃迁。
+  evidence:
+  - claim: 章末"买粮链"疑问为章末牵引（非正式钩子），由 CH-0007 契约承接，未登记 HOOK。
+    source: world/outline.md, chapters/.staging/TX-CH-0003-R01/CH-0003-镇不平.txt
+  - claim: hooks.md 无状态动作，无越权创建/推进/解决 SEED 或 HOOK。
+    source: world/hooks.md
+- gate: periodic-trigger-classification
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: 目标章节 CH-0003 未达到 originality-cycle 周期边界（interval_chapters=10），且无 arc_completed
+    / premise_changed 触发事件；单章套路黑名单由 validate_chapter.py 已覆盖（PASS）。
+  summary: 周期原创性审计不适用于第 3 章；单章套路扫描通过。
+- gate: archive-integrity
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: NOT_DUE：ARC-001 仅完成 3/10 章，未到 10 章周期触发，卷未完成，无强制归档授权；archive_state=NOT_DUE，变更集不含归档目标。
+  summary: 条件归档未到期（INV-ARCHIVE-001 周期/卷终/强制均不满足）。
+- gate: chapter-format
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Chapter validation passed.'
+  evidence:
+  - command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max
+      2800
+    exit_code: 0
+    output_hash: sha256:90d62eeed08c71994a63282bbe587d18703e64a68b23427722450b0040fe5c45
+- gate: outline-contract
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] INV-PLOT-001: outline contract is valid and frozen'
+  evidence:
+  - command: python scripts/validate_outline.py <outline_file>
+    exit_code: 0
+    output_hash: sha256:8d13e6664bc4b2aaff79b8f7b673e1656afca7eeac11998809ef2a38530ddd8e
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 5 prepared change(s)
+  evidence:
+  - target: chapters/CH-0003-镇不平.txt
+    staged_hash: sha256:d335f2bb1d025fbbff31f038c32db0c2768671961cf09d8c5005d9300fb72573
+  - target: world/chapter-summary.md
+    staged_hash: sha256:085dbaabeeda98f78cdb5b4752ccd453f3b0a55d392daac305d6c9fa8e1d01eb
+  - target: world/characters.md
+    staged_hash: sha256:aef7f18ba57e44e982bdcaccd484bde2ac9899156b193a01968119ec5ea90431
+  - target: world/timeline.md
+    staged_hash: sha256:c2912a48d8863f5521577dc009b18559f62306edcdf30a7f440fc672a208e7a1
+  - target: world/outline.md
+    staged_hash: sha256:ab16f40ac746d144253568a1954ba12d58a8007fd931d7b7f7df705c974dd96a
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 5 published target(s)
+  evidence:
+  - target: chapters/CH-0003-镇不平.txt
+    published_hash: sha256:d335f2bb1d025fbbff31f038c32db0c2768671961cf09d8c5005d9300fb72573
+  - target: world/chapter-summary.md
+    published_hash: sha256:085dbaabeeda98f78cdb5b4752ccd453f3b0a55d392daac305d6c9fa8e1d01eb
+  - target: world/characters.md
+    published_hash: sha256:aef7f18ba57e44e982bdcaccd484bde2ac9899156b193a01968119ec5ea90431
+  - target: world/timeline.md
+    published_hash: sha256:c2912a48d8863f5521577dc009b18559f62306edcdf30a7f440fc672a208e7a1
+  - target: world/outline.md
+    published_hash: sha256:ab16f40ac746d144253568a1954ba12d58a8007fd931d7b7f7df705c974dd96a
+changes:
+- target: chapters/CH-0003-镇不平.txt
+  staged: chapters/.staging/TX-CH-0003-R01/CH-0003-镇不平.txt
+  baseline_hash: absent
+  staged_hash: sha256:d335f2bb1d025fbbff31f038c32db0c2768671961cf09d8c5005d9300fb72573
+  idempotency_key: chapters/CH-0003-镇不平.txt:TX-CH-0003-R01
+- target: world/chapter-summary.md
+  staged: world/.staging/TX-CH-0003-R01/chapter-summary.md
+  baseline_hash: sha256:0106530ddd1b05def2e8c25ba55257eab074fa449d1a1211fbaa7dd017b2d216
+  staged_hash: sha256:085dbaabeeda98f78cdb5b4752ccd453f3b0a55d392daac305d6c9fa8e1d01eb
+  idempotency_key: world/chapter-summary.md:TX-CH-0003-R01
+- target: world/characters.md
+  staged: world/.staging/TX-CH-0003-R01/characters.md
+  baseline_hash: sha256:05b00605a1e004ed671f31bb8a237eaa7f1388c94597b1ac4fde5365c07509f9
+  staged_hash: sha256:aef7f18ba57e44e982bdcaccd484bde2ac9899156b193a01968119ec5ea90431
+  idempotency_key: world/characters.md:TX-CH-0003-R01
+- target: world/timeline.md
+  staged: world/.staging/TX-CH-0003-R01/timeline.md
+  baseline_hash: sha256:8e0c412da4145f2de73da0a87acb14b0d02d7b2372b2c0e58ec56f8a49c0ebfd
+  staged_hash: sha256:c2912a48d8863f5521577dc009b18559f62306edcdf30a7f440fc672a208e7a1
+  idempotency_key: world/timeline.md:TX-CH-0003-R01
+- target: world/outline.md
+  staged: world/.staging/TX-CH-0003-R01/outline.md
+  baseline_hash: sha256:b8b631fc5803f09f9653fc02853cb6556b9c21007a287a155170c49e59615455
+  staged_hash: sha256:ab16f40ac746d144253568a1954ba12d58a8007fd931d7b7f7df705c974dd96a
+  idempotency_key: world/outline.md:TX-CH-0003-R01
+applied_keys:
+- chapters/CH-0003-镇不平.txt:TX-CH-0003-R01
+- world/chapter-summary.md:TX-CH-0003-R01
+- world/characters.md:TX-CH-0003-R01
+- world/timeline.md:TX-CH-0003-R01
+- world/outline.md:TX-CH-0003-R01
+confirmations: []
+confirmation_nonce: 7db0e22535397a4a7e0a88983bb8590c
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null
+plan_contract:
+  outline_revision: 1
+  outline_hash: sha256:b8b631fc5803f09f9653fc02853cb6556b9c21007a287a155170c49e59615455
+  arc_id: ARC-001
+  arc_goal_id: GOAL-ARC-001
+  chapter_id: CH-0003
+  chapter_contract_hash: sha256:5d653c82a8ac538276974a5ac479ccb64c897ae831577c8d725d9e5cae50ebd0

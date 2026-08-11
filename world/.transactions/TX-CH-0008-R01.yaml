@@ -1,0 +1,232 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0008-R01
+source_command: 创作第 8 章
+command: create-chapter
+mode: full
+pipeline: create-chapter
+arguments:
+  chapter: '8'
+state: COMPLETE
+archive_state: NOT_DUE
+stages:
+- name: preflight
+  status: PASS
+  summary: style-guide INV-STYLE-001 PASS（validate_harness.py）；八类 World Bible 齐全；CH-0008
+    无已发布正文、无在途同章事务；begin 成功创建 TX-CH-0008-R01，plan_contract 绑定 outline revision 1 +
+    ARC-001 + GOAL-ARC-001 + CH-0008 契约 hash（2492b030…），与当前 outline hash（99e6527a…）一致。
+- name: draft
+  status: PASS
+  summary: 按冻结 CH-0008 执行契约撰写初稿：山口庄陈管事携名医登门递话"换命换药"、名医诊脉露破绽（"命火"vs"抽命"）、石横夜访老医师对质、茅先生以雪山参芯药引钓人入庄、温白点破"参芯钓客"骗局并立医案、石横拦门两拳一肘顶回庄丁（左肋旧伤崩裂）、村人围院乡望稳固、章末石横布防等雇凶；初稿补全至
+    chapters/.staging/TX-CH-0008-R01/CH-0008-换命.txt，标题《换命》。
+- name: polish
+  status: PASS
+  summary: 执行一次 chapter-polish 纯文本润色：清除"目光闪了一下"模板化描写与"在炕边坐下"重复动作、补承接段感官与布防细节、压缩感叹号至
+    0 个；润色后 2308 字，validate_chapter PASS，未改变任何事实、信息差或伏笔状态。
+gates:
+- gate: first-chapter-readiness
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: 目标为 CH-0008，非第一章；第一章就绪性已由 CH-0001 事务覆盖，preflight 已确认 style_basis 与八类 Bible
+    齐全。
+  summary: 非第一章，first-chapter-readiness 不适用。
+- gate: reader-evaluation
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 三读者画像评价聚合分 8.0（>=8.0）：目标类型读者 8.0、世界观沉浸读者 8.0、毒蛇文本读者 8.0；任一画像 >= 6.0，无阻断；报告终态
+    PASS_WITH_TARGET_MISS——仅 2 处保留性目标缺口（开篇承接约 400 字偏静、两场药师局破局节拍略近），不可自动修且不影响发布，记录后进入后续门禁。
+  evidence:
+  - claim: reader-evaluation-R1 报告记录三画像维度分、归一聚合分 8.0、保留性目标缺口与最终状态 PASS_WITH_TARGET_MISS；artifact
+      路径 world/.transactions/TX-CH-0008-R01/reader-evaluation-R1.md，正文 hash 3dd17309…
+      引用一致。
+    source: world/.transactions/TX-CH-0008-R01/reader-evaluation-R1.md, chapters/.staging/TX-CH-0008-R01/CH-0008-换命.txt
+  - claim: 报告无 WORLD_STATE_BLOCKED / STRUCTURAL_SUGGESTION_BLOCKED 阻断项；auto_actionable_suggestions
+      为空，仅记录保留性缺口（开篇迟滞、两场破局同构）与毒蛇反证审查（最该扣分三处、不可自动改问题、必保护高光）。
+    source: world/.transactions/TX-CH-0008-R01/reader-evaluation-R1.md
+- gate: narrative-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 正文无叙事层泄漏：validate_chapter.py 返回 PASS（INV-CHAPTER-001），无禁用符号、无 Harness ID、
+    无章节结构引用、无 Markdown 块；黑名单词扫描无命中；全章为石横第三人称受限视角，无作者/读者/剧情安排/外部镜头调度表达。
+  evidence:
+  - claim: validate_chapter.py --style writespec/style-guide.md --target 2300 --max
+      2800 返回 PASS；禁用符号与黑名单扫描无命中。
+    source: scripts/validate_chapter.py, chapters/.staging/TX-CH-0008-R01/CH-0008-换命.txt
+  - claim: 京中世族与抽命两处关键信息分别以石横记忆中的账印与温白医案漏出，未开上帝视角或旁白剧透，符合 style-guide 受限视角。
+    source: chapters/.staging/TX-CH-0008-R01/CH-0008-换命.txt, writespec/style-guide.md
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 六维审计全 PASS：体系纯度（气血/寿元/皮肉力白名单，无仙佛天道）；战力平衡（皮肉力初成对四名凡人庄丁，无越级，INV-POWER-001
+    满足，代价为左肋旧伤崩裂）；时间线（靖宁十七年冬，承 CH-0007 后 2-3 日，EVT-0005 落地、EVT-0008 新增）；物品消耗（条子延续、吊命药消耗、温白脉案
+    ITEM-0005 落地，无道具无中生有）；地理跨度（云乡-山口庄当日往返，商旅传讯可达）；人物 OOC（石横/石禾/温白/山口氏均符合人设）。
+  evidence:
+  - claim: 正文名词均属 power.md 白名单（气血/寿元/皮肉力），无体系污染；石横皮肉力初成对四名凡人庄丁取胜，未跨越完整大境界（差 1 阶），且支付左肋旧伤崩裂代价，INV-POWER-001
+      满足。
+    source: world/power.md, world/characters.md, chapters/.staging/TX-CH-0008-R01/CH-0008-换命.txt
+  - claim: 时间线 PASS：承 CH-0007 后 2-3 日（靖宁十七年冬），timeline.md EVT-0005（温白医案）落地、EVT-0008（真假药师局/雇凶预告）新增，与正文一致。
+    source: world/timeline.md, chapters/.staging/TX-CH-0008-R01/CH-0008-换命.txt
+  - claim: 物品消耗 PASS：粮行灭口条子由石横继续持有（留 CH-0009）、吊命药延续消耗、温白脉案（ITEM-0005 血田之证）落地；无道具无中生有。
+    source: world/inventory.md, chapters/.staging/TX-CH-0008-R01/CH-0008-换命.txt
+  - claim: 地理跨度 PASS：云乡（LOC-0001）—山口庄（LOC-0007 新增）当日往返，商旅传讯可达，无情报超时。
+    source: world/geography.md, chapters/.staging/TX-CH-0008-R01/CH-0008-换命.txt
+  - claim: 人物 OOC PASS：石横外冷内热、护妹不绥靖、重乡土；石禾病弱不懦弱（拒进庄）；温白独立动机（行医救人、查明怪病）；山口氏借势压人、武力由人代偿，均与
+      characters.md 一致。
+    source: world/characters.md, chapters/.staging/TX-CH-0008-R01/CH-0008-换命.txt
+- gate: plot-alignment
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 与 CH-0008 执行契约逐项一致：task（与乡社豪强周旋救妹、破真假药师局、稳固乡望）、conflict（豪强以石禾要挟、设真假药师陷阱）、outcome（识破圈套、以武力与智谋保住石禾、乡望稳固）、arc_contribution（强化守护锚点、坐实世族血田线索）、closing_pull（豪强放言雇凶、石横预判反扑并主动布防）全部兑现；未引入未授权重大叙事事实。
+  evidence:
+  - claim: 正文兑现契约五项；里程碑 MS-ARC-001-03 未提前达成（due CH-0010，本章仅贡献血田线索与雇凶牵引）。
+    source: world/outline.md, chapters/.staging/TX-CH-0008-R01/CH-0008-换命.txt
+  - claim: 未击杀山口氏（留 CH-0009）、未解开石禾病根（回收范围卷三）、未引入新势力；plan_contract 绑定 outline revision
+      1 + CH-0008 契约 hash 有效（INV-PLOT-001）。
+    source: world/outline.md, world/.transactions/TX-CH-0008-R01.yaml, scripts/validate_outline.py
+- gate: thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 本章不新增正式 HOOK/SEED；SEED-0002（幼妹之病"命被抽走"）埋设证据经温白医案在正文落地，与 hooks.md 预登记 CH-0008
+    一致；HOOK-0002 提出证据（温白医案）落地；SEED-0001 账本仍留 CH-0009，条子由石横继续持有；雇凶反扑为章末牵引（CH-0009 即解，不登记新
+    HOOK）。无越权跃迁（INV-FORESHADOW-001）。
+  evidence:
+  - claim: SEED-0002 埋设章节（CH-0008）与预登记一致，正文以温白医案（第四个抽命例子）提供埋设证据，hooks.md 无需状态跃迁记录；HOOK-0002
+      提出证据落地。
+    source: world/hooks.md, chapters/.staging/TX-CH-0008-R01/CH-0008-换命.txt
+  - claim: 新候选（山口氏雇凶、温白追查抽命）仅存在于构思输出，未写入 hooks.md；账本残页与条子归属与 CH-0009 契约一致。
+    source: world/hooks.md, world/outline.md
+- gate: periodic-trigger-classification
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: 目标章节 CH-0008 未达到 originality-cycle 周期边界（interval_chapters=10），且无 arc_completed
+    / premise_changed 触发事件；单章套路黑名单由 validate_chapter.py 已覆盖（PASS）。
+  summary: 周期原创性审计不适用于第 8 章；单章套路扫描通过。
+- gate: archive-integrity
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: NOT_DUE：ARC-001 完成 8/10 章，未到 10 章周期触发，卷未完成，无强制归档授权；archive_state=NOT_DUE，变更集不含归档目标。
+  summary: 条件归档未到期（INV-ARCHIVE-001 周期/卷终/强制均不满足）。
+- gate: chapter-format
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Chapter validation passed.'
+  evidence:
+  - command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max
+      2800
+    exit_code: 0
+    output_hash: sha256:90d62eeed08c71994a63282bbe587d18703e64a68b23427722450b0040fe5c45
+- gate: outline-contract
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] INV-PLOT-001: outline contract is valid and frozen'
+  evidence:
+  - command: python scripts/validate_outline.py <outline_file>
+    exit_code: 0
+    output_hash: sha256:8d13e6664bc4b2aaff79b8f7b673e1656afca7eeac11998809ef2a38530ddd8e
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 7 prepared change(s)
+  evidence:
+  - target: chapters/CH-0008-换命.txt
+    staged_hash: sha256:3dd1730917649714670eba9f9340c7721dc0af75f4c14acb5a3bc4aa767f2be6
+  - target: world/chapter-summary.md
+    staged_hash: sha256:79c228eae689deb27a33f27421e0c1a2322cc4916b79fedeb9d08b030100ddf0
+  - target: world/characters.md
+    staged_hash: sha256:2eb3374d581fdd731169d0126811efe0ca40c45fe652af7725c5919f6acb4eb0
+  - target: world/inventory.md
+    staged_hash: sha256:312d8c5c93c6ade4d3a47d7b89d3200d31d1e4d87a8746d1220eb3c68b0c3849
+  - target: world/timeline.md
+    staged_hash: sha256:275b3e7d5cf4f58f676dcdd3de4b89aafbe509315810488b0603782a72dce0d3
+  - target: world/geography.md
+    staged_hash: sha256:05f951f8e19268d15b5011dbba9649ee33ab337b6c667d794bd84d39d2f82c5c
+  - target: world/outline.md
+    staged_hash: sha256:049a1a3f62d765dcc4e4a4cbd2259bb4728975513155540db7c4095cf1bab982
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 7 published target(s)
+  evidence:
+  - target: chapters/CH-0008-换命.txt
+    published_hash: sha256:3dd1730917649714670eba9f9340c7721dc0af75f4c14acb5a3bc4aa767f2be6
+  - target: world/chapter-summary.md
+    published_hash: sha256:79c228eae689deb27a33f27421e0c1a2322cc4916b79fedeb9d08b030100ddf0
+  - target: world/characters.md
+    published_hash: sha256:2eb3374d581fdd731169d0126811efe0ca40c45fe652af7725c5919f6acb4eb0
+  - target: world/inventory.md
+    published_hash: sha256:312d8c5c93c6ade4d3a47d7b89d3200d31d1e4d87a8746d1220eb3c68b0c3849
+  - target: world/timeline.md
+    published_hash: sha256:275b3e7d5cf4f58f676dcdd3de4b89aafbe509315810488b0603782a72dce0d3
+  - target: world/geography.md
+    published_hash: sha256:05f951f8e19268d15b5011dbba9649ee33ab337b6c667d794bd84d39d2f82c5c
+  - target: world/outline.md
+    published_hash: sha256:049a1a3f62d765dcc4e4a4cbd2259bb4728975513155540db7c4095cf1bab982
+changes:
+- target: chapters/CH-0008-换命.txt
+  staged: chapters/.staging/TX-CH-0008-R01/CH-0008-换命.txt
+  baseline_hash: absent
+  staged_hash: sha256:3dd1730917649714670eba9f9340c7721dc0af75f4c14acb5a3bc4aa767f2be6
+  idempotency_key: chapters/CH-0008-换命.txt:TX-CH-0008-R01
+- target: world/chapter-summary.md
+  staged: world/.staging/TX-CH-0008-R01/chapter-summary.md
+  baseline_hash: sha256:739286c206b0d822fcbed6e9d148c408e3f024e54288b9597877343d05ace770
+  staged_hash: sha256:79c228eae689deb27a33f27421e0c1a2322cc4916b79fedeb9d08b030100ddf0
+  idempotency_key: world/chapter-summary.md:TX-CH-0008-R01
+- target: world/characters.md
+  staged: world/.staging/TX-CH-0008-R01/characters.md
+  baseline_hash: sha256:b5e2ace1742e8cbad65a8afd42572e25ff81ee32339f34492e90dfbac5703491
+  staged_hash: sha256:2eb3374d581fdd731169d0126811efe0ca40c45fe652af7725c5919f6acb4eb0
+  idempotency_key: world/characters.md:TX-CH-0008-R01
+- target: world/timeline.md
+  staged: world/.staging/TX-CH-0008-R01/timeline.md
+  baseline_hash: sha256:69ef32ec5021eb3f2b60baa88b12838e7dce99880448f46cde0786f96097d341
+  staged_hash: sha256:275b3e7d5cf4f58f676dcdd3de4b89aafbe509315810488b0603782a72dce0d3
+  idempotency_key: world/timeline.md:TX-CH-0008-R01
+- target: world/inventory.md
+  staged: world/.staging/TX-CH-0008-R01/inventory.md
+  baseline_hash: sha256:bb2dc6051485f505ef7a826242fd9ea2370c849eaf8e5b0b3ac97d756f5f60d2
+  staged_hash: sha256:312d8c5c93c6ade4d3a47d7b89d3200d31d1e4d87a8746d1220eb3c68b0c3849
+  idempotency_key: world/inventory.md:TX-CH-0008-R01
+- target: world/geography.md
+  staged: world/.staging/TX-CH-0008-R01/geography.md
+  baseline_hash: sha256:7e272616a5a796600d2ca43d2908cf275fb5d619c3172570c87f0b24bff9a72b
+  staged_hash: sha256:05f951f8e19268d15b5011dbba9649ee33ab337b6c667d794bd84d39d2f82c5c
+  idempotency_key: world/geography.md:TX-CH-0008-R01
+- target: world/outline.md
+  staged: world/.staging/TX-CH-0008-R01/outline.md
+  baseline_hash: sha256:99e6527a1676dbf06c3b31cad24b6635f90d144d7993c74c0af866c67d12e245
+  staged_hash: sha256:049a1a3f62d765dcc4e4a4cbd2259bb4728975513155540db7c4095cf1bab982
+  idempotency_key: world/outline.md:TX-CH-0008-R01
+applied_keys:
+- chapters/CH-0008-换命.txt:TX-CH-0008-R01
+- world/chapter-summary.md:TX-CH-0008-R01
+- world/characters.md:TX-CH-0008-R01
+- world/inventory.md:TX-CH-0008-R01
+- world/timeline.md:TX-CH-0008-R01
+- world/geography.md:TX-CH-0008-R01
+- world/outline.md:TX-CH-0008-R01
+confirmations: []
+confirmation_nonce: db5e8049d6221288429ca218ecc205b6
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null
+plan_contract:
+  outline_revision: 1
+  outline_hash: sha256:99e6527a1676dbf06c3b31cad24b6635f90d144d7993c74c0af866c67d12e245
+  arc_id: ARC-001
+  arc_goal_id: GOAL-ARC-001
+  chapter_id: CH-0008
+  chapter_contract_hash: sha256:2492b03072ad6509e39a1319192d7fdf3ecdecb73177f3508d67185ac9f99212

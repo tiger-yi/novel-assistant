@@ -1,0 +1,113 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0001-R02
+source_command: 润色章节 CH-0001
+command: polish-chapter
+mode: published
+pipeline: polish-chapter
+arguments:
+  chapter: '0001'
+state: COMPLETE
+archive_state: NOT_DUE
+stages:
+- name: source-baseline
+  status: PASS
+  summary: 正式正文 CH-0001-血价.txt 基线审计通过：chapter-length 2546 字（2300-2800）、chapter-format
+    PASS（INV-CHAPTER-001）、无叙事层泄漏；world-audit 与 thread-integrity 无既存硬伤，允许进入等义润色。
+- name: polish
+  status: PASS
+  summary: 按 chapter-polish.md 对 CH-0001 staging 副本执行等义润色，共 4 处语言层调整（详见 presentation-equivalence
+    evidence），不改变事件、因果、人物行为、资源、伤势与信息差；润色后 2546 字，格式 PASS。
+gates:
+- gate: source-baseline
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 原文基线有效，无 PREEXISTING_WORLD_ISSUE。
+  evidence:
+  - claim: 正式正文字数 2546、validate_chapter PASS；world-audit 六维无既存硬伤；thread-integrity
+      无 HOOK/SEED 异常状态。
+    source: scripts/check_count.py, scripts/validate_chapter.py, world/power.md, world/hooks.md
+- gate: presentation-equivalence
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 新旧正文等义：逐行 diff 仅 4 处语言层调整，事件顺序、对话含义、卖血换粮结果、破限加点半激活、血铺骗局记账与欠账、石禾病情均不变。
+  evidence:
+  - claim: diff 显示修改点限于（1）"又看了眼墙角那只早就空了的米缸"→"目光在墙角那只早就空了的米缸上停了一停"（去"看了眼"重复）（2）"怕一起身眼前那圈黑雾"→"怕蹲久了起身，眼前那圈黑雾"（起身逻辑清晰化）（3）"他忽然站起来"→"他站起来"（去冗余"忽然"）（4）"血色慢慢漾开"→"血色漾开"（去黑名单词"慢慢"）（5）"忽然隐隐约约浮出"→"隐隐约约浮出"（去冗余"忽然"）。
+    source: chapters/CH-0001-血价.txt, chapters/.staging/TX-CH-0001-R02/CH-0001-血价.txt
+  - claim: 无事件、因果、人物决策、物品消耗、伤势、信息差与线索状态变化，满足等义呈现修订边界。
+    source: world/chapter-summary.md, world/hooks.md
+- gate: narrative-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 润色后正文无叙事层泄漏，validate_chapter PASS（INV-CHAPTER-001），无新增符号、Harness ID、章节结构引用或镜头调度。
+  evidence:
+  - claim: validate_chapter.py --style writespec/style-guide.md --target 2300 --max
+      2800 返回 PASS。
+    source: scripts/validate_chapter.py, chapters/.staging/TX-CH-0001-R02/CH-0001-血价.txt
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 润色未引入新世界观事实：体系（破限加点半激活）、战力（无战斗）、时间线（靖宁十七年秋末）、物品（卖血换粮、欠账）、地理（云乡-血铺街）、人物行为均与
+    world/ 一致，无新增冲突。
+  evidence:
+  - claim: diff 仅语言层，无新增设定名词、道具、地点或战力表述；六维结论与 CH-0001 创作事务一致。
+    source: world/power.md, world/timeline.md, world/inventory.md, world/geography.md,
+      world/characters.md
+- gate: thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 叙事线索状态与证据不变：破限加点半激活（ITEM-0001）与血铺骗局记账线索未改，hooks.md 无变化。
+  evidence:
+  - claim: 润色未改动与线索相关的措辞含义，hooks.md 无状态动作。
+    source: world/hooks.md, world/.transactions/TX-CH-0001-R02.yaml
+- gate: chapter-format
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Chapter validation passed.'
+  evidence:
+  - command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max
+      2800
+    exit_code: 0
+    output_hash: sha256:90d62eeed08c71994a63282bbe587d18703e64a68b23427722450b0040fe5c45
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 1 prepared change(s)
+  evidence:
+  - target: chapters/CH-0001-血价.txt
+    staged_hash: sha256:d4c823dfda5b6549a0014d5dcfd1643181d26945a8bcc76cc14792731dd86f46
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 1 published target(s)
+  evidence:
+  - target: chapters/CH-0001-血价.txt
+    published_hash: sha256:d4c823dfda5b6549a0014d5dcfd1643181d26945a8bcc76cc14792731dd86f46
+changes:
+- target: chapters/CH-0001-血价.txt
+  staged: chapters/.staging/TX-CH-0001-R02/CH-0001-血价.txt
+  baseline_hash: sha256:ffdffabc3e22d3fe298236fcacbeefa76cd19b76950095cc5d44ebc03a397ea3
+  staged_hash: sha256:d4c823dfda5b6549a0014d5dcfd1643181d26945a8bcc76cc14792731dd86f46
+  idempotency_key: chapters/CH-0001-血价.txt:TX-CH-0001-R02
+applied_keys:
+- chapters/CH-0001-血价.txt:TX-CH-0001-R02
+confirmations:
+- type: overwrite
+  target: chapters/CH-0001-血价.txt
+  status: CONFIRMED
+  source: user
+  method: interactive-cli
+  proof: sha256:99e3c5e1085b87118447a012adf1382ea7df33f58e7f15f204182b2ad0be4895
+confirmation_nonce: b7f2c9e8a41d5f0639a8c2e7b4d1f0a5
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null

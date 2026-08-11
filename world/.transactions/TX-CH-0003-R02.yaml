@@ -1,0 +1,113 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0003-R02
+source_command: 润色章节 CH-0003
+command: polish-chapter
+mode: published
+pipeline: polish-chapter
+arguments:
+  chapter: '0003'
+state: COMPLETE
+archive_state: NOT_DUE
+stages:
+- name: source-baseline
+  status: PASS
+  summary: 正式正文 CH-0003-镇不平.txt 基线审计通过：chapter-length 2303 字（2300-2800）、chapter-format
+    PASS（INV-CHAPTER-001）、无叙事层泄漏；world-audit 与 thread-integrity 无既存硬伤，允许进入等义润色。
+- name: polish
+  status: PASS
+  summary: 按 chapter-polish.md 对 CH-0003 staging 副本执行等义润色，共 7 处语言层调整（详见 presentation-equivalence
+    evidence），不改变事件、因果、人物行为、资源、伤势与信息差；润色后 2306 字，格式 PASS。
+gates:
+- gate: source-baseline
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 原文基线有效，无 PREEXISTING_WORLD_ISSUE。
+  evidence:
+  - claim: 正式正文字数 2303、validate_chapter PASS；world-audit 六维无既存硬伤；thread-integrity
+      无 HOOK/SEED 异常状态。
+    source: scripts/check_count.py, scripts/validate_chapter.py, world/power.md, world/hooks.md
+- gate: presentation-equivalence
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 新旧正文等义：逐行 diff 仅 7 处语言层调整（指代明确、去"像是"叠用、去影子意象重复、口语强化），事件顺序、对话含义、冲突结果、刀的去向（拾起后还回墙根）、村人反应、誓言内容、末尾"买粮链"思考均不变。
+  evidence:
+  - claim: diff 显示修改点限于（1）"没看他手里的刀"→"没看侯三手里的刀，先扫了一眼"（指代明确）（2）"像是说漏了嘴，又像是巴不得"→"又巴不得"（3）"眼神变了变"→"眼神动了动"（去后文"活泛"重复）（4）"一出口…一口气问了出来"→"落地…全抖了出来"（5）"来一回，我打一回"→"打到他不敢来为止"（口语强化，不改语义）（6）"火光把他的影子照在墙上，一动没动"→"像灶膛里最后一截火，暗着，却还烫着"（去
+      L87 影子意象重复）（7）"又像是巴不得他听见什么"→"又巴不得他听见什么"。
+    source: chapters/CH-0003-镇不平.txt, chapters/.staging/TX-CH-0003-R02/CH-0003-镇不平.txt
+  - claim: 无事件、因果、人物决策、物品消耗、伤势、信息差与线索状态变化，满足等义呈现修订边界。
+    source: world/chapter-summary.md, world/hooks.md
+- gate: narrative-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 润色后正文无叙事层泄漏，validate_chapter PASS（INV-CHAPTER-001），无新增符号、Harness ID、章节结构引用或镜头调度。
+  evidence:
+  - claim: validate_chapter.py --style writespec/style-guide.md --target 2300 --max
+      2800 返回 PASS。
+    source: scripts/validate_chapter.py, chapters/.staging/TX-CH-0003-R02/CH-0003-镇不平.txt
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 润色未引入新世界观事实：体系、战力（皮肉力空手对刀）、时间线（靖宁十七年秋末）、物品（弯刀还回）、地理（云乡）、人物行为均与 world/ 一致，无新增冲突。
+  evidence:
+  - claim: diff 仅语言层，无新增设定名词、道具、地点或战力表述；六维结论与 CH-0003 创作事务一致。
+    source: world/power.md, world/timeline.md, world/inventory.md, world/geography.md,
+      world/characters.md
+- gate: thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 叙事线索状态与证据不变：hooks.md 无变化，"买粮链"仍为 CH-0007 契约承接的章末牵引。
+  evidence:
+  - claim: 润色未改动与线索相关的措辞含义，hooks.md 无状态动作。
+    source: world/hooks.md, world/.transactions/TX-CH-0003-R02.yaml
+- gate: chapter-format
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Chapter validation passed.'
+  evidence:
+  - command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max
+      2800
+    exit_code: 0
+    output_hash: sha256:90d62eeed08c71994a63282bbe587d18703e64a68b23427722450b0040fe5c45
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 1 prepared change(s)
+  evidence:
+  - target: chapters/CH-0003-镇不平.txt
+    staged_hash: sha256:8be5c01ba176d6b1d5f31bb9780e90d50a377ed3f3bbef3e34f6915d18f50baa
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 1 published target(s)
+  evidence:
+  - target: chapters/CH-0003-镇不平.txt
+    published_hash: sha256:8be5c01ba176d6b1d5f31bb9780e90d50a377ed3f3bbef3e34f6915d18f50baa
+changes:
+- target: chapters/CH-0003-镇不平.txt
+  staged: chapters/.staging/TX-CH-0003-R02/CH-0003-镇不平.txt
+  baseline_hash: sha256:d335f2bb1d025fbbff31f038c32db0c2768671961cf09d8c5005d9300fb72573
+  staged_hash: sha256:8be5c01ba176d6b1d5f31bb9780e90d50a377ed3f3bbef3e34f6915d18f50baa
+  idempotency_key: chapters/CH-0003-镇不平.txt:TX-CH-0003-R02
+applied_keys:
+- chapters/CH-0003-镇不平.txt:TX-CH-0003-R02
+confirmations:
+- type: overwrite
+  target: chapters/CH-0003-镇不平.txt
+  status: CONFIRMED
+  source: user
+  method: interactive-cli
+  proof: sha256:ae137a1aca22518db89a3aff0823c58176d37ef31ab43bfbe13a8e9240d055b8
+confirmation_nonce: bba4ce6a34c721c162688d1c17e0d5f6
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null

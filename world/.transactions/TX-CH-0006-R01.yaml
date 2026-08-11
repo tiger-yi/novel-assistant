@@ -1,0 +1,203 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0006-R01
+source_command: 创作第 6 章
+command: create-chapter
+mode: full
+pipeline: create-chapter
+arguments:
+  chapter: '6'
+state: COMPLETE
+archive_state: NOT_DUE
+stages:
+- name: preflight
+  status: PASS
+  summary: style-guide INV-STYLE-001 PASS（validate_harness.py）；八类 World Bible 齐全；CH-0006
+    无已发布正文、无在途同章事务；begin 成功创建 TX-CH-0006-R01，plan_contract 绑定 outline revision 1 +
+    ARC-001 + GOAL-ARC-001 + CH-0006 契约 hash，与当前 outline hash 一致。
+- name: draft
+  status: PASS
+  summary: 按冻结 CH-0006 执行契约撰写初稿：大股流寇强攻、乡邻伤亡（赵四牺牲）、石横独自断后、裂地爆发逼退、重伤养息、赵却现身招揽；初稿补全至
+    chapters/.staging/TX-CH-0006-R01/CH-0006-成名.txt，标题《成名》。
+- name: polish
+  status: PASS
+  summary: 执行一次 chapter-polish 纯文本润色：清黑名单词、补足战斗与养息细节、采纳 reader-evaluation 建议弱化裂地越阶感；润色后
+    2375 字，格式 PASS。
+gates:
+- gate: first-chapter-readiness
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: 目标为 CH-0006，非第一章；第一章就绪性已由 CH-0001 事务覆盖，preflight 已确认 style_basis 与八类 Bible
+    齐全。
+  summary: 非第一章，first-chapter-readiness 不适用。
+- gate: reader-evaluation
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 三读者画像评价聚合分 8.6（>=8.0）：目标类型读者 8.8、世界观沉浸读者 8.4、毒蛇文本读者 8.5；任一画像 >= 6.0，无阻断，最终状态
+    PASS，直接进入后续门禁。
+  evidence:
+  - claim: reader-evaluation-R1 报告记录三画像维度分、归一聚合分 8.6 与最终状态 PASS；artifact 路径 world/.transactions/TX-CH-0006-R01/reader-evaluation-R1.md，正文
+      hash 引用一致。
+    source: world/.transactions/TX-CH-0006-R01/reader-evaluation-R1.md, chapters/.staging/TX-CH-0006-R01/CH-0006-成名.txt
+  - claim: A-1 建议（裂地一击弱化为冻酥旧土）已采纳，manual_decision_suggestions 记录赵四牺牲与寿元损耗后续承接观察。
+    source: world/.transactions/TX-CH-0006-R01/reader-evaluation-R1.md
+- gate: narrative-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 正文无叙事层泄漏：无【】[]（）《》、无 Markdown 标记、无 Harness ID、无章节结构引用、无镜头调度；引号均用于对话；禁用符号与黑名单词全检通过。
+  evidence:
+  - claim: validate_chapter.py --style writespec/style-guide.md --target 2300 --max
+      2800 返回 PASS（INV-CHAPTER-001）；黑名单扫描无命中。
+    source: scripts/validate_chapter.py, chapters/.staging/TX-CH-0006-R01/CH-0006-成名.txt
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 六维审计全 PASS：体系纯度（气血/寿元/破限白名单，无仙佛天道）；战力平衡（皮肉力对凡人流寇，裂地爆发以寿元为代价、冻酥旧土裂口，无越级，INV-POWER-001
+    满足）；时间线（靖宁十七年秋末-初冬，EVT-0003 完成）；物品消耗（寿元燃烧、重伤用药无异常）；地理跨度（云乡村口）；人物 OOC（石横断后决绝、赵却深沉、赵老三悲愤、石禾守候）。
+  evidence:
+  - claim: 裂地一击为绝境爆发，对手为凡人流寇，未跨越境界，INV-POWER-001 满足；代价为寿元燃烧符合 PWR-RULE-001/002。
+    source: world/power.md, chapters/.staging/TX-CH-0006-R01/CH-0006-成名.txt
+  - claim: 时间线 PASS：EVT-0003 靖宁十七年秋末-初冬血战成名，与 timeline.md 一致。
+    source: world/timeline.md
+  - claim: 物品消耗 PASS：寿元燃烧为机制消耗，无道具异常；重伤养息无新道具。
+    source: world/inventory.md
+  - claim: 地理跨度 PASS：云乡村口（LOC-0001），无越境。
+    source: world/geography.md
+  - claim: 人物 OOC PASS：石横护乡决绝、赵却边军深沉，与 characters.md 一致。
+    source: world/characters.md
+- gate: plot-alignment
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 与 CH-0006 执行契约逐项一致：task（血战大股流寇、一战成名、赵却现身）、conflict（敌众我寡、乡邻伤亡、独自断后）、outcome（以命换命守村、击溃主力、重伤养息、名声传至斥候）、arc_contribution（完成
+    MS-ARC-001-02）、closing_pull（赵却武威营招揽）全部兑现；未引入未授权重大叙事事实。
+  evidence:
+  - claim: 正文兑现 task/conflict/outcome/arc_contribution/closing_pull 五项契约，赵四牺牲落实乡邻伤亡，赵却招揽收尾。
+    source: world/outline.md, chapters/.staging/TX-CH-0006-R01/CH-0006-成名.txt
+  - claim: plan_contract 绑定 outline revision 1 + ARC-001 + GOAL-ARC-001 + CH-0006
+      契约 hash 有效（INV-PLOT-001），validate_outline.py 对 staging outline PASS。
+    source: world/.transactions/TX-CH-0006-R01.yaml, scripts/validate_outline.py
+- gate: thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 本章不新增正式 HOOK/SEED；赵却承接入伍线（CHAR-0007 首现），裂地寿元损耗承接 CH-0001/0002 代价链；hooks.md
+    无越权。
+  evidence:
+  - claim: 赵却招揽为章末牵引（非正式钩子），由 ARC-001 卷目标与 CH-0010 入伍契约承接，未登记 HOOK。
+    source: world/outline.md, chapters/.staging/TX-CH-0006-R01/CH-0006-成名.txt
+  - claim: hooks.md 无状态动作，无越权创建/推进 SEED 或 HOOK。
+    source: world/hooks.md
+- gate: periodic-trigger-classification
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: 目标章节 CH-0006 未达到 originality-cycle 周期边界（interval_chapters=10），且无 arc_completed
+    / premise_changed 触发事件；单章套路黑名单由 validate_chapter.py 已覆盖（PASS）。
+  summary: 周期原创性审计不适用于第 6 章；单章套路扫描通过。
+- gate: archive-integrity
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: NOT_DUE：ARC-001 仅完成 6/10 章，未到 10 章周期触发，卷未完成，无强制归档授权；archive_state=NOT_DUE，变更集不含归档目标。
+  summary: 条件归档未到期（INV-ARCHIVE-001 周期/卷终/强制均不满足）。
+- gate: chapter-format
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Chapter validation passed.'
+  evidence:
+  - command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max
+      2800
+    exit_code: 0
+    output_hash: sha256:90d62eeed08c71994a63282bbe587d18703e64a68b23427722450b0040fe5c45
+- gate: outline-contract
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] INV-PLOT-001: outline contract is valid and frozen'
+  evidence:
+  - command: python scripts/validate_outline.py <outline_file>
+    exit_code: 0
+    output_hash: sha256:8d13e6664bc4b2aaff79b8f7b673e1656afca7eeac11998809ef2a38530ddd8e
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 5 prepared change(s)
+  evidence:
+  - target: chapters/CH-0006-成名.txt
+    staged_hash: sha256:7769ae24b06c47aeecbffe3854c9e399567d7da8fd40a7268503f493029f9fdb
+  - target: world/chapter-summary.md
+    staged_hash: sha256:90dcc1fe4b479eee26069dd45c8d886c01c339a6ec7836f7a593a373fdfd16f8
+  - target: world/characters.md
+    staged_hash: sha256:e456075810fb37979bd1f2dd98ff934bd1e0d056206dbb9f3198b72868ee6e9d
+  - target: world/timeline.md
+    staged_hash: sha256:ebb38fd1f56e07193bd1beaf84c971acbedc74218e391643152cb153e71d5117
+  - target: world/outline.md
+    staged_hash: sha256:97bdd59f213f3978d6f48ff5d991a224c94be6684d5e2f2a7f8dbf47fb17df2c
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 5 published target(s)
+  evidence:
+  - target: chapters/CH-0006-成名.txt
+    published_hash: sha256:7769ae24b06c47aeecbffe3854c9e399567d7da8fd40a7268503f493029f9fdb
+  - target: world/chapter-summary.md
+    published_hash: sha256:90dcc1fe4b479eee26069dd45c8d886c01c339a6ec7836f7a593a373fdfd16f8
+  - target: world/characters.md
+    published_hash: sha256:e456075810fb37979bd1f2dd98ff934bd1e0d056206dbb9f3198b72868ee6e9d
+  - target: world/timeline.md
+    published_hash: sha256:ebb38fd1f56e07193bd1beaf84c971acbedc74218e391643152cb153e71d5117
+  - target: world/outline.md
+    published_hash: sha256:97bdd59f213f3978d6f48ff5d991a224c94be6684d5e2f2a7f8dbf47fb17df2c
+changes:
+- target: chapters/CH-0006-成名.txt
+  staged: chapters/.staging/TX-CH-0006-R01/CH-0006-成名.txt
+  baseline_hash: absent
+  staged_hash: sha256:7769ae24b06c47aeecbffe3854c9e399567d7da8fd40a7268503f493029f9fdb
+  idempotency_key: chapters/CH-0006-成名.txt:TX-CH-0006-R01
+- target: world/chapter-summary.md
+  staged: world/.staging/TX-CH-0006-R01/chapter-summary.md
+  baseline_hash: sha256:206a3970f0018b390528a055d45abdc3f8500afbe94de6b5c52240da405afe2c
+  staged_hash: sha256:90dcc1fe4b479eee26069dd45c8d886c01c339a6ec7836f7a593a373fdfd16f8
+  idempotency_key: world/chapter-summary.md:TX-CH-0006-R01
+- target: world/characters.md
+  staged: world/.staging/TX-CH-0006-R01/characters.md
+  baseline_hash: sha256:eefd9e2428c824edc523185c04643d8c768081573a9a05517bc90f0116231509
+  staged_hash: sha256:e456075810fb37979bd1f2dd98ff934bd1e0d056206dbb9f3198b72868ee6e9d
+  idempotency_key: world/characters.md:TX-CH-0006-R01
+- target: world/timeline.md
+  staged: world/.staging/TX-CH-0006-R01/timeline.md
+  baseline_hash: sha256:2b541fe2e5865977931c27282356daafafd3e0b6aadc89d33620a907d97f4308
+  staged_hash: sha256:ebb38fd1f56e07193bd1beaf84c971acbedc74218e391643152cb153e71d5117
+  idempotency_key: world/timeline.md:TX-CH-0006-R01
+- target: world/outline.md
+  staged: world/.staging/TX-CH-0006-R01/outline.md
+  baseline_hash: sha256:b9e46ab0790a9f303b2fb6442f97e04ce29682bc01e7a527a4f9ebaba255d948
+  staged_hash: sha256:97bdd59f213f3978d6f48ff5d991a224c94be6684d5e2f2a7f8dbf47fb17df2c
+  idempotency_key: world/outline.md:TX-CH-0006-R01
+applied_keys:
+- chapters/CH-0006-成名.txt:TX-CH-0006-R01
+- world/chapter-summary.md:TX-CH-0006-R01
+- world/characters.md:TX-CH-0006-R01
+- world/timeline.md:TX-CH-0006-R01
+- world/outline.md:TX-CH-0006-R01
+confirmations: []
+confirmation_nonce: 259f5222fbdba87aef5e182e5d191cbc
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null
+plan_contract:
+  outline_revision: 1
+  outline_hash: sha256:b9e46ab0790a9f303b2fb6442f97e04ce29682bc01e7a527a4f9ebaba255d948
+  arc_id: ARC-001
+  arc_goal_id: GOAL-ARC-001
+  chapter_id: CH-0006
+  chapter_contract_hash: sha256:a83d147e67c87085668a0f45a9c82dc9b96aa732d9eaa2c53edaa99658f586cd

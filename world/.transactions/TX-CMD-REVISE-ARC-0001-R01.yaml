@@ -1,0 +1,88 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CMD-REVISE-ARC-0001-R01
+source_command: 修订卷规划 ARC-002
+command: revise-arc
+mode: null
+pipeline: revise-arc
+arguments:
+  arc: ARC-002
+state: COMPLETE
+archive_state: NOT_CHECKED
+stages:
+- name: preflight
+  status: PASS
+  summary: INV-PLOT-001 校验通过（validate_outline.py）；ARC-002 存在且为 roadmap 未完成卷，含 110
+    个未发布章节（CH-0011..0120）；无在途同目标卷规划修订事务；begin 已记录正式 outline 基线 hash（64402299…）。
+- name: prepare-revision
+  status: PASS
+  summary: 为 ARC-002 生成最小修订：递增修订号 1→2，ARC-002 planning_status roadmap→frozen，补齐 4
+    个里程碑与 110 章执行契约（CH-0011..CH-0120）；未触碰已发布章节（CH-0001..0010）、固定章节区间（11-120）、卷目标 GOAL-ARC-002
+    终态与已完成里程碑；ARC-003..006 保持 roadmap 不动。staging：world/.staging/TX-CMD-REVISE-ARC-0001-R01/outline.md。
+gates:
+- gate: plan-impact
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 影响分析完成：旧值（ARC-002 planning_status=roadmap、milestones=[]、chapters=[]）→ 新值（planning_status=frozen、4
+    里程碑、110 章执行契约）；受影响章节全部为未发布章节（CH-0011..0120），已发布范围（CH-0001..0010）与已完成里程碑零改动；恢复卷目标因果路径为
+    MS-ARC-002-01(20)→MS-ARC-002-02(40)→MS-ARC-002-03(80)→MS-ARC-002-04(120)，GOAL-ARC-002
+    三条件分别由 CH-0020/0040、CH-0078+0056/0103、CH-0083+0101/0102 兑现；跨卷因果：CH-0120 入京承接 ARC-003
+    entry_cause，SEED-0001/0002/0004/0005 在卷二推进并衔接卷三。
+  evidence:
+  - claim: 旧值与新值逐项对应：revision 1→2；ARC-002 planning_status roadmap→frozen；milestones
+      []→[MS-ARC-002-01..04]（due 20/40/80/120 严格递增且在 11-120 内）；chapters []→110 条执行契约（CH-0011..0120，前三章
+      golden_three_role=inciting/feedback/goal-lock，每章 milestone 均引用已声明里程碑）。
+    source: world/outline.md, world/.staging/TX-CMD-REVISE-ARC-0001-R01/outline.md
+  - claim: 已发布范围不可修改基线保持：ARC-001 卷 10 章契约与统计、卷章节区间、GOAL-ARC-002 结果/完成条件/必因/禁止结局均未变；ARC-003..006
+      roadmap 未动；validate_outline.py 对 staging 返回 PASS（INV-PLOT-001 连续区间、里程碑、契约完整）。
+    source: world/.staging/TX-CMD-REVISE-ARC-0001-R01/outline.md, scripts/validate_outline.py
+  - claim: 卷目标因果路径闭环：条件一（站稳脚跟获军功派赏识）由 CH-0020/MS-02-01 完成；条件二（首镇妖潮+结识袍泽与女主线）由 CH-0078
+      妖王决战与 CH-0032/0056/0103 女主线完成；条件三（勘破掮客吸血消耗政策并埋反制）由 CH-0083 消耗全貌、CH-0101 证据集齐、CH-0102
+      分流反制完成；卷终 CH-0120 入京兑现 ARC-003 entry_cause。
+    source: world/.staging/TX-CMD-REVISE-ARC-0001-R01/outline.md
+- gate: outline-contract
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] INV-PLOT-001: outline contract is valid and frozen'
+  evidence:
+  - command: python scripts/validate_outline.py <outline_file>
+    exit_code: 0
+    output_hash: sha256:8d13e6664bc4b2aaff79b8f7b673e1656afca7eeac11998809ef2a38530ddd8e
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 1 prepared change(s)
+  evidence:
+  - target: world/outline.md
+    staged_hash: sha256:14deedb0b1a97f7c0d38bdcf010eda82f7dbcf58a95a5ca696dfecd147d61a29
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 1 published target(s)
+  evidence:
+  - target: world/outline.md
+    published_hash: sha256:14deedb0b1a97f7c0d38bdcf010eda82f7dbcf58a95a5ca696dfecd147d61a29
+changes:
+- target: world/outline.md
+  staged: world/.staging/TX-CMD-REVISE-ARC-0001-R01/outline.md
+  baseline_hash: sha256:64402299185648e4929746107926b092e20540cc493fa5b3afb871f53dc9c8e7
+  staged_hash: sha256:14deedb0b1a97f7c0d38bdcf010eda82f7dbcf58a95a5ca696dfecd147d61a29
+  idempotency_key: world/outline.md:TX-CMD-REVISE-ARC-0001-R01
+applied_keys:
+- world/outline.md:TX-CMD-REVISE-ARC-0001-R01
+confirmations:
+- type: overwrite
+  target: world/outline.md
+  status: CONFIRMED
+  source: user
+  method: interactive-cli
+  proof: sha256:09815d034727770e30b01b600c785145ca1f467e76318e275a065115cb6f12a2
+confirmation_nonce: fde6b323e0e1d4d6d4880c93e6735db3
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null

@@ -1,0 +1,159 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0005-R02
+source_command: 创作第 5 章
+command: create-chapter
+mode: full
+pipeline: create-chapter
+arguments:
+  chapter: '5'
+state: COMPLETE
+archive_state: NOT_DUE
+stages:
+- name: preflight
+  status: PASS
+  summary: style-guide INV-STYLE-001 PASS；八类 World Bible 齐全；CH-0005 已发布（R01 完成），用户明确授权按
+    R1 读者评价扣分项修复，创建 R02 修订事务；plan_contract 绑定当前 outline revision 1 + ARC-001 + CH-0005
+    契约 hash，与当前 outline 一致。
+- name: draft
+  status: PASS
+  summary: 按 R1 扣分项修复正文：布防分工段（L39）压缩为单句带过，布防段收尾补石横巡检的动作节拍；修复后 2330 字。
+- name: polish
+  status: PASS
+  summary: 按 chapter-polish 确认无黑名单词、禁符号与叙事层泄漏；check_count 2330 字（区间内），validate_chapter
+    PASS。
+gates:
+- gate: first-chapter-readiness
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: 重写已发布 CH-0005，非首次创作。
+  summary: 非首次创作，first-chapter-readiness 不适用。
+- gate: reader-evaluation
+  kind: semantic
+  required: true
+  status: PASS
+  summary: R2 复评聚合分 8.6（>=8.0）：目标类型读者 8.9、世界观沉浸读者 8.4、毒蛇文本读者 8.5；任一画像 >= 6.0，最终状态
+    PASS；revision_delta 显示原扣分项（布防分工段说明偏长）已解决。
+  evidence:
+  - claim: reader-evaluation-R2 报告记录三画像维度分、聚合分 8.6 与最终状态 PASS；artifact 路径 world/.transactions/TX-CH-0005-R02/reader-evaluation-R2.md，正文
+      hash 引用一致。
+    source: world/.transactions/TX-CH-0005-R02/reader-evaluation-R2.md, chapters/.staging/TX-CH-0005-R02/CH-0005-守村.txt
+  - claim: revision_delta 记录翻页欲 8.5→8.7、语言咬合力 8.0→8.4、聚合分 8.56→8.63（报告一位小数 8.6→8.6），无新引入硬伤，保留高光未受损。
+    source: world/.transactions/TX-CH-0005-R02/reader-evaluation-R2.md
+- gate: narrative-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 修复后正文无叙事层泄漏，validate_chapter PASS（INV-CHAPTER-001），无黑名单词；修复仅压缩分工段并补巡检动作节拍。
+  evidence:
+  - claim: validate_chapter.py --style writespec/style-guide.md --target 2300 --max
+      2800 返回 PASS（INV-CHAPTER-001）；禁用符号与黑名单扫描无命中。
+    source: scripts/validate_chapter.py, chapters/.staging/TX-CH-0005-R02/CH-0005-守村.txt
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 六维审计全 PASS：修复为纯文本节奏调整，不改变力量、时间线、物品、地理与人物状态；战力/资源/地理/人物结论与 R01 一致（INV-POWER-001
+    满足）。
+  evidence:
+  - claim: 修复仅压缩 L39 分工句并补巡检节拍，未引入新事件或状态；六维结论与 R01 一致。
+    source: world/power.md, world/timeline.md, world/inventory.md, world/geography.md,
+      world/characters.md
+- gate: plot-alignment
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 修复不改变契约：task/conflict/outcome/arc_contribution/closing_pull 仍逐项兑现；L39 压缩保留分工因果，巡检节拍不引入未授权事实。
+  evidence:
+  - claim: 正文仍兑现契约五项，L39 分工因果保留，布防动作节拍为既有事件内表现。
+    source: world/outline.md, chapters/.staging/TX-CH-0005-R02/CH-0005-守村.txt
+  - claim: plan_contract 绑定当前 outline revision 1 + CH-0005 契约 hash 有效（INV-PLOT-001）。
+    source: world/.transactions/TX-CH-0005-R02.yaml, scripts/validate_outline.py
+- gate: thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 修复未改变叙事线索生命周期，hooks.md 无状态动作。
+  evidence:
+  - claim: 修复未改变线索生命周期，hooks.md 无新增/推进 SEED 或 HOOK。
+    source: world/hooks.md
+- gate: periodic-trigger-classification
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: 目标章节 CH-0005 未达到 originality-cycle 周期边界（interval_chapters=10），且无 arc_completed
+    / premise_changed 触发事件；单章套路黑名单由 validate_chapter.py 已覆盖（PASS）。
+  summary: 周期原创性审计不适用于第 5 章；单章套路扫描通过。
+- gate: archive-integrity
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: NOT_DUE：ARC-001 完成 5/10 章，未到 10 章周期触发，卷未完成，无强制归档授权；archive_state=NOT_DUE，变更集不含归档目标。
+  summary: 条件归档未到期（INV-ARCHIVE-001 周期/卷终/强制均不满足）。
+- gate: chapter-format
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Chapter validation passed.'
+  evidence:
+  - command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max
+      2800
+    exit_code: 0
+    output_hash: sha256:90d62eeed08c71994a63282bbe587d18703e64a68b23427722450b0040fe5c45
+- gate: outline-contract
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] INV-PLOT-001: outline contract is valid and frozen'
+  evidence:
+  - command: python scripts/validate_outline.py <outline_file>
+    exit_code: 0
+    output_hash: sha256:8d13e6664bc4b2aaff79b8f7b673e1656afca7eeac11998809ef2a38530ddd8e
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 2 prepared change(s)
+  evidence:
+  - target: chapters/CH-0005-守村.txt
+    staged_hash: sha256:16514d557779a0b6a66318236aef81ed97f8c361e1f433f05b17d3b6c453745f
+  - target: world/outline.md
+    staged_hash: sha256:97bdd59f213f3978d6f48ff5d991a224c94be6684d5e2f2a7f8dbf47fb17df2c
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 2 published target(s)
+  evidence:
+  - target: chapters/CH-0005-守村.txt
+    published_hash: sha256:16514d557779a0b6a66318236aef81ed97f8c361e1f433f05b17d3b6c453745f
+  - target: world/outline.md
+    published_hash: sha256:97bdd59f213f3978d6f48ff5d991a224c94be6684d5e2f2a7f8dbf47fb17df2c
+changes:
+- target: chapters/CH-0005-守村.txt
+  staged: chapters/.staging/TX-CH-0005-R02/CH-0005-守村.txt
+  baseline_hash: sha256:84fd08a53331010036617065f777adc41852313342005bf30d2e8306033238f4
+  staged_hash: sha256:16514d557779a0b6a66318236aef81ed97f8c361e1f433f05b17d3b6c453745f
+  idempotency_key: chapters/CH-0005-守村.txt:TX-CH-0005-R02
+- target: world/outline.md
+  staged: world/.staging/TX-CH-0005-R02/outline.md
+  baseline_hash: sha256:97bdd59f213f3978d6f48ff5d991a224c94be6684d5e2f2a7f8dbf47fb17df2c
+  staged_hash: sha256:97bdd59f213f3978d6f48ff5d991a224c94be6684d5e2f2a7f8dbf47fb17df2c
+  idempotency_key: world/outline.md:TX-CH-0005-R02
+applied_keys:
+- chapters/CH-0005-守村.txt:TX-CH-0005-R02
+- world/outline.md:TX-CH-0005-R02
+confirmations: []
+confirmation_nonce: 685b72d96a0590808d6b5d0c342c27ad
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null
+plan_contract:
+  outline_revision: 1
+  outline_hash: sha256:97bdd59f213f3978d6f48ff5d991a224c94be6684d5e2f2a7f8dbf47fb17df2c
+  arc_id: ARC-001
+  arc_goal_id: GOAL-ARC-001
+  chapter_id: CH-0005
+  chapter_contract_hash: sha256:57276ead0a626b3514ebb0fc258f20d7a147ff15309ecb297dd86f6e750829f3

@@ -1,0 +1,168 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0004-R02
+source_command: 创作第 4 章
+command: create-chapter
+mode: full
+pipeline: create-chapter
+arguments:
+  chapter: '4'
+state: COMPLETE
+archive_state: NOT_DUE
+stages:
+- name: preflight
+  status: PASS
+  summary: style-guide INV-STYLE-001 PASS；八类 World Bible 齐全；CH-0004 已发布（R01 完成），用户明确授权按
+    R1 读者评价扣分项修复，创建 R02 修订事务；plan_contract 绑定 outline revision 1 + ARC-001 + CH-0004
+    契约 hash。
+- name: draft
+  status: PASS
+  summary: 按 R1 扣分项修复正文：压缩中段（老周头劝忍段、练拳段）、替换全部"那杆秤"重复意象、新增识破假药局后反将金掌柜的爽点；2792 字。
+- name: polish
+  status: PASS
+  summary: 按 chapter-polish 润色：清除黑名单词与重复段落，压字数至区间；润色后 2792 字，格式 PASS。
+gates:
+- gate: first-chapter-readiness
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: 重写已发布 CH-0004，非首次创作。
+  summary: 非首次创作，first-chapter-readiness 不适用。
+- gate: reader-evaluation
+  kind: semantic
+  required: true
+  status: PASS
+  summary: R2 复评聚合分 8.4（>=8.0）：目标类型读者 8.4、世界观沉浸读者 8.4、毒蛇文本读者 8.5；任一画像 >= 6.0，无阻断，最终状态
+    PASS；revision_delta 显示原扣分项（中段节奏、意象复用、爽点不足）已解决。
+  evidence:
+  - claim: reader-evaluation-R2 报告记录三画像维度分、聚合分 8.4 与最终状态 PASS；artifact 路径 world/.transactions/TX-CH-0004-R02/reader-evaluation-R2.md，正文
+      hash 引用一致。
+    source: world/.transactions/TX-CH-0004-R02/reader-evaluation-R2.md, chapters/.staging/TX-CH-0004-R02/CH-0004-药路.txt
+  - claim: revision_delta 记录原问题解决、聚合分 8.3→8.4、无新引入硬伤、保留高光未受损。
+    source: world/.transactions/TX-CH-0004-R02/reader-evaluation-R2.md
+- gate: narrative-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 修复后正文无叙事层泄漏，validate_chapter PASS（INV-CHAPTER-001），无黑名单词、无"那杆秤"重复意象。
+  evidence:
+  - claim: validate_chapter.py --style writespec/style-guide.md --target 2300 --max
+      2800 返回 PASS；黑名单与重复意象扫描无命中。
+    source: scripts/validate_chapter.py, chapters/.staging/TX-CH-0004-R02/CH-0004-药路.txt
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 六维审计全 PASS：体系纯度；战力平衡（皮肉力肩伤练拳入门，无越阶，INV-POWER-001）；时间线（EVT-0007）；物品消耗（草药闭合）；地理（云乡-镇东）；人物
+    OOC（反将金掌柜符合石横"不吃亏"成长，周满山阴招）。
+  evidence:
+  - claim: 反将金掌柜为识破局内的表现强化，不改变 CH-0004 outcome 事实；六维结论与 R01 一致。
+    source: world/power.md, world/timeline.md, world/inventory.md, world/geography.md,
+      world/characters.md
+- gate: plot-alignment
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 修复不改变契约：task/conflict/outcome/arc_contribution/closing_pull 仍兑现；反将金掌柜为识破后的表现延伸，未引入未授权事实。
+  evidence:
+  - claim: 正文兑现契约五项，反将金掌柜属 outcome"识破布局"的智力爽点表现。
+    source: world/outline.md, chapters/.staging/TX-CH-0004-R02/CH-0004-药路.txt
+  - claim: plan_contract 绑定 outline revision 1 + CH-0004 契约 hash 有效（INV-PLOT-001），validate_outline.py
+      对 staging outline PASS。
+    source: world/.transactions/TX-CH-0004-R02.yaml, scripts/validate_outline.py
+- gate: thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 叙事线索状态与证据不变：游骑哨探仍为 CH-0005 承接，hooks.md 无新增 HOOK/SEED。
+  evidence:
+  - claim: 修复未改变线索生命周期，hooks.md 无状态动作。
+    source: world/hooks.md
+- gate: periodic-trigger-classification
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: CH-0004 重写不触发 originality-cycle（未到 10 章边界）。
+  summary: 周期原创性不适用。
+- gate: archive-integrity
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: NOT_DUE：ARC-001 完成 4/10 章，未到归档触发。
+  summary: 条件归档未到期。
+- gate: chapter-format
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Chapter validation passed.'
+  evidence:
+  - command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max
+      2800
+    exit_code: 0
+    output_hash: sha256:90d62eeed08c71994a63282bbe587d18703e64a68b23427722450b0040fe5c45
+- gate: outline-contract
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] INV-PLOT-001: outline contract is valid and frozen'
+  evidence:
+  - command: python scripts/validate_outline.py <outline_file>
+    exit_code: 0
+    output_hash: sha256:8d13e6664bc4b2aaff79b8f7b673e1656afca7eeac11998809ef2a38530ddd8e
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 3 prepared change(s)
+  evidence:
+  - target: chapters/CH-0004-药路.txt
+    staged_hash: sha256:a2e4ee55111980664f115a9f7b863456ca5b0f089dabb7518d417f9fb8cb67b8
+  - target: world/chapter-summary.md
+    staged_hash: sha256:c7097ebc56b348365f2ed69e4a81f1077f001f519c060faf8469b260b2b258ae
+  - target: world/outline.md
+    staged_hash: sha256:800b7d27e86a016ae6520bf18387a2075c50d247302b57d682b80bcef2c39288
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 3 published target(s)
+  evidence:
+  - target: chapters/CH-0004-药路.txt
+    published_hash: sha256:a2e4ee55111980664f115a9f7b863456ca5b0f089dabb7518d417f9fb8cb67b8
+  - target: world/chapter-summary.md
+    published_hash: sha256:c7097ebc56b348365f2ed69e4a81f1077f001f519c060faf8469b260b2b258ae
+  - target: world/outline.md
+    published_hash: sha256:800b7d27e86a016ae6520bf18387a2075c50d247302b57d682b80bcef2c39288
+changes:
+- target: chapters/CH-0004-药路.txt
+  staged: chapters/.staging/TX-CH-0004-R02/CH-0004-药路.txt
+  baseline_hash: sha256:3b84694d9da1866131980c0a8d8c092717c41c7d68400b460fc507a233d219ae
+  staged_hash: sha256:a2e4ee55111980664f115a9f7b863456ca5b0f089dabb7518d417f9fb8cb67b8
+  idempotency_key: chapters/CH-0004-药路.txt:TX-CH-0004-R02
+- target: world/chapter-summary.md
+  staged: world/.staging/TX-CH-0004-R02/chapter-summary.md
+  baseline_hash: sha256:fe0598327e5620791bc7199cd3243ea08089da0ed287109ac42a41041a612864
+  staged_hash: sha256:c7097ebc56b348365f2ed69e4a81f1077f001f519c060faf8469b260b2b258ae
+  idempotency_key: world/chapter-summary.md:TX-CH-0004-R02
+- target: world/outline.md
+  staged: world/.staging/TX-CH-0004-R02/outline.md
+  baseline_hash: sha256:53bff06cc22434affb3d2cb764b8d16469de1ecdaa59b2721dca9af185b7971e
+  staged_hash: sha256:800b7d27e86a016ae6520bf18387a2075c50d247302b57d682b80bcef2c39288
+  idempotency_key: world/outline.md:TX-CH-0004-R02
+applied_keys:
+- chapters/CH-0004-药路.txt:TX-CH-0004-R02
+- world/chapter-summary.md:TX-CH-0004-R02
+- world/outline.md:TX-CH-0004-R02
+confirmations: []
+confirmation_nonce: 6d9fdd88afdd500cd569b09586f07d3a
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null
+plan_contract:
+  outline_revision: 1
+  outline_hash: sha256:53bff06cc22434affb3d2cb764b8d16469de1ecdaa59b2721dca9af185b7971e
+  arc_id: ARC-001
+  arc_goal_id: GOAL-ARC-001
+  chapter_id: CH-0004
+  chapter_contract_hash: sha256:ca993724e047d03a44691d67e6eaf569087a39260fa0ad7dccb4a38f38376197

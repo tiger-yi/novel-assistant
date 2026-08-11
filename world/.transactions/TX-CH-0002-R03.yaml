@@ -1,0 +1,111 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0002-R03
+source_command: 润色章节 CH-0002
+command: polish-chapter
+mode: published
+pipeline: polish-chapter
+arguments:
+  chapter: '0002'
+state: COMPLETE
+archive_state: NOT_DUE
+stages:
+- name: source-baseline
+  status: PASS
+  summary: 正式正文 CH-0002-破限.txt 基线审计通过：chapter-length 2329 字（2300-2800）、chapter-format
+    PASS（INV-CHAPTER-001）、无叙事层泄漏；world-audit 与 thread-integrity 无既存硬伤，允许进入等义润色。
+- name: polish
+  status: PASS
+  summary: 按重评报告扣分点执行等义修复：练拳段去"满手是血/皮破血渗"重复描写；润色后 2329 字，格式 PASS。
+gates:
+- gate: source-baseline
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 原文基线有效，无 PREEXISTING_WORLD_ISSUE。
+  evidence:
+  - claim: 正式正文字数 2329、validate_chapter PASS；world-audit 六维无既存硬伤；thread-integrity
+      无 HOOK/SEED 异常状态。
+    source: scripts/check_count.py, scripts/validate_chapter.py, world/power.md, world/hooks.md
+- gate: presentation-equivalence
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 新旧正文等义：diff 仅 2 处语言层调整，事件顺序、让粮、加点、皮肉力初成、温饱、里正上门均不变。
+  evidence:
+  - claim: diff 显示修改点限于（1）"打到十几拳，拳面的皮破了，血渗出来，染在灰白的树皮上"→"打到十几拳，血顺着手腕淌下来，把灰白的树皮染成暗红"（去与前句"皮肉糊在树皮上"的重复）（2）"石横砸得满手是血"→"石横砸得手臂发沉"（去重复血意象，保留时间推进与力竭感）。
+    source: chapters/CH-0002-破限.txt, chapters/.staging/TX-CH-0002-R03/CH-0002-破限.txt
+  - claim: 无事件、因果、人物决策、物品消耗、伤势、信息差与线索状态变化，满足等义呈现修订边界。
+    source: world/chapter-summary.md, world/hooks.md
+- gate: narrative-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 润色后正文无叙事层泄漏，validate_chapter PASS（INV-CHAPTER-001）。
+  evidence:
+  - claim: validate_chapter.py --style writespec/style-guide.md --target 2300 --max
+      2800 返回 PASS。
+    source: scripts/validate_chapter.py, chapters/.staging/TX-CH-0002-R03/CH-0002-破限.txt
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 润色未引入新世界观事实：体系、战力、时间线、物品、地理、人物行为均与 world/ 一致。
+  evidence:
+  - claim: diff 仅语言层，无新增设定名词、道具、地点或战力表述；六维结论与 CH-0002 创作事务一致。
+    source: world/power.md, world/timeline.md, world/inventory.md, world/geography.md,
+      world/characters.md
+- gate: thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 叙事线索状态与证据不变：破限加点规则落地（ITEM-0001）与血铺骗局记账线索未改，hooks.md 无变化。
+  evidence:
+  - claim: 润色未改动与线索相关的措辞含义，hooks.md 无状态动作。
+    source: world/hooks.md, world/.transactions/TX-CH-0002-R03.yaml
+- gate: chapter-format
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Chapter validation passed.'
+  evidence:
+  - command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max
+      2800
+    exit_code: 0
+    output_hash: sha256:90d62eeed08c71994a63282bbe587d18703e64a68b23427722450b0040fe5c45
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 1 prepared change(s)
+  evidence:
+  - target: chapters/CH-0002-破限.txt
+    staged_hash: sha256:46aaba5bb851ef266f62859eb99e25c23224e66e70224301e19918e5be0076c4
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 1 published target(s)
+  evidence:
+  - target: chapters/CH-0002-破限.txt
+    published_hash: sha256:46aaba5bb851ef266f62859eb99e25c23224e66e70224301e19918e5be0076c4
+changes:
+- target: chapters/CH-0002-破限.txt
+  staged: chapters/.staging/TX-CH-0002-R03/CH-0002-破限.txt
+  baseline_hash: sha256:3e4306ef6d611835025919b3f120a554ae9a179d97080aa0728810bac79ffc3d
+  staged_hash: sha256:46aaba5bb851ef266f62859eb99e25c23224e66e70224301e19918e5be0076c4
+  idempotency_key: chapters/CH-0002-破限.txt:TX-CH-0002-R03
+applied_keys:
+- chapters/CH-0002-破限.txt:TX-CH-0002-R03
+confirmations:
+- type: overwrite
+  target: chapters/CH-0002-破限.txt
+  status: CONFIRMED
+  source: user
+  method: interactive-cli
+  proof: sha256:83a7449eb8b36128093f0c6abc76e713173dc2478c31fab2cb16ece90053ac56
+confirmation_nonce: 6e2b489df3290f01f12d6e1840bb262f
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null

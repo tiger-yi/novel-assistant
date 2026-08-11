@@ -1,0 +1,113 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0002-R02
+source_command: 润色章节 CH-0002
+command: polish-chapter
+mode: published
+pipeline: polish-chapter
+arguments:
+  chapter: '0002'
+state: COMPLETE
+archive_state: NOT_DUE
+stages:
+- name: source-baseline
+  status: PASS
+  summary: 正式正文 CH-0002-破限.txt 基线审计通过：chapter-length 2311 字（2300-2800）、chapter-format
+    PASS（INV-CHAPTER-001）、无叙事层泄漏；world-audit 与 thread-integrity 无既存硬伤，允许进入等义润色。
+- name: polish
+  status: PASS
+  summary: 按 chapter-polish.md 对 CH-0002 staging 副本执行等义润色，共 2 处语言层调整（详见 presentation-equivalence
+    evidence），不改变事件、因果、人物行为、资源、伤势与信息差；润色后 2329 字，格式 PASS。
+gates:
+- gate: source-baseline
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 原文基线有效，无 PREEXISTING_WORLD_ISSUE。
+  evidence:
+  - claim: 正式正文字数 2311、validate_chapter PASS；world-audit 六维无既存硬伤；thread-integrity
+      无 HOOK/SEED 异常状态。
+    source: scripts/check_count.py, scripts/validate_chapter.py, world/power.md, world/hooks.md
+- gate: presentation-equivalence
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 新旧正文等义：逐行 diff 仅 2 处语言层调整，事件顺序、对话含义、病儿让粮、第一次加点、皮肉力初成、温饱暂解、里正带侯三上门均不变。
+  evidence:
+  - claim: diff 显示修改点限于（1）"他攥了攥拳，想起昨夜烙在血肉里那两行字，以气血为薪，以寿元为柴"→"他攥了攥拳，骨头里空落落的那股劲，像是寻着了个去处，顺着指骨往虎口那道旧裂口上走"（消除与上段"以气血为薪，以寿元为柴"的重复引用，改用身体感承接）（2）"他知道自己不是在练拳，是在喂那个薪字。卖血把身子掏空了，他得用别的东西把它填回来"→"他清楚自己不是在练拳，是在拿血肉把那个薪字喂饱——卖血把身子掏空了，他得靠别的东西，把它一分一分填回来"（消除与"那个薪字，得喂饱"的重复，保留消耗可见规则）。
+    source: chapters/CH-0002-破限.txt, chapters/.staging/TX-CH-0002-R02/CH-0002-破限.txt
+  - claim: 无事件、因果、人物决策、物品消耗、伤势、信息差与线索状态变化，满足等义呈现修订边界。
+    source: world/chapter-summary.md, world/hooks.md
+- gate: narrative-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 润色后正文无叙事层泄漏，validate_chapter PASS（INV-CHAPTER-001），无新增符号、Harness ID、章节结构引用或镜头调度。
+  evidence:
+  - claim: validate_chapter.py --style writespec/style-guide.md --target 2300 --max
+      2800 返回 PASS。
+    source: scripts/validate_chapter.py, chapters/.staging/TX-CH-0002-R02/CH-0002-破限.txt
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 润色未引入新世界观事实：体系（破限加点、气血为薪）、战力（皮肉力初成徒手碎柴）、时间线（靖宁十七年秋末）、物品（半碗粮让与狗剩、捞鱼煮汤）、地理（云乡-村后野地）、人物行为均与
+    world/ 一致，无新增冲突。
+  evidence:
+  - claim: diff 仅语言层，无新增设定名词、道具、地点或战力表述；六维结论与 CH-0002 创作事务一致。
+    source: world/power.md, world/timeline.md, world/inventory.md, world/geography.md,
+      world/characters.md
+- gate: thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 叙事线索状态与证据不变：破限加点规则落地（ITEM-0001）与血铺骗局记账线索未改，hooks.md 无变化。
+  evidence:
+  - claim: 润色未改动与线索相关的措辞含义，hooks.md 无状态动作。
+    source: world/hooks.md, world/.transactions/TX-CH-0002-R02.yaml
+- gate: chapter-format
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Chapter validation passed.'
+  evidence:
+  - command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max
+      2800
+    exit_code: 0
+    output_hash: sha256:90d62eeed08c71994a63282bbe587d18703e64a68b23427722450b0040fe5c45
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 1 prepared change(s)
+  evidence:
+  - target: chapters/CH-0002-破限.txt
+    staged_hash: sha256:3e4306ef6d611835025919b3f120a554ae9a179d97080aa0728810bac79ffc3d
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 1 published target(s)
+  evidence:
+  - target: chapters/CH-0002-破限.txt
+    published_hash: sha256:3e4306ef6d611835025919b3f120a554ae9a179d97080aa0728810bac79ffc3d
+changes:
+- target: chapters/CH-0002-破限.txt
+  staged: chapters/.staging/TX-CH-0002-R02/CH-0002-破限.txt
+  baseline_hash: sha256:3f52c18a8063672c6bea6f28ada6f0392c2473f141368d6d7f561d0df5e81edc
+  staged_hash: sha256:3e4306ef6d611835025919b3f120a554ae9a179d97080aa0728810bac79ffc3d
+  idempotency_key: chapters/CH-0002-破限.txt:TX-CH-0002-R02
+applied_keys:
+- chapters/CH-0002-破限.txt:TX-CH-0002-R02
+confirmations:
+- type: overwrite
+  target: chapters/CH-0002-破限.txt
+  status: CONFIRMED
+  source: user
+  method: interactive-cli
+  proof: sha256:a07da4b72ffdfb888c2cb6e80334983cf832d1cf87b4e68d2ded15aa93eee450
+confirmation_nonce: eefe83847d9198a53e50e0b4af5c213d
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null

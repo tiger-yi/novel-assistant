@@ -1,0 +1,59 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CMD-AUDIT-ORIGINALITY-0003-R01
+source_command: 审计原创性
+command: audit-originality
+mode: null
+pipeline: audit-originality
+arguments: {}
+state: COMPLETE
+archive_state: NOT_CHECKED
+stages: []
+gates:
+- gate: audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 周期审计总体 PASS：覆盖 ARC-001 卷一（CH-0001..0010）全部已发布正文与 World Bible；前轮 TX-CMD-AUDIT-ORIGINALITY-0002-R01
+    接受的全部 WARN 在复查点 CH-0010 复查——L-002 势力渗透（SEED-0005 禁令/悬赏/粮价/通货/传闻多通道落地）、D-001 换地图进入方式（带账北行、托付乡邻保留旧账）、K-001
+    人名/桥段同质化均缓解关闭；本轮 A-K 全维度 PASS，L 维周期复查 9/9 PASS；无 FAIL/WARN 硬项，周期阻断解除。报告 artifact：world/.transactions/TX-CMD-AUDIT-ORIGINALITY-0003-R01/originality-audit-report.md。
+  evidence:
+  - claim: 前轮 WARN 复查全部缓解关闭：CH-0010 正文落地禁武告示/通缉悬赏/粮价涨三成/送粮骡队减少/军饷克扣掺谷壳/武圣坟商旅传闻（L-002）；石横条子/脉案/残账贴身北行、拳谱窄刀托付罗幺（D-001）；卷一
+      10 章人名不撞库桥段功能各异（K-001）。
+    source: world/.transactions/TX-CMD-AUDIT-ORIGINALITY-0003-R01/originality-audit-report.md,
+      chapters/CH-0001..0010, world/hooks.md, world/outline.md
+  - claim: A-K 维度全 PASS：世界观底层逻辑（吃人秩序 vs 凡武求生，power.md 底层规则/社会成本）；战力平衡（十阶锚点+破限代价可见，INV-POWER-001
+      全程满足）；人设（反派因果非降智、温白独立线）；节奏（trope-blacklist 全库无命中，换地图携带旧账）；命名（不撞库）；桥段降噪（利益链+信息差实现功能）；代价与人性锚点（升级全有代价）；规则兼容（凡武惧概念攻击，抽命以医理查源应对）；社会运行（血价/粮价/军饷克扣进日常）；势力资源闭环（世族/武威营/北狄/妖域）；L3
+      结构无 AI 风险。
+    source: world/.transactions/TX-CMD-AUDIT-ORIGINALITY-0003-R01/originality-audit-report.md,
+      world/power.md, world/characters.md, world/geography.md, world/inventory.md,
+      writespec/trope-blacklist.md
+  - claim: coverage 绑定 begin 预填值：through_chapter=10（最高已完成章节），events=[TX-CH-0010-R01（arc_completed）、TX-CMD-INIT-WORLD-0001-R01（outline_initialized）]；L
+      维为第一章前必审模块，周期审计仅复查（9/9 PASS）。
+    source: world/.transactions/TX-CMD-AUDIT-ORIGINALITY-0003-R01.yaml
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: NOT_APPLICABLE
+  summary: read-only pipeline has no formal changes
+  evidence: []
+  reason: read-only pipeline has no formal changes
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 0 published target(s)
+  evidence: []
+changes: []
+applied_keys: []
+confirmations: []
+confirmation_nonce: b7c1062ec01453c4cd934530ce63cedf
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null
+coverage:
+  through_chapter: 10
+  events:
+  - TX-CH-0010-R01
+  - TX-CMD-INIT-WORLD-0001-R01

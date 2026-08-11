@@ -1,0 +1,111 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0003-R03
+source_command: 润色章节 CH-0003
+command: polish-chapter
+mode: published
+pipeline: polish-chapter
+arguments:
+  chapter: '0003'
+state: COMPLETE
+archive_state: NOT_DUE
+stages:
+- name: source-baseline
+  status: PASS
+  summary: 正式正文 CH-0003-镇不平.txt 基线审计通过：chapter-length 2306 字（2300-2800）、chapter-format
+    PASS（INV-CHAPTER-001）、无叙事层泄漏；world-audit 与 thread-integrity 无既存硬伤，允许进入等义润色。
+- name: polish
+  status: PASS
+  summary: 按重评报告扣分点执行等义修复：补场景切换空行、去村人追问重复、立誓过渡硬化、补充刀尖对峙承接；润色后 2310 字，格式 PASS。
+gates:
+- gate: source-baseline
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 原文基线有效，无 PREEXISTING_WORLD_ISSUE。
+  evidence:
+  - claim: 正式正文字数 2306、validate_chapter PASS；world-audit 六维无既存硬伤；thread-integrity
+      无 HOOK/SEED 异常状态。
+    source: scripts/check_count.py, scripts/validate_chapter.py, world/power.md, world/hooks.md
+- gate: presentation-equivalence
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 新旧正文等义：diff 仅 4 处调整，事件顺序、对话含义、冲突结果、弯刀还回、村人改观、誓言核心（镇不平自己上）、末尾买粮链均不变。
+  evidence:
+  - claim: diff 显示修改点限于（1）L57→L58 补场景切换空行（排版）（2）村人追问句去重复（"你说……你说里正口里的那个上头"→"里正口里那个上头……到底"）（3）誓言段去"在这地界，谁拳头硬，谁才护得住自己的人"说明句，保留"镇不平他，就把自己这条命也搭上"核心（4）新增刀尖对峙承接"石横没动。刀尖隔着棉袄抵住他的胸膛"，属原场景内既有压迫的物理化展开，未新增事件。
+    source: chapters/CH-0003-镇不平.txt, chapters/.staging/TX-CH-0003-R03/CH-0003-镇不平.txt
+  - claim: 无事件、因果、人物决策、物品消耗、伤势、信息差与线索状态变化，满足等义呈现修订边界；誓言"镇不平自己上"与 CH-0003 outcome 一致。
+    source: world/chapter-summary.md, world/outline.md, world/hooks.md
+- gate: narrative-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 润色后正文无叙事层泄漏，validate_chapter PASS（INV-CHAPTER-001），无新增符号、Harness ID、章节结构引用或镜头调度。
+  evidence:
+  - claim: validate_chapter.py --style writespec/style-guide.md --target 2300 --max
+      2800 返回 PASS。
+    source: scripts/validate_chapter.py, chapters/.staging/TX-CH-0003-R03/CH-0003-镇不平.txt
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 润色未引入新世界观事实：体系、战力（皮肉力空手对刀）、时间线、物品（弯刀还回）、地理、人物行为均与 world/ 一致。
+  evidence:
+  - claim: diff 仅语言层与排版，无新增设定名词、道具、地点或战力表述；六维结论与 CH-0003 创作事务一致。
+    source: world/power.md, world/timeline.md, world/inventory.md, world/geography.md,
+      world/characters.md
+- gate: thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 叙事线索状态与证据不变：hooks.md 无变化，买粮链仍为 CH-0007 契约承接的章末牵引。
+  evidence:
+  - claim: 润色未改动与线索相关的措辞含义，hooks.md 无状态动作。
+    source: world/hooks.md, world/.transactions/TX-CH-0003-R03.yaml
+- gate: chapter-format
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Chapter validation passed.'
+  evidence:
+  - command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max
+      2800
+    exit_code: 0
+    output_hash: sha256:90d62eeed08c71994a63282bbe587d18703e64a68b23427722450b0040fe5c45
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 1 prepared change(s)
+  evidence:
+  - target: chapters/CH-0003-镇不平.txt
+    staged_hash: sha256:83044360f7984c8d15a03cca33361a5a3e564bbeb99303a54493cc1afdcdc8e4
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 1 published target(s)
+  evidence:
+  - target: chapters/CH-0003-镇不平.txt
+    published_hash: sha256:83044360f7984c8d15a03cca33361a5a3e564bbeb99303a54493cc1afdcdc8e4
+changes:
+- target: chapters/CH-0003-镇不平.txt
+  staged: chapters/.staging/TX-CH-0003-R03/CH-0003-镇不平.txt
+  baseline_hash: sha256:8be5c01ba176d6b1d5f31bb9780e90d50a377ed3f3bbef3e34f6915d18f50baa
+  staged_hash: sha256:83044360f7984c8d15a03cca33361a5a3e564bbeb99303a54493cc1afdcdc8e4
+  idempotency_key: chapters/CH-0003-镇不平.txt:TX-CH-0003-R03
+applied_keys:
+- chapters/CH-0003-镇不平.txt:TX-CH-0003-R03
+confirmations:
+- type: overwrite
+  target: chapters/CH-0003-镇不平.txt
+  status: CONFIRMED
+  source: user
+  method: interactive-cli
+  proof: sha256:c9f6c725c340ecc8b40d3d2a2295890fc8793942672e18bdb4789fc10229a8de
+confirmation_nonce: fc8efffe2d6acdf8f0ddef823b5e7e19
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null

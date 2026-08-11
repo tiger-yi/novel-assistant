@@ -1,0 +1,113 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0009-R02
+source_command: 润色章节 CH-0009
+command: polish-chapter
+mode: published
+pipeline: polish-chapter
+arguments:
+  chapter: 0009
+state: COMPLETE
+archive_state: NOT_DUE
+stages:
+- name: polish
+  status: PASS
+  summary: 按 reader-evaluation-R1.md 扣分项做等义呈现修订：仅压缩开篇承接段（删除数星子/风声脚步/炕上人瘦成一团等氛围描写，删减劈柴细节，调整温白台词语序），保留守三夜、药剩四副、温白留话、左肋旧伤、虎口裂口等全部事实；正文主体（夜战、清算、账房、章末）零改动。润色后
+    2510 字，validate_chapter PASS。扣分项中的蒙面刺客形象功能化与清算段节奏为 R1 报告判定的结构性保留项（需新增对话/场景，超出等义边界），本轮不修。
+gates:
+- gate: source-baseline
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 原文基线审计通过：chapter-length 2568（范围内）、chapter-format validate_chapter PASS；world-audit
+    六维与 thread-integrity 由 TX-CH-0009-R01 覆盖且正文无 World Bible/叙事线索冲突，无 PREEXISTING_WORLD_ISSUE。
+  evidence:
+  - claim: 正式正文字数 2568（2300-2800 内）、validate_chapter.py 返回 PASS；六维世界观与叙事线索状态与 R01
+      提交一致，无既有硬伤。
+    source: chapters/CH-0009-清算.txt, scripts/check_count.py, scripts/validate_chapter.py
+- gate: presentation-equivalence
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 新旧正文逐行对照：仅第 3/5/7/9 段（开篇承接）存在差异，均为语言与节奏层的等义调整（删除氛围性描写"数星子""风声像脚步声""炕上人瘦成一团"、删减"半下午柴"细节、温白台词与动作语序对调、合并短句）；事件顺序、因果、人物行为、资源（药剩四副/条子/脉案/窄刀/账本残页）、伤势（双肩刀伤/左肋旧伤/虎口/寿元倒扣）、信息差（石横不知世族全貌）与叙事线索状态全部保持不变；正文主体第
+    11 行至章末零改动。
+  evidence:
+  - claim: 行级 diff 显示差异仅集中于开篇承接 4 段；守夜事实（三夜/布防/等道上的人）、温白留话（抽命手不停/病根不除/吊药续命）与石横守禾安排均保留；删除内容均为纯氛围与外形描写，不构成事件、因果或人物行为变化。
+    source: chapters/CH-0009-清算.txt, chapters/.staging/TX-CH-0009-R02/CH-0009-清算.txt
+  - claim: 温白台词"山口庄这回，是冲着命来的"内容不变，仅由"动作+台词"调整为"台词+动作"；石横"站在门口望着村口那片黑，把刀按了按"的动作与语义不变。
+    source: chapters/CH-0009-清算.txt, chapters/.staging/TX-CH-0009-R02/CH-0009-清算.txt
+- gate: narrative-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 润色后 validate_chapter.py 返回 PASS（INV-CHAPTER-001），无禁用符号、无 Harness ID、无章节结构引用、无叙事层泄漏；全章仍为石横第三人称受限视角；黑名单词扫描无命中。
+  evidence:
+  - claim: validate_chapter.py --style writespec/style-guide.md --target 2300 --max
+      2800 返回 PASS；禁用符号与黑名单扫描无命中。
+    source: scripts/validate_chapter.py, chapters/.staging/TX-CH-0009-R02/CH-0009-清算.txt
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 六维审计延续 R01 结论：体系纯度（气血/寿元/皮肉力/筋骨阶白名单）、战力平衡（皮肉力对筋骨阶差 1 完整大境界，破限底牌+代价，INV-POWER-001
+    满足）、时间线（靖宁十七年冬末承 CH-0008 后第三夜）、物品消耗（条子/脉案/残页/窄刀归属不变）、地理跨度（云乡-山口庄乡道可达）、人物 OOC（石横独挑不滥杀）均无新增冲突；本轮只压缩语言未引入任何
+    World Bible 事实。
+  evidence:
+  - claim: 润色仅删除氛围描写与调整语序，未新增任何名词、道具、地点、人物或设定；六维实体依据与 R01 提交一致。
+    source: world/power.md, world/inventory.md, world/timeline.md, world/geography.md,
+      world/characters.md, chapters/.staging/TX-CH-0009-R02/CH-0009-清算.txt
+- gate: thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 叙事线索状态与证据不变：SEED-0001 推进记录（CH-0009）保持；SEED-0002 与 HOOK-0001/0002/0003 保持活跃不动；本章不新增正式
+    HOOK/SEED；幂等键 SEED-0001+推进+CH-0009 无重复跃迁（INV-FORESHADOW-001）。
+  evidence:
+  - claim: 正文开篇压缩不触及账房残页、抽命医案、武威营文书等任何线索承载段落，hooks.md 与 R01 提交一致，无需变更。
+    source: world/hooks.md, chapters/.staging/TX-CH-0009-R02/CH-0009-清算.txt
+- gate: chapter-format
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Chapter validation passed.'
+  evidence:
+  - command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max
+      2800
+    exit_code: 0
+    output_hash: sha256:90d62eeed08c71994a63282bbe587d18703e64a68b23427722450b0040fe5c45
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 1 prepared change(s)
+  evidence:
+  - target: chapters/CH-0009-清算.txt
+    staged_hash: sha256:5ccc000a04edb340e79784107f7d184b0c78f066d81953143ba5bbcba44872eb
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 1 published target(s)
+  evidence:
+  - target: chapters/CH-0009-清算.txt
+    published_hash: sha256:5ccc000a04edb340e79784107f7d184b0c78f066d81953143ba5bbcba44872eb
+changes:
+- target: chapters/CH-0009-清算.txt
+  staged: chapters/.staging/TX-CH-0009-R02/CH-0009-清算.txt
+  baseline_hash: sha256:470b559256ab308d72915d2e6162aeb69338dcdc7eabd006b9c952b0ca791859
+  staged_hash: sha256:5ccc000a04edb340e79784107f7d184b0c78f066d81953143ba5bbcba44872eb
+  idempotency_key: chapters/CH-0009-清算.txt:TX-CH-0009-R02
+applied_keys:
+- chapters/CH-0009-清算.txt:TX-CH-0009-R02
+confirmations:
+- type: overwrite
+  target: chapters/CH-0009-清算.txt
+  status: CONFIRMED
+  source: user
+  method: interactive-cli
+  proof: sha256:d82e03b5e6f46163893de5c26b2d39433497d44ea92fae46080652ac12eb3c99
+confirmation_nonce: c6094dc2fdd2243e38b17e649366de86
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null

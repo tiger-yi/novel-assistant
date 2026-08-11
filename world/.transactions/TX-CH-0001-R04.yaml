@@ -1,0 +1,204 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CH-0001-R04
+source_command: 创作第 1 章
+command: create-chapter
+mode: full
+pipeline: create-chapter
+arguments:
+  chapter: '1'
+state: COMPLETE
+archive_state: NOT_DUE
+stages:
+- name: preflight
+  status: PASS
+  summary: style-guide INV-STYLE-001 PASS；八类 World Bible 齐全；CH-0001 已发布，用户明确授权重写（修复
+    inciting 爽点承诺未兑现扣分点），按已发布章节修订通道创建 R04；plan_contract 绑定 outline revision 1 + ARC-001
+    + GOAL-ARC-001 + CH-0001 契约 hash。
+- name: draft
+  status: PASS
+  summary: 重写 CH-0001：保留饥寒卖血被骗主线，觉醒段新增主动引气、虎口裂口自愈一分的兑现萌芽，结尾确认"机会在握、以命换力"；2800 字。
+- name: polish
+  status: PASS
+  summary: 按 chapter-polish 润色：去重复意象、补场景切换空行、压缩背景段；润色后 2800 字，格式 PASS。
+gates:
+- gate: first-chapter-readiness
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: 重写已发布 CH-0001，非首次创作；第一章就绪性已由 CH-0001-R01 覆盖，preflight 确认 style_basis 与八类
+    Bible 齐全。
+  summary: 非首次创作，first-chapter-readiness 不适用。
+- gate: reader-evaluation
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 三读者画像评价聚合分 8.3（>=8.0）：目标类型读者 8.3、世界观沉浸读者 8.4、毒蛇文本读者 8.3；任一画像 >= 6.0，无阻断，最终状态
+    PASS。
+  evidence:
+  - claim: reader-evaluation-R1 报告记录三画像维度分、聚合分 8.3 与最终状态 PASS；artifact 路径 world/.transactions/TX-CH-0001-R04/reader-evaluation-R1.md，正文
+      hash 引用一致。
+    source: world/.transactions/TX-CH-0001-R04/reader-evaluation-R1.md, chapters/.staging/TX-CH-0001-R04/CH-0001-血价.txt
+  - claim: 无 auto_actionable_suggestions 与 manual_decision_suggestions 阻断；protected_highlights
+      已列明。
+    source: world/.transactions/TX-CH-0001-R04/reader-evaluation-R1.md
+- gate: narrative-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 重写后正文无叙事层泄漏，validate_chapter PASS（INV-CHAPTER-001），无符号、Harness ID、章节结构引用或镜头调度。
+  evidence:
+  - claim: validate_chapter.py --style writespec/style-guide.md --target 2300 --max
+      2800 返回 PASS；grep 无 forbidden 符号与 ID。
+    source: scripts/validate_chapter.py, chapters/.staging/TX-CH-0001-R04/CH-0001-血价.txt
+- gate: world-audit
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 六维审计全 PASS：体系纯度（气血/寿元/破限白名单）；战力平衡（主动引气仅"裂口自愈一分"感知级，未跨阶，INV-POWER-001 满足，皮肉力初成仍留
+    CH-0002）；时间线（靖宁十七年秋末，EVT-0001）；物品消耗（卖血换粮、欠账、干糠闭合）；地理（云乡-血铺街）；人物 OOC（石横护妹决绝、麻六贪财）。
+  evidence:
+  - claim: 引气成功为"半激活后的感知兑现"，未引入新力量刻度，与 power.md 一阶碎木不冲突；皮肉力初成由 CH-0002 契约承接。
+    source: world/power.md, chapters/.staging/TX-CH-0001-R04/CH-0001-血价.txt
+  - claim: 时间、物品、地理、人物六维与 world/ 一致，无新增冲突。
+    source: world/timeline.md, world/inventory.md, world/geography.md, world/characters.md
+- gate: plot-alignment
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 重写仍兑现 CH-0001 契约：task（饥寒卖血被骗、面板半激活）、conflict（麻六压价诈血）、outcome（濒死觉醒、以气血寿元为薪半激活、获得第一次刻意晋升机会）、arc_contribution（生存主驱动）、closing_pull（破限提示+机会在握）全部兑现；修复点（主动引气）属
+    outcome"刻意晋升机会"内的表现强化，未引入未授权重大事实。
+  evidence:
+  - claim: 正文兑现 task/conflict/outcome/arc_contribution/closing_pull，新增"主动引气、裂口自愈一分"为
+      outcome 的感知兑现，不改变契约结果。
+    source: world/outline.md, chapters/.staging/TX-CH-0001-R04/CH-0001-血价.txt
+  - claim: plan_contract 绑定 outline revision 1 + ARC-001 + CH-0001 契约 hash 有效（INV-PLOT-001），validate_outline.py
+      对 staging outline PASS。
+    source: world/.transactions/TX-CH-0001-R04.yaml, scripts/validate_outline.py
+- gate: thread-integrity
+  kind: semantic
+  required: true
+  status: PASS
+  summary: 叙事线索状态与证据不变：破限加点半激活+首次引气（ITEM-0001 更新）、血铺骗局记账、幼妹之病均未越权；hooks.md 无新增 HOOK/SEED。
+  evidence:
+  - claim: 重写未改变线索生命周期，hooks.md 无状态动作。
+    source: world/hooks.md, world/inventory.md
+- gate: periodic-trigger-classification
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: CH-0001 重写不触发 originality-cycle（未到 10 章边界，无 arc_completed / premise_changed）；单章黑名单由
+    validate_chapter 覆盖。
+  summary: 周期原创性不适用。
+- gate: archive-integrity
+  kind: semantic
+  required: true
+  status: NOT_APPLICABLE
+  reason: NOT_DUE：ARC-001 完成 3/10 章，未到周期/卷终/强制归档触发；archive_state=NOT_DUE，变更集不含归档目标。
+  summary: 条件归档未到期。
+- gate: chapter-format
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] Chapter validation passed.'
+  evidence:
+  - command: python scripts/validate_chapter.py <chapter_file> --target 2300 --max
+      2800
+    exit_code: 0
+    output_hash: sha256:90d62eeed08c71994a63282bbe587d18703e64a68b23427722450b0040fe5c45
+- gate: outline-contract
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: '[PASS] INV-PLOT-001: outline contract is valid and frozen'
+  evidence:
+  - command: python scripts/validate_outline.py <outline_file>
+    exit_code: 0
+    output_hash: sha256:8d13e6664bc4b2aaff79b8f7b673e1656afca7eeac11998809ef2a38530ddd8e
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 6 prepared change(s)
+  evidence:
+  - target: chapters/CH-0001-血价.txt
+    staged_hash: sha256:c33a475fd822f6f7190b77aaf6191fd98984280d5b7cb0d0c2a550c01f940c3e
+  - target: world/chapter-summary.md
+    staged_hash: sha256:e65a74dade82d51588bf7b8d8f3a6be8e304ebe695859485e0a280d2d33ad0d4
+  - target: world/characters.md
+    staged_hash: sha256:b00f0f7760463640cb7205d64df84ae8279a541b2166e88ca3a684575f3f6fe9
+  - target: world/inventory.md
+    staged_hash: sha256:a387708a091557f65ffb80e1cef05202c7fc6183258accd7e14440c56e1cfd57
+  - target: world/timeline.md
+    staged_hash: sha256:96cf43204992bf44d6a620b2bb7dab2563b676bd0c7f6e04e1897e427cb78ce9
+  - target: world/outline.md
+    staged_hash: sha256:f80cac6b19fbc25c3b9298544a0a89f81cb3c05fa87fd870fa2129522d9c587e
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 6 published target(s)
+  evidence:
+  - target: chapters/CH-0001-血价.txt
+    published_hash: sha256:c33a475fd822f6f7190b77aaf6191fd98984280d5b7cb0d0c2a550c01f940c3e
+  - target: world/chapter-summary.md
+    published_hash: sha256:e65a74dade82d51588bf7b8d8f3a6be8e304ebe695859485e0a280d2d33ad0d4
+  - target: world/characters.md
+    published_hash: sha256:b00f0f7760463640cb7205d64df84ae8279a541b2166e88ca3a684575f3f6fe9
+  - target: world/inventory.md
+    published_hash: sha256:a387708a091557f65ffb80e1cef05202c7fc6183258accd7e14440c56e1cfd57
+  - target: world/timeline.md
+    published_hash: sha256:96cf43204992bf44d6a620b2bb7dab2563b676bd0c7f6e04e1897e427cb78ce9
+  - target: world/outline.md
+    published_hash: sha256:f80cac6b19fbc25c3b9298544a0a89f81cb3c05fa87fd870fa2129522d9c587e
+changes:
+- target: chapters/CH-0001-血价.txt
+  staged: chapters/.staging/TX-CH-0001-R04/CH-0001-血价.txt
+  baseline_hash: sha256:f5c4353a2532461ea37406368199721ffaebee9dd4c420b9909fc13af8f8032b
+  staged_hash: sha256:c33a475fd822f6f7190b77aaf6191fd98984280d5b7cb0d0c2a550c01f940c3e
+  idempotency_key: chapters/CH-0001-血价.txt:TX-CH-0001-R04
+- target: world/chapter-summary.md
+  staged: world/.staging/TX-CH-0001-R04/chapter-summary.md
+  baseline_hash: sha256:085dbaabeeda98f78cdb5b4752ccd453f3b0a55d392daac305d6c9fa8e1d01eb
+  staged_hash: sha256:e65a74dade82d51588bf7b8d8f3a6be8e304ebe695859485e0a280d2d33ad0d4
+  idempotency_key: world/chapter-summary.md:TX-CH-0001-R04
+- target: world/characters.md
+  staged: world/.staging/TX-CH-0001-R04/characters.md
+  baseline_hash: sha256:aef7f18ba57e44e982bdcaccd484bde2ac9899156b193a01968119ec5ea90431
+  staged_hash: sha256:b00f0f7760463640cb7205d64df84ae8279a541b2166e88ca3a684575f3f6fe9
+  idempotency_key: world/characters.md:TX-CH-0001-R04
+- target: world/inventory.md
+  staged: world/.staging/TX-CH-0001-R04/inventory.md
+  baseline_hash: sha256:dbcb6135c9349e78b238d41c0d9eb625760abafa92446a4e5a8e90e70c6b8859
+  staged_hash: sha256:a387708a091557f65ffb80e1cef05202c7fc6183258accd7e14440c56e1cfd57
+  idempotency_key: world/inventory.md:TX-CH-0001-R04
+- target: world/timeline.md
+  staged: world/.staging/TX-CH-0001-R04/timeline.md
+  baseline_hash: sha256:c2912a48d8863f5521577dc009b18559f62306edcdf30a7f440fc672a208e7a1
+  staged_hash: sha256:96cf43204992bf44d6a620b2bb7dab2563b676bd0c7f6e04e1897e427cb78ce9
+  idempotency_key: world/timeline.md:TX-CH-0001-R04
+- target: world/outline.md
+  staged: world/.staging/TX-CH-0001-R04/outline.md
+  baseline_hash: sha256:ab16f40ac746d144253568a1954ba12d58a8007fd931d7b7f7df705c974dd96a
+  staged_hash: sha256:f80cac6b19fbc25c3b9298544a0a89f81cb3c05fa87fd870fa2129522d9c587e
+  idempotency_key: world/outline.md:TX-CH-0001-R04
+applied_keys:
+- chapters/CH-0001-血价.txt:TX-CH-0001-R04
+- world/chapter-summary.md:TX-CH-0001-R04
+- world/characters.md:TX-CH-0001-R04
+- world/inventory.md:TX-CH-0001-R04
+- world/timeline.md:TX-CH-0001-R04
+- world/outline.md:TX-CH-0001-R04
+confirmations: []
+confirmation_nonce: 33bb4ae704dd5f0905df6fb7661cb4fb
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null
+plan_contract:
+  outline_revision: 1
+  outline_hash: sha256:ab16f40ac746d144253568a1954ba12d58a8007fd931d7b7f7df705c974dd96a
+  arc_id: ARC-001
+  arc_goal_id: GOAL-ARC-001
+  chapter_id: CH-0001
+  chapter_contract_hash: sha256:afcf8850f04a4c91106550e4ed856d4fa6e433a4d9bb5f7aefe429f5f0c0d140
