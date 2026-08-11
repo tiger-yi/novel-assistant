@@ -1,0 +1,47 @@
+schema: novel-harness/transaction/v1
+transaction_id: TX-CMD-GENERATE-METADATA-0001-R01
+source_command: 生成小说元数据
+command: generate-metadata
+mode: null
+pipeline: generate-metadata
+arguments: {}
+state: COMPLETE
+archive_state: NOT_CHECKED
+stages:
+- name: generate
+  status: PASS
+  summary: 已读取 world/outline.md、world/characters.md 与 metadata-guide 平台约束；基于破限加点金手指、乱世粮道主线、女主温白与抽命悬案生成五套元数据方案（META-01
+    至 META-05），按不同卖点定位区分；书名沿用冻结大纲 book_title 拳碎大魏，简介均处 50-500 字，标签均有设定支撑，封面按 ReAct
+    协议生成并预留书名与笔名排版区。
+gates:
+- gate: prepared-change-set
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: validated 1 prepared change(s)
+  evidence:
+  - target: metadata/novel-metadata.md
+    staged_hash: sha256:d98d99ba4f682bdb6233770db35198a561bc72bdd35b1bed220ee4c90da0347d
+- gate: postflight-consistency
+  kind: deterministic
+  required: true
+  status: PASS
+  summary: verified 1 published target(s)
+  evidence:
+  - target: metadata/novel-metadata.md
+    published_hash: sha256:d98d99ba4f682bdb6233770db35198a561bc72bdd35b1bed220ee4c90da0347d
+changes:
+- target: metadata/novel-metadata.md
+  staged: metadata/.staging/TX-CMD-GENERATE-METADATA-0001-R01/novel-metadata.md
+  idempotency_key: metadata/novel-metadata.md:TX-CMD-GENERATE-METADATA-0001-R01
+  baseline_hash: absent
+  staged_hash: sha256:d98d99ba4f682bdb6233770db35198a561bc72bdd35b1bed220ee4c90da0347d
+applied_keys:
+- metadata/novel-metadata.md:TX-CMD-GENERATE-METADATA-0001-R01
+confirmations: []
+confirmation_nonce: 0dfecfd1a24efd4cdcb673e4b2ba1d33
+events: []
+recovery:
+  last_successful_stage: commit
+  failed_stage: null
+  message: null
