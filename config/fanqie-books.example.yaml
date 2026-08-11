@@ -1,0 +1,11 @@
+books:
+  quan-sui-da-wei:
+    book_id: "7672639232065670168"
+    book_name: "拳碎大魏"
+    session_name: "fanqie-writer"
+    draft_box_url: "https://fanqienovel.com/main/writer/chapter-manage/7672639232065670168&%E6%8B%B3%E7%A2%8E%E5%A4%A7%E9%AD%8F?type=2"
+    new_draft_url: "https://fanqienovel.com/main/writer/7672639232065670168/publish/?enter_from=newdraft"
+    editor_click:
+      x: 480
+      y: 310
+    login_url: "https://fanqienovel.com/main/writer/book-manage"

@@ -29,3 +29,6 @@ replay_pid*
 # Python caches
 __pycache__/
 *.py[cod]
+
+# Local private automation state
+.local/
