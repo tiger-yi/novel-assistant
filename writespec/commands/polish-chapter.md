@@ -22,7 +22,7 @@
 
 1. 事务执行器严格解析 `润色章节 CH-NNNN`，创建下一 `TX-CH-NNNN-RNN`。
 2. 执行原文基线审计；失败返回 `SOURCE_BASELINE_INVALID`，不进入润色。
-3. 将正式正文复制到事务 staging，由 `draft-worker` 按 `chapter-polish.md` 润色。
+3. 将正式正文复制到事务 staging，由 `draft-worker` 按 `chapter-polish.md` 和当前 `writespec/style-guide.md` 润色。
 4. 运行最终门禁；`presentation-equivalence` 失败时可重润色，最多计入 3 轮。
 5. 门禁通过后，事务执行器覆盖正式章节，并只允许同步 `world/chapter-summary.md` 中该章的等义摘要、正文 hash 和证据摘要值。
 
@@ -43,11 +43,12 @@
 - `chapter-length`: 2300-2800 字。
 - `chapter-format`: 满足 `INV-CHAPTER-001`。
 - `presentation-equivalence`: 新旧正文事件、因果、人物行为、资源、伤势和信息差等义，只接受 `PASS`。
+- `style-application`: 润色后正文必须证明已应用当前 `writespec/style-guide.md`，产出至少 5 条可定位的 `style_application_evidence`，覆盖核心调性、受限视角/认知偏差、人物声线、节奏或爽点结构、题材质感/黑名单规避；只接受 `PASS`。
 - `narrative-integrity`: 不存在叙事层泄漏，只接受 `PASS`。
 - `world-audit`: 未引入新世界观冲突。
 - `thread-integrity`: 叙事线索状态和证据不变，只接受 `PASS`。
 
-任一必需门禁失败时不覆盖正式正文，不自动修改 World Bible，不自动改剧情；只保留 staging 候选、evidence artifact、失败门禁和恢复点。
+任一必需门禁失败时不覆盖正式正文，不自动修改 World Bible，不自动改剧情；只保留 staging 候选、evidence artifact、失败门禁和恢复点。`style-application` 失败时只允许在等义边界内重润色语言、视角、节奏、排版和质感，不得改变剧情事实、人物决策、胜负、伤势、资源、伏笔状态或 World Bible。
 
 ## Subagent 输出
 

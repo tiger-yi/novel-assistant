@@ -553,6 +553,16 @@ pipelines:
           - PASS
         delegable: true
         worker: gate-worker
+      - name: style-application
+        uses: style-guide
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+        delegable: true
+        worker: gate-worker
+        evidence:
+          - style_application_evidence
       - name: narrative-integrity
         uses: chapter-creation-spec
         handler: semantic-gate
@@ -605,6 +615,14 @@ pipelines:
         required: true
         allowed_statuses:
           - PASS
+      - name: style-application
+        uses: style-guide
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+        evidence:
+          - style_application_evidence
       - name: narrative-integrity
         uses: chapter-creation-spec
         handler: semantic-gate

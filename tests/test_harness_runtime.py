@@ -174,6 +174,20 @@ class HarnessRepositoryRoutesTest(unittest.TestCase):
         self.assertEqual("polish-current-chapter", current.name)
         self.assertEqual("current-staging", current.mode)
 
+    def test_polish_pipelines_require_style_application_gate(self):
+        pipelines = self.manifest.data.get("pipelines") or {}
+        for pipeline_name in ("polish-chapter", "polish-current-chapter"):
+            stages = {
+                stage.get("name"): stage
+                for stage in (pipelines.get(pipeline_name) or {}).get("stages", [])
+            }
+            gate = stages.get("style-application")
+
+            self.assertIsNotNone(gate, pipeline_name)
+            self.assertEqual("style-guide", gate.get("uses"))
+            self.assertTrue(gate.get("required"))
+            self.assertEqual(["style_application_evidence"], gate.get("evidence"))
+
 
 if __name__ == "__main__":
     unittest.main()
