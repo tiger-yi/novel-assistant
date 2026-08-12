@@ -417,6 +417,14 @@ pipelines:
         uses: create-style
         handler: agent
         required: true
+      - name: longform-style-readiness
+        uses: create-style
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+        evidence:
+          - longform_style_readiness
       - name: style-ready
         uses: style-guide
         handler: deterministic-gate
@@ -457,6 +465,14 @@ pipelines:
           - PASS_WITH_TARGET_MISS
         delegable: true
         worker: reader-gate-worker
+      - name: style-application
+        uses: style-guide
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+        evidence:
+          - style_application_evidence
       - name: chapter-format
         uses: chapter-creation-spec
         handler: deterministic-gate
@@ -1005,6 +1021,12 @@ verification:
       invariant: INV-POWER-001
     - name: reader-evaluation
       spec: ../writespec/reader-evaluation.md
+      evidence_required: true
+    - name: longform-style-readiness
+      spec: ../writespec/commands/create-style.md
+      evidence_required: true
+    - name: style-application
+      spec: ../writespec/style-guide.md
       evidence_required: true
     - name: logic-closure
       spec: ../writespec/state-management.md

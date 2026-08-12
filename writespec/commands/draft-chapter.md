@@ -33,9 +33,10 @@
 7. 将初稿写入 `chapters/.staging/TX-CH-NNNN-RNN/CH-NNNN-标题.txt`。
 8. 按 `chapter-polish.md` 执行一次纯文本润色。
 9. 按 `reader-evaluation.md` 执行多读者画像评价；低于阻断线或单画像硬下限时，只能依据可自动执行建议进行局部受限重润色并复评，结构性或世界状态建议必须停止并交由人工决策。
-10. 运行字数检查；低于 2300 字时只依据既有细纲补全内容，高于 2800 字时只做不改变事实的压缩，再执行一次纯文本润色，禁止新增设定或注水。
-11. 对最终 staging 版本运行字数、格式、标题唯一性、六维世界观、剧情对齐、留存结构和逻辑闭环门禁。自动修复最多 3 轮，仍失败则停止。
-12. 在事务 staging 中生成 World Bible 候选文件与变更集，列出目标、实体 ID、旧值、新值、摘要和幂等键；世界观相关变更必须列出六维审计结论、来源章节、引用文件或实体 ID 和正文证据，其中战力结论必须显式满足 `INV-POWER-001`；叙事线索变更还必须列出动作、来源章节、正文证据和 `INV-FORESHADOW-001` 幂等键。此时不修改正式文件。
+10. 对读者评价后的 staging 正文执行 `style-application` 语义门禁，产出至少 5 条可定位的 `style-application-evidence`，证明最终候选正文已经应用当前 `writespec/style-guide.md`。
+11. 运行字数检查；低于 2300 字时只依据既有细纲补全内容，高于 2800 字时只做不改变事实的压缩，再执行一次纯文本润色，禁止新增设定或注水。
+12. 对最终 staging 版本运行字数、格式、标题唯一性、六维世界观、剧情对齐、留存结构和逻辑闭环门禁。自动修复最多 3 轮，仍失败则停止。
+13. 在事务 staging 中生成 World Bible 候选文件与变更集，列出目标、实体 ID、旧值、新值、摘要和幂等键；世界观相关变更必须列出六维审计结论、来源章节、引用文件或实体 ID 和正文证据，其中战力结论必须显式满足 `INV-POWER-001`；叙事线索变更还必须列出动作、来源章节、正文证据和 `INV-FORESHADOW-001` 幂等键。此时不修改正式文件。
 
 整个准备阶段必须遵守 `INV-TRANSACTION-001`。
 
@@ -53,6 +54,7 @@
 - 字数: `python scripts/check_count.py <chapter_file> --target 2300 --max 2800 --segments`
 - 格式: `python scripts/validate_chapter.py <chapter_file> --target 2300 --max 2800`，必须满足 `INV-CHAPTER-001`。
 - 读者评价: 按 `reader-evaluation.md` 给出三读者画像评分、聚合分、短引证据、建议拆分、artifact 路径/hash 和最终状态；只接受 `PASS` 或 `PASS_WITH_TARGET_MISS`。
+- 风格应用: 按 `style-guide.md` 给出至少 5 条可定位证据，覆盖核心调性、受限视角/认知偏差、人物声线、节奏或爽点结构、题材质感/黑名单规避；优先引用正文行号，行号不稳定时使用场景和段落摘要。只接受 `PASS`。失败时只允许文本润色或局部呈现重写，不得改变剧情事实、人物决策、胜负、伤势、资源、伏笔状态或 World Bible。
 - 世界观: 按 `world-audit.md` 给出带文件、章节 ID 或实体 ID 的六维结果，其中战力满足 `INV-POWER-001`。
 - 剧情对齐: 按 `INV-PLOT-001` 逐项核对事务绑定、章节结果、卷目标贡献、里程碑和未授权重大事实；不允许 `WARN` 放行。
 - 状态闭环: 按 `state-management.md` 核对消耗、伤势、信息差、事务状态与幂等键；叙事线索状态满足 `INV-FORESHADOW-001`。
