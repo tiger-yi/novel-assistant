@@ -188,6 +188,48 @@ class HarnessRepositoryRoutesTest(unittest.TestCase):
             self.assertTrue(gate.get("required"))
             self.assertEqual(["style_application_evidence"], gate.get("evidence"))
 
+    def test_chapter_and_polish_pipelines_require_signing_first_impression_gate(self):
+        pipelines = self.manifest.data.get("pipelines") or {}
+        for pipeline_name in (
+            "create-chapter",
+            "polish-chapter",
+            "polish-current-chapter",
+        ):
+            stages = (pipelines.get(pipeline_name) or {}).get("stages", [])
+            names = [stage.get("name") for stage in stages]
+            gate = next(
+                (
+                    stage
+                    for stage in stages
+                    if stage.get("name") == "signing-first-impression-risk"
+                ),
+                None,
+            )
+
+            self.assertIsNotNone(gate, pipeline_name)
+            self.assertEqual("chapter-polish", gate.get("uses"))
+            self.assertEqual("semantic-gate", gate.get("handler"))
+            self.assertTrue(gate.get("required"))
+            self.assertEqual(["PASS", "WARN"], gate.get("allowed_statuses"))
+            self.assertEqual(
+                ["signing_first_impression_risk"],
+                gate.get("evidence"),
+            )
+            self.assertLess(
+                names.index("polish"),
+                names.index("signing-first-impression-risk"),
+            )
+            if pipeline_name == "create-chapter":
+                self.assertLess(
+                    names.index("signing-first-impression-risk"),
+                    names.index("reader-evaluation"),
+                )
+            else:
+                self.assertLess(
+                    names.index("signing-first-impression-risk"),
+                    names.index("chapter-format"),
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

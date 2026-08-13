@@ -455,6 +455,15 @@ pipelines:
         uses: chapter-polish
         handler: agent
         required: true
+      - name: signing-first-impression-risk
+        uses: chapter-polish
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+          - WARN
+        evidence:
+          - signing_first_impression_risk
       - name: reader-evaluation
         uses: reader-evaluation
         handler: semantic-gate
@@ -541,6 +550,17 @@ pipelines:
         required: true
         delegable: true
         worker: draft-worker
+      - name: signing-first-impression-risk
+        uses: chapter-polish
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+          - WARN
+        delegable: true
+        worker: gate-worker
+        evidence:
+          - signing_first_impression_risk
       - name: chapter-format
         uses: chapter-creation-spec
         handler: deterministic-gate
@@ -605,6 +625,15 @@ pipelines:
         required: true
         delegable: true
         worker: draft-worker
+      - name: signing-first-impression-risk
+        uses: chapter-polish
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+          - WARN
+        evidence:
+          - signing_first_impression_risk
       - name: chapter-format
         uses: chapter-creation-spec
         handler: deterministic-gate
@@ -1039,6 +1068,9 @@ verification:
       invariant: INV-POWER-001
     - name: reader-evaluation
       spec: ../writespec/reader-evaluation.md
+      evidence_required: true
+    - name: signing-first-impression-risk
+      spec: ../writespec/chapter-polish.md
       evidence_required: true
     - name: longform-style-readiness
       spec: ../writespec/commands/create-style.md

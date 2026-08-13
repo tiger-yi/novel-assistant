@@ -10,13 +10,14 @@
 - 不用于 `构思第 N 章`。
 - 不用于 `润色章节 CH-NNNN` 或 `润色当前章节`。
 - 评价对象必须是事务 staging 中经过一次 `chapter-polish.md` 纯文本润色后的正文候选。
+- 评价前必须已完成 `signing-first-impression-risk` 门禁；本门禁评价多读者质量，不替代签约首感风险。
 
 ## 流程位置
 
 章节创作流程中，本门禁位于 `polish` 之后、`chapter-format` 之前：
 
 ```text
-draft -> polish -> reader-evaluation -> chapter-format -> narrative/world/plot/thread gates -> commit
+draft -> polish -> signing-first-impression-risk -> reader-evaluation -> chapter-format -> narrative/world/plot/thread gates -> commit
 ```
 
 若读者评价触发自动重润色，重润色后的正文必须重新进入后续字数、格式、叙事、世界观、剧情和线索门禁。旧门禁结果不得覆盖新正文。
@@ -121,13 +122,13 @@ draft -> polish -> reader-evaluation -> chapter-format -> narrative/world/plot/t
 | `major` | -0.7 | 影响本章核心体验或多个维度，需要优先修 |
 | `critical` | -1.0 或阻断 | 破坏核心因果、承诺兑现、世界状态或读者理解 |
 
-以下问题触发硬阻断或人工决策，不得只用扣分抵消：
+以下问题触发硬阻断或自动化阻断分级，不得只用扣分抵消：
 
 | 阻断项 | 触发条件 | 处理 |
 | :--- | :--- | :--- |
 | 核心因果断裂 | 读者需要依赖作者解释才能理解胜负、选择、获得、逃脱或揭露 | `STRUCTURAL_SUGGESTION_BLOCKED` |
 | 主角关键失智 | 主角关键选择违背既有人设、目标或已知信息，且不是文本有意呈现的代价 | `STRUCTURAL_SUGGESTION_BLOCKED` |
-| 章节承诺落空 | `chapter_promise` 的核心回报未兑现，章末也没有补偿性牵引 | `MANUAL_DECISION_REQUIRED` |
+| 章节承诺落空 | `chapter_promise` 的核心回报未兑现，章末也没有补偿性牵引 | 先判 `AUTO_ROUTE_COMMIT`，若必须改章节结果则 `AUTO_ROUTE_REVIEW` |
 | 关键结果靠巧合 | 胜负、获得、逃脱、揭露或重要转折主要依赖未经铺垫的巧合 | `STRUCTURAL_SUGGESTION_BLOCKED` |
 | 爽点必须改剧情才成立 | 需要新增事件、新因果、新死亡、新法宝或改章节结果才能修复 | `STRUCTURAL_SUGGESTION_BLOCKED` |
 | 世界状态冲突 | 战力、资源、伤势、时间线、地理、信息差或伏笔状态与证据冲突 | `WORLD_STATE_BLOCKED` |
@@ -276,14 +277,14 @@ reader_evaluation:
 - `STRUCTURAL_SUGGESTION_BLOCKED`: 涉及新事件、新因果、新背叛、新死亡、新法宝、改人物选择、改章节结果或改卷目标。
 - `WORLD_STATE_BLOCKED`: 涉及 World Bible 事实、战力、道具、伤势、时间线、地理、信息差或伏笔状态变化。
 
-禁止项只能记录为人工决策建议，按需转入原创性审计、大纲修订或其他授权流程。
+禁止项不得在当前读者评价阶段直接改正文，但必须继续按四档自动化阻断分级处理。单章未发布候选且不改变冻结契约时优先 `AUTO_ROUTE_COMMIT`；影响后续章节契约、World Bible 核心事实或已发布事实时转 `AUTO_ROUTE_REVIEW`；需要用户接受长期风险或撤销叙事承诺时转 `HUMAN_REQUIRED`。
 
 默认自动修复授权：
 
 - `PASS_WITH_AUTO_FIX` 默认授权 `draft-worker` 按 `auto_actionable_suggestions` 局部受限重润色 1 次。
 - 自动修复只允许 `risk_level` 为 `low` 或 `medium`，且 `suggestion_type` 属于允许自动执行的建议类型。
 - 自动修复不得新增事件、新因果、新角色、新死亡、新法宝，不得改变章节 `task/outcome/conflict/closing_pull`、人物关键选择、World Bible 事实、伏笔状态或后续章节契约。
-- `risk_level: high`、`STRUCTURAL_SUGGESTION_BLOCKED`、`WORLD_STATE_BLOCKED` 和 `hard_manual_required` 一律不得自动执行。
+- `risk_level: high`、`STRUCTURAL_SUGGESTION_BLOCKED`、`WORLD_STATE_BLOCKED` 和 `hard_manual_required` 一律不得作为当前阶段文本修复直接执行；其中可由正确命令流程自动生成并验证候选的，进入 `AUTO_ROUTE_COMMIT` 或 `AUTO_ROUTE_REVIEW`。
 
 当多种风险同时存在时，可一键生成 `risk_resolution_plan`，并只执行不依赖高权限结论的安全文本修复。若低/中风险文本修复所在段落受 `WORLD_STATE_BLOCKED`、`STRUCTURAL_SUGGESTION_BLOCKED` 或 `hard_manual_required` 影响，必须放入 `deferred_auto_fixes`，等待上游风险处理后再执行。
 
@@ -301,13 +302,15 @@ reader_evaluation:
 - `instruction`: 面向重润色的具体动作，不得写成抽象评价。
 - `must_preserve`: 不得误伤的剧情事实、人物选择、设定状态、伏笔和高光表达。
 
-`manual_decision_suggestions` 必须拆分为三类，减少不必要人工介入：
+`manual_decision_suggestions` 必须拆分为三类，并附自动化阻断分级，减少不必要人工介入：
 
 - `auto_escalatable_manual`: 可自动生成候选修法，但候选不得直接提交；用于需要比较方案但不改变事实的问题。
 - `auto_safe_structural_fix`: 允许自动修复的低风险结构问题；前提是不改变章节结果、人物选择、World Bible、伏笔状态或后续契约。
 - `hard_manual_required`: 必须人工确认的问题；只用于新增事件、新因果、新死亡、新法宝、改章节结果、改人物选择、改 World Bible、改伏笔状态、改后续章节契约等越权项。
 
 `auto_safe_structural_fix` 的建议必须同时写明 `allowed_scope` 和 `forbidden_scope`。例如可增强现有战斗压迫感、混乱、险象和动作因果，但不得新增强敌、改变胜负结果或挪用下一章升级契约。
+
+`auto_escalatable_manual` 和 `auto_safe_structural_fix` 不应默认等待人工。若只影响未发布当前章、可保持同一章节执行契约并通过后续门禁，应标记为 `AUTO_ROUTE_COMMIT`；若会调整未发布后续章节契约或 World Bible 核心事实，应标记为 `AUTO_ROUTE_REVIEW`。只有放弃/取消伏笔、改已发布事实、改卷目标、接受长期风险等不可逆事项才标记为 `HUMAN_REQUIRED`。
 
 ## 综合修复计划
 
@@ -327,6 +330,7 @@ reader_evaluation:
 - `mode`: `BLOCKED_WITH_REPAIR_PLAN` 或 `AUTO_FIX_THEN_REVIEW`。
 - `priority_order`: 实际命中的风险类型排序。
 - `immediate_action`: 当前轮应执行的动作，例如 `generate_repair_plan`、`safe_auto_fix_only`、`manual_route_required`。
+- `automation_classification`: `AUTO_FIX`、`AUTO_ROUTE_COMMIT`、`AUTO_ROUTE_REVIEW` 或 `HUMAN_REQUIRED`。
 - `safe_auto_fixes`: 可立即自动执行且不依赖高权限结论的建议 ID。
 - `deferred_auto_fixes`: 暂缓执行的自动建议 ID，并说明被哪个高权限风险阻断。
 - `required_routes`: 后续应转入的命令路由和触发条件。
@@ -334,9 +338,9 @@ reader_evaluation:
 
 推荐路由规则：
 
-- `WORLD_STATE_BLOCKED`: 若正文需要依赖新的世界事实，建议 `更新世界`；若正文违反既有世界事实，建议重新执行 `创作第 N 章`。
-- `STRUCTURAL_SUGGESTION_BLOCKED`: 若只影响当前章结构，建议重新执行 `创作第 N 章`；若影响卷目标或后续章节契约，建议 `修订卷规划 ARC-001`。
-- `hard_manual_required`: 必须列出候选方向和影响，等待用户选择。
+- `WORLD_STATE_BLOCKED`: 若正文证据已支撑普通状态回写，标记 `AUTO_ROUTE_COMMIT` 并进入 `更新世界` 候选提交；若正文需要依赖新的核心世界事实，标记 `AUTO_ROUTE_REVIEW`；若正文违反既有世界事实，优先重新执行 `创作第 N 章`。
+- `STRUCTURAL_SUGGESTION_BLOCKED`: 若只影响未发布当前章结构，标记 `AUTO_ROUTE_COMMIT` 并重新执行 `创作第 N 章`；若影响卷目标或后续章节契约，标记 `AUTO_ROUTE_REVIEW` 并建议 `修订卷规划 ARC-001`。
+- `hard_manual_required`: 必须列出候选方向和影响；只有不可逆事项才等待用户选择。
 - `risk_level: high`: 可生成候选修法和影响评估，但不得提交正文或状态变更。
 
 ## 复评规则

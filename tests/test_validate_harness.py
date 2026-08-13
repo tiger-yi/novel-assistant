@@ -603,6 +603,24 @@ class HarnessValidationTest(unittest.TestCase):
 
         self.assertTrue(any("unknown delegation worker" in error for error in errors))
 
+    def test_automation_blocking_classes_are_documented(self):
+        repo_root = Path(__file__).resolve().parents[1]
+        expected = {
+            "AUTO_FIX",
+            "AUTO_ROUTE_COMMIT",
+            "AUTO_ROUTE_REVIEW",
+            "HUMAN_REQUIRED",
+        }
+        docs = [
+            repo_root / "novel-harness" / "CONTEXT.md",
+            repo_root / "writespec" / "continuous-improvement.md",
+            repo_root / "writespec" / "state-management.md",
+        ]
+        text = "\n".join(path.read_text(encoding="utf-8") for path in docs)
+
+        for token in expected:
+            self.assertIn(token, text)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -77,6 +77,8 @@ ID 创建后不可因改名或状态变化而修改。顺序型 ID 取全部活�
 
 Manifest 声明 `requires_confirmation: when_overwriting` 时，每个被覆盖目标都必须通过 `novel_harness.py confirm-overwrite` 的交互操作确认。确认记录由事务 nonce、规范化目标路径和基线摘要绑定，手写 `source: user` 或通配目标均无效。该机制是 Harness 内的操作授权边界，不等同于操作系统身份认证。
 
+自动化阻断分级中的 `AUTO_ROUTE_COMMIT` 只授权自动进入 Manifest 已注册的正确命令流程，并在候选、基线、门禁和事务记录全部通过后由事务执行器提交；它不授权 Agent 直接写正式章节、World Bible、归档、风格或元数据。若候选会改变冻结卷目标、后续章节契约、World Bible 核心事实、已发布事实、放弃或取消叙事线索，或要求用户接受长期风险，必须降级为 `AUTO_ROUTE_REVIEW` 或 `HUMAN_REQUIRED`。
+
 `审计原创性` 虽不修改正式内容，仍由执行器创建 YAML 执行记录。记录的 `coverage.through_chapter` 取开始审计时最高已完成章节，`coverage.events` 绑定当时全部未覆盖周期事件事务 ID；提交时重新计算，不一致即拒绝。周期门禁要求第 11、21 等下一周期章节开始前，存在覆盖上一边界及全部事件且状态为 `COMPLETE` 的原创性审计记录。
 
 ## 4. 幂等规则
