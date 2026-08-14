@@ -36,3 +36,5 @@ __pycache__/
 chapters/.staging/
 world/.transactions/
 world/.staging/
+analysis/.staging/
+metadata/.staging/
