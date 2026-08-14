@@ -33,3 +33,6 @@ __pycache__/
 # Local private automation state
 .local/
 .playwright-cli
+chapters/.staging/
+world/.transactions/
+world/.staging/
