@@ -146,6 +146,15 @@ routes:
         - literal: "查看世界状态"
       load: on_command
       pipeline: check-status
+    - name: cleanup-transactions
+      path: ../writespec/commands/cleanup-transactions.md
+      activation: command
+      matches:
+        - literal: "清理事务缓存"
+      load: on_command
+      pipeline: cleanup-transactions
+      side_effect: destructive_local_cache
+      requires_confirmation: once_after_preview
     - name: create-chapter
       path: ../writespec/commands/draft-chapter.md
       activation: command
@@ -793,6 +802,20 @@ pipelines:
       - name: render
         uses: state-management
         handler: render
+        required: true
+  cleanup-transactions:
+    stages:
+      - name: preview
+        uses: cleanup-transactions
+        handler: render
+        required: true
+      - name: confirmation
+        uses: cleanup-transactions
+        handler: preflight
+        required: true
+      - name: cleanup
+        uses: cleanup-transactions
+        handler: local-cache-cleanup
         required: true
   trending:
     stages:

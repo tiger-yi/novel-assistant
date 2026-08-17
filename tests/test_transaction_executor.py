@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 
 import yaml
@@ -122,6 +123,44 @@ class TransactionContractTest(unittest.TestCase):
         errors = validate_transaction(transaction)
 
         self.assertTrue(any("invalid transaction state" in error for error in errors))
+
+    def test_accepts_aborted_transaction_with_cleaned_staging(self):
+        transaction = self.valid_transaction()
+        transaction["state"] = "ABORTED"
+        transaction["staging_state"] = "CLEANED"
+
+        self.assertEqual([], validate_transaction(transaction))
+
+    def test_aborted_transaction_does_not_require_failed_gate_to_pass(self):
+        transaction = self.valid_transaction()
+        transaction["state"] = "ABORTED"
+        transaction["gates"][0]["status"] = "FAIL"
+
+        self.assertEqual([], validate_transaction(transaction))
+
+    def test_rejects_unknown_staging_state(self):
+        transaction = self.valid_transaction()
+        transaction["staging_state"] = "DELETED"
+
+        errors = validate_transaction(transaction)
+
+        self.assertTrue(any("invalid staging state" in error for error in errors))
+
+    def test_rejects_completed_at_without_timezone(self):
+        transaction = self.valid_transaction()
+        transaction["completed_at"] = "2026-08-17T09:00:00"
+
+        errors = validate_transaction(transaction)
+
+        self.assertTrue(any("invalid completed_at" in error for error in errors))
+
+    def test_rejects_completed_at_outside_utc(self):
+        transaction = self.valid_transaction()
+        transaction["completed_at"] = "2026-08-17T17:00:00+08:00"
+
+        errors = validate_transaction(transaction)
+
+        self.assertTrue(any("invalid completed_at" in error for error in errors))
 
 
 class TransactionCommitTest(unittest.TestCase):
@@ -274,6 +313,8 @@ class TransactionCommitTest(unittest.TestCase):
             (self.root / "world/outline.md").read_text(encoding="utf-8"),
         )
         self.assertEqual("COMPLETE", result["state"])
+        completed_at = datetime.fromisoformat(result["completed_at"])
+        self.assertIsNotNone(completed_at.tzinfo)
         self.assertEqual(["CH-0001:outline"], result["applied_keys"])
         self.assertEqual(
             {"prepared-change-set", "postflight-consistency"},

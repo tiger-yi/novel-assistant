@@ -81,6 +81,14 @@ Manifest 声明 `requires_confirmation: when_overwriting` 时，每个被覆盖�
 
 `审计原创性` 虽不修改正式内容，仍由执行器创建 YAML 执行记录。记录的 `coverage.through_chapter` 取开始审计时最高已完成章节，`coverage.events` 绑定当时全部未覆盖周期事件事务 ID；提交时重新计算，不一致即拒绝。周期门禁要求第 11、21 等下一周期章节开始前，存在覆盖上一边界及全部事件且状态为 `COMPLETE` 的原创性审计记录。
 
+### 3.5 事务缓存生命周期
+
+事务 YAML 与其门禁证据是永久机器事实，不得随 staging 清理。事务执行器只有在发布、状态回写与 Postflight 全部成功并将事务置为 `COMPLETE` 时，才写入带时区的 UTC `completed_at`。
+
+`chapters/.staging/`、`world/.staging/`、`analysis/.staging/` 与 `metadata/.staging/` 是可清理事务缓存，不是永久版本库。其保留、孤儿判定、确认和失败停止规则由 `commands/cleanup-transactions.md` 定义。删除成功后，具名事务只增加 `staging_state: CLEANED`；不得删除事务 YAML、门禁证据或幂等键。
+
+未完成事务不得由年龄推断为废弃。只有 `清理事务缓存` 的本次预览逐项明确选择后，才允许把活动或 `FAILED` 事务原子转为终态 `ABORTED` 并删除其 staging。`ABORTED` 不得作为成功发布、周期审计覆盖或迁移父授权的依据。
+
 ## 4. 幂等规则
 
 ### INV-STATE-001 有序幂等回写

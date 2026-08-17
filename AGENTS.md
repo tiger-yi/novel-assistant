@@ -72,6 +72,7 @@ Novel Assistant 是中文玄幻长篇小说的结构化创作 Harness。项目�
 | `更新世界` | `writespec/commands/update-world.md` |
 | `归档世界` | `writespec/commands/archive-world.md` |
 | `查看世界状态` | `writespec/commands/check-status.md` |
+| `清理事务缓存` | `writespec/commands/cleanup-transactions.md` |
 | `热门话题` | `writespec/commands/trending.md` |
 | `审计原创性` | `writespec/commands/audit-originality.md` |
 | `生成小说元数据` | `writespec/commands/generate-metadata.md` |

@@ -25,6 +25,10 @@ migration:
   failed: []
   child_transactions: {}
 state: PREFLIGHT
+# 仅在执行器完成全部提交与 Postflight 后写入 UTC ISO-8601 时间。
+completed_at: null
+# staging 被受控清理后记为 CLEANED；未清理时保持 null。
+staging_state: null
 archive_state: NOT_CHECKED
 stages: []
 gates: []

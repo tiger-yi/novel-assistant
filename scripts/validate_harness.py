@@ -28,6 +28,7 @@ PIPELINE_HANDLERS = {
     "transaction-gate",
     "transaction-commit",
     "transaction-archive",
+    "local-cache-cleanup",
     "render",
 }
 STYLE_REQUIRED_SECTIONS = (

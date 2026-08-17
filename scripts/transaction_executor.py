@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime, timezone
 import hashlib
 import os
 import re
@@ -29,6 +30,7 @@ TRANSACTION_STATES = {
     "COMMITTING",
     "COMPLETE",
     "FAILED",
+    "ABORTED",
 }
 ARCHIVE_STATES = {
     "NOT_CHECKED",
@@ -109,6 +111,22 @@ def validate_transaction(data: dict) -> list[str]:
         errors.append(f"invalid transaction state: {data.get('state')}")
     if data.get("archive_state") not in ARCHIVE_STATES:
         errors.append(f"invalid archive state: {data.get('archive_state')}")
+    staging_state = data.get("staging_state")
+    if staging_state is not None and staging_state != "CLEANED":
+        errors.append(f"invalid staging state: {staging_state}")
+    completed_at = data.get("completed_at")
+    if completed_at is not None:
+        try:
+            parsed_completed_at = datetime.fromisoformat(completed_at)
+        except (TypeError, ValueError):
+            parsed_completed_at = None
+        if (
+            parsed_completed_at is None
+            or parsed_completed_at.tzinfo is None
+            or parsed_completed_at.utcoffset()
+            != timezone.utc.utcoffset(parsed_completed_at)
+        ):
+            errors.append(f"invalid completed_at: {completed_at}")
 
     gates = data.get("gates")
     if not isinstance(gates, list):
@@ -128,7 +146,12 @@ def validate_transaction(data: dict) -> list[str]:
         if status not in GATE_STATUSES:
             errors.append(f"invalid gate status: {status}")
             continue
-        if gate.get("required") and status == "FAIL" and kind != "deterministic":
+        if (
+            gate.get("required")
+            and status == "FAIL"
+            and kind != "deterministic"
+            and data.get("state") != "ABORTED"
+        ):
             errors.append(f"required gate did not pass: {gate_name}")
         if status == "NOT_APPLICABLE" and not gate.get("reason"):
             errors.append(f"NOT_APPLICABLE gate requires reason: {gate_name}")
@@ -1594,6 +1617,9 @@ def commit_transaction(
     if match.name == "migrate-presentation-chapter":
         record_migration_child_completion(record_directory, transaction)
     transaction["state"] = "COMPLETE"
+    transaction["completed_at"] = datetime.now(timezone.utc).isoformat().replace(
+        "+00:00", "Z"
+    )
     transaction["recovery"] = {
         "last_successful_stage": "commit",
         "failed_stage": None,

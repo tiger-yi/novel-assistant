@@ -131,6 +131,13 @@ class HarnessRepositoryRoutesTest(unittest.TestCase):
 
         self.assertEqual("generate-metadata", match.name)
 
+    def test_resolves_transaction_cache_cleanup(self):
+        match = self.manifest.resolve("清理事务缓存")
+
+        self.assertEqual("cleanup-transactions", match.name)
+        self.assertEqual("cleanup-transactions", match.route["pipeline"])
+        self.assertEqual("destructive_local_cache", match.route["side_effect"])
+
     def test_resolves_controlled_arc_revision(self):
         match = self.manifest.resolve("修订卷规划 ARC-001")
 

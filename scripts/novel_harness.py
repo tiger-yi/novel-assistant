@@ -6,6 +6,7 @@ import sys
 import yaml
 
 from harness_runtime import CommandResolutionError, HarnessManifest
+from transaction_cache import CacheError, cleanup_cache, inspect_cache
 from transaction_executor import (
     TransactionError,
     begin_transaction,
@@ -56,6 +57,19 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     status_parser = subparsers.add_parser("status")
     status_parser.add_argument("transaction", type=Path)
+    cache_status_parser = subparsers.add_parser("cache-status")
+    cache_status_parser.add_argument(
+        "--repo-root",
+        type=Path,
+        default=Path(__file__).resolve().parents[1],
+    )
+    cleanup_parser = subparsers.add_parser("cleanup-cache")
+    cleanup_parser.add_argument("items", nargs="+")
+    cleanup_parser.add_argument(
+        "--repo-root",
+        type=Path,
+        default=Path(__file__).resolve().parents[1],
+    )
     subparsers.add_parser("invariants")
     return parser
 
@@ -137,6 +151,57 @@ def main(argv=None):
                 )
             )
             return 0
+        if args.action == "cache-status":
+            print(
+                json.dumps(
+                    inspect_cache(args.repo_root),
+                    ensure_ascii=False,
+                    sort_keys=True,
+                )
+            )
+            return 0
+        if args.action == "cleanup-cache":
+            manifest = HarnessManifest.load(args.manifest)
+            cleanup_match = manifest.resolve("清理事务缓存")
+            if cleanup_match.name != "cleanup-transactions":
+                raise CommandResolutionError(
+                    "cleanup route does not resolve to cleanup-transactions"
+                )
+            inventory = inspect_cache(
+                args.repo_root, record_observations=True
+            )
+            if len(args.items) != len(set(args.items)):
+                raise CacheError("duplicate cache item selection")
+            items_by_id = {item["id"]: item for item in inventory["items"]}
+            missing = [item_id for item_id in args.items if item_id not in items_by_id]
+            if missing:
+                raise CacheError(f"cache item does not exist: {missing[0]}")
+            selected = [items_by_id[item_id] for item_id in args.items]
+            print(
+                json.dumps(
+                    {"selected": selected},
+                    ensure_ascii=False,
+                    sort_keys=True,
+                )
+            )
+            expected = f"CONFIRM CLEANUP {','.join(args.items)}"
+            confirmation = input(f'Type "{expected}" to authorize: ')
+            if confirmation != expected:
+                raise CacheError("cleanup confirmation did not match")
+            result = cleanup_cache(
+                args.repo_root,
+                args.items,
+                confirmed=True,
+            )
+            if result["failed"] is not None:
+                failure = result["failed"]
+                print(
+                    f"[FAIL] cache cleanup stopped at {failure['id']}: "
+                    f"{failure['error']}"
+                )
+                return 1
+            print(f"[PASS] cache cleanup complete: {','.join(result['cleaned'])}")
+            return 0
         if args.action == "resolve":
             manifest = HarnessManifest.load(args.manifest)
             command_text = _read_command_text(args)
@@ -196,7 +261,13 @@ def main(argv=None):
         transaction = load_transaction(args.transaction)
         print(yaml.safe_dump(transaction, allow_unicode=True, sort_keys=False), end="")
         return 0
-    except (OSError, EOFError, CommandResolutionError, TransactionError) as exc:
+    except (
+        OSError,
+        EOFError,
+        CacheError,
+        CommandResolutionError,
+        TransactionError,
+    ) as exc:
         print(f"[FAIL] {exc}")
         return 1
 
