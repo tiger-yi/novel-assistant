@@ -645,6 +645,19 @@ def _validate_pipeline_completion(
             )
             if gate.get("status") not in allowed_statuses:
                 raise TransactionError(f"required gate did not pass: {stage_name}")
+            required_evidence = set(required_stage.get("required_evidence") or [])
+            if handler == "semantic-gate" and required_evidence:
+                evidence_keys = {
+                    item.get("key")
+                    for item in (gate.get("evidence") or [])
+                    if isinstance(item, dict) and item.get("key")
+                }
+                missing_evidence = sorted(required_evidence - evidence_keys)
+                if missing_evidence:
+                    raise TransactionError(
+                        "required semantic evidence key is missing: "
+                        f"{stage_name} ({', '.join(missing_evidence)})"
+                    )
         else:
             stage = stages.get(stage_name)
             if stage is None:

@@ -46,7 +46,7 @@
 - `signing-first-impression-risk`: 润色后正文必须按 `chapter-polish.md` 给出 `signing_first_impression_risk` 证据，覆盖开篇、主要场景入口和章末牵引；接受 `PASS` 或 `WARN` 继续。已发布章节若命中 `L3-ROUTE-AUTO`，只有等义呈现修订可在验证通过后自动提交；影响事件重心、摘要语义、World Bible 或后续契约时，只保留候选预览和推荐路由。
 - `presentation-equivalence`: 新旧正文事件、因果、人物行为、资源、伤势和信息差等义，只接受 `PASS`。
 - `style-application`: 润色后正文必须证明已应用当前 `writespec/style-guide.md`，产出至少 5 条可定位的 `style_application_evidence`，覆盖核心调性、受限视角/认知偏差、人物声线、节奏或爽点结构、题材质感/黑名单规避；只接受 `PASS`。
-- `narrative-integrity`: 不存在叙事层泄漏，只接受 `PASS`。
+- `narrative-integrity`: 不存在叙事层泄漏；同时按 `chapter-creation-spec.md` 扫描全部在场台词与非在场引述，提交 `key: reported_speech_audit` 的证据，记录扫描范围、命中位置、表达策略或合法保留理由及未解决项。无命中也必须提交，只接受 `PASS`。
 - `world-audit`: 未引入新世界观冲突。
 - `thread-integrity`: 叙事线索状态和证据不变，只接受 `PASS`。
 

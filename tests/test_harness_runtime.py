@@ -195,6 +195,30 @@ class HarnessRepositoryRoutesTest(unittest.TestCase):
             self.assertTrue(gate.get("required"))
             self.assertEqual(["style_application_evidence"], gate.get("evidence"))
 
+    def test_chapter_output_pipelines_require_reported_speech_audit(self):
+        pipelines = self.manifest.data.get("pipelines") or {}
+        for pipeline_name in (
+            "create-chapter",
+            "polish-chapter",
+            "polish-current-chapter",
+            "migration-chapter",
+        ):
+            stages = {
+                stage.get("name"): stage
+                for stage in (pipelines.get(pipeline_name) or {}).get("stages", [])
+            }
+            gate = stages.get("narrative-integrity")
+
+            self.assertIsNotNone(gate, pipeline_name)
+            self.assertEqual("chapter-creation-spec", gate.get("uses"))
+            self.assertEqual("semantic-gate", gate.get("handler"))
+            self.assertTrue(gate.get("required"))
+            self.assertEqual(["PASS"], gate.get("allowed_statuses"))
+            self.assertEqual(
+                ["reported_speech_audit"],
+                gate.get("required_evidence"),
+            )
+
     def test_chapter_and_polish_pipelines_require_signing_first_impression_gate(self):
         pipelines = self.manifest.data.get("pipelines") or {}
         for pipeline_name in (

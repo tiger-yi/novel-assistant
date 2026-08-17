@@ -27,7 +27,7 @@
 
 - `chapter-format`: 对 staging 正文重新执行完整 `INV-CHAPTER-001`。
 - `presentation-equivalence`: 逐项证明新旧正文事件和事实等义，只接受 `PASS`。
-- `narrative-integrity`: 证明不存在内部 ID、作者/读者/剧情安排或外部镜头调度，只接受 `PASS`。
+- `narrative-integrity`: 证明不存在内部 ID、作者/读者/剧情安排或外部镜头调度；同时扫描全部在场台词与非在场引述，提交 `key: reported_speech_audit` 的证据，记录命中位置、表达策略或合法保留理由及未解决项。无命中也必须提交，只接受 `PASS`。
 - `plot-alignment`: 证明修订未改变已发布剧情事实，只接受 `PASS`。
 - `thread-integrity`: 证明叙事线索状态和因果不变，只接受 `PASS`。
 - 事务与 Postflight: 校验目标基线、正文摘要、证据引用和幂等键。

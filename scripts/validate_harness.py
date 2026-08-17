@@ -399,6 +399,30 @@ def validate_repository(repo_root, style_override=None):
                             f"pipeline {pipeline_name} stage {stage_name} uses "
                             f"unknown delegation worker: {stage.get('worker')}"
                         )
+                    required_evidence = stage.get("required_evidence")
+                    if required_evidence is not None:
+                        if handler != "semantic-gate":
+                            errors.append(
+                                f"pipeline {pipeline_name} stage {stage_name} "
+                                "required_evidence requires semantic-gate"
+                            )
+                        if (
+                            not isinstance(required_evidence, list)
+                            or not required_evidence
+                            or any(
+                                not isinstance(item, str) or not item.strip()
+                                for item in required_evidence
+                            )
+                        ):
+                            errors.append(
+                                f"pipeline {pipeline_name} stage {stage_name} "
+                                "required_evidence must be a non-empty string list"
+                            )
+                        elif len(required_evidence) != len(set(required_evidence)):
+                            errors.append(
+                                f"pipeline {pipeline_name} stage {stage_name} "
+                                "required_evidence contains duplicates"
+                            )
 
     seen_triggers = set()
     seen_patterns = set()

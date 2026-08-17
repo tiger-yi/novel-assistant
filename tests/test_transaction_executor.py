@@ -828,6 +828,96 @@ class TransactionCommitTest(unittest.TestCase):
         with self.assertRaisesRegex(TransactionError, "required gate did not pass"):
             commit_transaction(self.root, self.manifest_path, transaction_path)
 
+    def test_rejects_missing_required_semantic_evidence_key(self):
+        transaction_path = self.write_prepared_transaction()
+        transaction = load_transaction(transaction_path)
+        transaction["gates"] = [
+            {
+                "gate": "narrative-integrity",
+                "kind": "semantic",
+                "required": True,
+                "status": "PASS",
+                "summary": "叙事完整性通过",
+                "evidence": [
+                    {
+                        "claim": "不存在叙事层泄漏",
+                        "source": "chapters/.staging/CH-0001.txt",
+                    }
+                ],
+            }
+        ]
+        transaction_path.write_text(
+            yaml.safe_dump(transaction, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+        manifest = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))
+        manifest["pipelines"]["update-world"]["stages"].insert(
+            1,
+            {
+                "name": "narrative-integrity",
+                "uses": "update-world",
+                "handler": "semantic-gate",
+                "required": True,
+                "allowed_statuses": ["PASS"],
+                "required_evidence": ["reported_speech_audit"],
+            },
+        )
+        self.manifest_path.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(
+            TransactionError, "required semantic evidence key is missing"
+        ):
+            commit_transaction(self.root, self.manifest_path, transaction_path)
+
+    def test_accepts_required_semantic_evidence_key(self):
+        transaction_path = self.write_prepared_transaction()
+        transaction = load_transaction(transaction_path)
+        transaction["gates"] = [
+            {
+                "gate": "narrative-integrity",
+                "kind": "semantic",
+                "required": True,
+                "status": "PASS",
+                "summary": "叙事完整性通过",
+                "evidence": [
+                    {
+                        "key": "reported_speech_audit",
+                        "claim": "旧话转述扫描无未解决项",
+                        "source": "chapters/.staging/CH-0001.txt",
+                    }
+                ],
+            }
+        ]
+        transaction_path.write_text(
+            yaml.safe_dump(transaction, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+        manifest = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))
+        manifest["pipelines"]["update-world"]["stages"].insert(
+            1,
+            {
+                "name": "narrative-integrity",
+                "uses": "update-world",
+                "handler": "semantic-gate",
+                "required": True,
+                "allowed_statuses": ["PASS"],
+                "required_evidence": ["reported_speech_audit"],
+            },
+        )
+        self.manifest_path.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        committed = commit_transaction(
+            self.root, self.manifest_path, transaction_path
+        )
+
+        self.assertEqual("COMPLETE", committed["state"])
+
     def test_rejects_missing_required_agent_stage(self):
         transaction_path = self.write_prepared_transaction()
         manifest = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))

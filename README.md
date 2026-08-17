@@ -88,7 +88,7 @@ Manifest 支持可选 subagent delegation 策略。subagent 可以全量读取�
 
 每章都必须具有服务主线的“章末牵引”，但只有需要跨章追踪的问题或承诺才登记为 `HOOK-*`。剧情对齐是阻断门禁；留存质量可以重写优化，但不能成为偏离卷目标、临时增加支线或新增重大设定的理由。
 
-`INV-CHAPTER-001` 同时禁止面板化符号、书名号、内部 ID、裸字母数字代号、章节结构引用和叙事层泄漏。使用 `python scripts/novel_harness.py invariants` 可从 Manifest 动态查看全部 INV 的唯一 owner 与相关门禁；项目不维护重复的 `INV/` 目录。
+`INV-CHAPTER-001` 同时禁止面板化符号、书名号、内部 ID、裸字母数字代号、章节结构引用、非对话引号和叙事层泄漏。章节创作、两种正文润色与历史呈现迁移都通过必需的 `narrative-integrity` 提交 `reported_speech_audit`；旧话转述的表达选择以 `writespec/chapter-creation-spec.md` 为唯一正式指导。使用 `python scripts/novel_harness.py invariants` 可从 Manifest 动态查看全部 INV 的唯一 owner 与相关门禁；项目不维护重复的 `INV/` 目录。
 
 历史正文通过 `迁移正文呈现` 先执行只读扫描，再对授权清单逐章使用 `迁移正文呈现 CH-NNNN`。每章生成新的 `RNN`，只允许等义修改呈现和证据指针；剧情事实、实体状态和线索生命周期不得变化。单章失败不回滚其他已完成章节，父批次保留 `PARTIAL` 状态和恢复范围。
 

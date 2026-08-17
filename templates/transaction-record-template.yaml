@@ -31,6 +31,7 @@ completed_at: null
 staging_state: null
 archive_state: NOT_CHECKED
 stages: []
+# 语义门禁若在 pipeline 声明 required_evidence，对应 evidence 项必须提供同名 key。
 gates: []
 changes: []
 applied_keys: []

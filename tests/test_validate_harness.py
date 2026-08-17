@@ -1,3 +1,4 @@
+import copy
 import tempfile
 import textwrap
 import unittest
@@ -471,6 +472,108 @@ class HarnessValidationTest(unittest.TestCase):
         errors = validate_repository(self.root)
 
         self.assertTrue(any("has no verification command" in error for error in errors))
+
+    def test_reports_required_evidence_on_non_semantic_gate(self):
+        manifest = yaml.safe_load(self.manifest.read_text(encoding="utf-8"))
+        manifest["schema"] = "novel-harness/context/v2"
+        manifest["routes"]["commands"][0].update(
+            {
+                "activation": "command",
+                "matches": [{"literal": "创作章节"}],
+                "pipeline": "draft",
+            }
+        )
+        for spec in manifest["routes"]["specs"]:
+            spec["activation"] = (
+                "profile" if spec["name"] == "style-guide" else "pipeline"
+            )
+        manifest["pipelines"] = {
+            "draft": {
+                "stages": [
+                    {
+                        "name": "draft",
+                        "uses": "chapter",
+                        "handler": "agent",
+                        "required": True,
+                        "required_evidence": ["reported_speech_audit"],
+                    },
+                    {
+                        "name": "commit",
+                        "uses": "chapter",
+                        "handler": "transaction-commit",
+                        "required": True,
+                    },
+                ]
+            }
+        }
+        self.manifest.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        errors = validate_repository(self.root)
+
+        self.assertTrue(
+            any("required_evidence requires semantic-gate" in error for error in errors)
+        )
+
+    def test_reports_invalid_required_evidence_list(self):
+        base_manifest = yaml.safe_load(self.manifest.read_text(encoding="utf-8"))
+        base_manifest["schema"] = "novel-harness/context/v2"
+        base_manifest["routes"]["commands"][0].update(
+            {
+                "activation": "command",
+                "matches": [{"literal": "创作章节"}],
+                "pipeline": "draft",
+            }
+        )
+        for spec in base_manifest["routes"]["specs"]:
+            spec["activation"] = (
+                "profile" if spec["name"] == "style-guide" else "pipeline"
+            )
+
+        cases = (
+            ([], "must be a non-empty string list"),
+            ([""], "must be a non-empty string list"),
+            ("reported_speech_audit", "must be a non-empty string list"),
+            (
+                ["reported_speech_audit", "reported_speech_audit"],
+                "contains duplicates",
+            ),
+        )
+        for required_evidence, expected_error in cases:
+            with self.subTest(required_evidence=required_evidence):
+                manifest = copy.deepcopy(base_manifest)
+                manifest["pipelines"] = {
+                    "draft": {
+                        "stages": [
+                            {
+                                "name": "narrative-integrity",
+                                "uses": "chapter",
+                                "handler": "semantic-gate",
+                                "required": True,
+                                "required_evidence": required_evidence,
+                            },
+                            {
+                                "name": "commit",
+                                "uses": "chapter",
+                                "handler": "transaction-commit",
+                                "required": True,
+                            },
+                        ]
+                    }
+                }
+                self.manifest.write_text(
+                    yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+                    encoding="utf-8",
+                )
+
+                errors = validate_repository(self.root)
+
+                self.assertTrue(
+                    any(expected_error in error for error in errors),
+                    errors,
+                )
 
     def test_reports_v2_write_command_without_transaction_executor(self):
         manifest = yaml.safe_load(self.manifest.read_text(encoding="utf-8"))

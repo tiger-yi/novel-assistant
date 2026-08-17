@@ -113,6 +113,7 @@ World Bible 变更集必须按 `chapter-summary -> characters -> inventory -> ti
 
 - 确定性门禁由脚本退出码判定，结果写入 YAML 事务记录。
 - 语义门禁必须逐维提供结论、来源文件、章节 ID 或实体 ID；引用正文时记录摘要值。
+- pipeline stage 声明 `required_evidence` 时，对应语义门禁的 `evidence` 必须为每个具名项提供同名 `key`；普通 `claim`/`source` 证据不能替代。缺失具名证据时事务执行器必须在正式写入前拒绝提交；未声明该字段的历史 pipeline 保持原有证据契约。
 - 门禁统一返回 `PASS`、`WARN`、`FAIL` 或附原因的 `NOT_APPLICABLE`；必需结果或证据缺失按 `FAIL`。
 - 准备阶段失败不得发布或回写。
 - 提交阶段失败不得声称事务完成，必须给出恢复点。

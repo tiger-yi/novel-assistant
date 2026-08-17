@@ -503,6 +503,9 @@ pipelines:
           - PASS
         evidence:
           - chapter_title_uniqueness
+          - reported_speech_audit
+        required_evidence:
+          - reported_speech_audit
       - name: world-audit
         uses: world-audit
         handler: semantic-gate
@@ -598,6 +601,10 @@ pipelines:
         required: true
         allowed_statuses:
           - PASS
+        evidence:
+          - reported_speech_audit
+        required_evidence:
+          - reported_speech_audit
         delegable: true
         worker: gate-worker
       - name: world-audit
@@ -667,6 +674,10 @@ pipelines:
         required: true
         allowed_statuses:
           - PASS
+        evidence:
+          - reported_speech_audit
+        required_evidence:
+          - reported_speech_audit
   revise-arc:
     stages:
       - name: preflight
@@ -725,6 +736,10 @@ pipelines:
         required: true
         allowed_statuses:
           - PASS
+        evidence:
+          - reported_speech_audit
+        required_evidence:
+          - reported_speech_audit
       - name: plot-alignment
         uses: chapter-creation-spec
         handler: semantic-gate
@@ -1056,6 +1071,8 @@ verification:
     - name: narrative-integrity
       spec: ../writespec/chapter-creation-spec.md
       evidence_required: true
+      required_evidence:
+        - reported_speech_audit
       invariant: INV-CHAPTER-001
     - name: plot-alignment
       spec: ../writespec/chapter-creation-spec.md
