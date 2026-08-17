@@ -1,0 +1,5 @@
+book_id: 13140402
+book_title: 百炼拳帝
+chapter_dir: chapters
+filename_pattern: "CH-{chapter:04d}-*.txt"
+browser_profile_dir: .local/qimao-browser-profile

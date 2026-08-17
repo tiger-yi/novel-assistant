@@ -1,0 +1,6 @@
+book_id: 696136
+book_name: 暴击返还收获成神
+chapter_dir: chapters
+filename_pattern: "CH-{chapter:04d}-*.txt"
+session: shuqi-writer-40d5d13d1f98
+back: "/bookListManage/1"
