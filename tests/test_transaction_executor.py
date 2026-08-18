@@ -1040,6 +1040,91 @@ class TransactionCommitTest(unittest.TestCase):
         )
         self.assertEqual("PASS", gate["status"])
 
+    def test_executor_resolves_payoff_evidence_for_deterministic_gate(self):
+        transaction_path = self.write_prepared_transaction()
+        transaction = load_transaction(transaction_path)
+        transaction["plan_contract"] = {
+            "payoff": {
+                "evidence_path": (
+                    "world/.transactions/TX-CMD-UPDATE-WORLD-0001-R01/"
+                    "payoff-evidence.yaml"
+                )
+            }
+        }
+        transaction_path.write_text(
+            yaml.safe_dump(transaction, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+        evidence_path = self.stage_file(
+            "world/.transactions/TX-CMD-UPDATE-WORLD-0001-R01/payoff-evidence.yaml",
+            "schema: novel-harness/payoff-evidence/v1\n",
+        )
+        (self.root / "check_payoff.py").write_text(
+            "from pathlib import Path\n"
+            "import sys\n"
+            "path = Path(sys.argv[1])\n"
+            "raise SystemExit(0 if path.is_file() else 9)\n",
+            encoding="utf-8",
+        )
+        manifest = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))
+        manifest["pipelines"]["update-world"]["stages"].insert(
+            1,
+            {
+                "name": "payoff-contract",
+                "uses": "update-world",
+                "handler": "deterministic-gate",
+                "required": True,
+            },
+        )
+        manifest["verification"] = {
+            "commands": [
+                {
+                    "name": "payoff-contract",
+                    "command": "python check_payoff.py <payoff_evidence_file>",
+                }
+            ]
+        }
+        self.manifest_path.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = commit_transaction(self.root, self.manifest_path, transaction_path)
+
+        gate = next(
+            item for item in result["gates"] if item["gate"] == "payoff-contract"
+        )
+        self.assertEqual("PASS", gate["status"])
+        self.assertTrue(evidence_path.exists())
+
+    def test_executor_rejects_payoff_gate_without_evidence_path(self):
+        transaction_path = self.write_prepared_transaction()
+        manifest = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))
+        manifest["pipelines"]["update-world"]["stages"].insert(
+            1,
+            {
+                "name": "payoff-contract",
+                "uses": "update-world",
+                "handler": "deterministic-gate",
+                "required": True,
+            },
+        )
+        manifest["verification"] = {
+            "commands": [
+                {
+                    "name": "payoff-contract",
+                    "command": "python check_payoff.py <payoff_evidence_file>",
+                }
+            ]
+        }
+        self.manifest_path.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(TransactionError, "plan_contract.payoff"):
+            commit_transaction(self.root, self.manifest_path, transaction_path)
+
     def test_required_archive_stage_rejects_unresolved_archive_state(self):
         transaction_path = self.write_prepared_transaction(
             source_command="归档世界",

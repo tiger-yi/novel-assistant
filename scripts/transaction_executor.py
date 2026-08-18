@@ -709,6 +709,25 @@ def _staged_artifact(
     return candidates[0]
 
 
+def _payoff_evidence_file(repo_root: Path, transaction: dict) -> Path:
+    payoff = (transaction.get("plan_contract") or {}).get("payoff")
+    if not isinstance(payoff, dict):
+        raise TransactionError(
+            "payoff-contract gate requires plan_contract.payoff in transaction record"
+        )
+    raw_path = payoff.get("evidence_path")
+    if not isinstance(raw_path, str) or not raw_path:
+        raise TransactionError(
+            "payoff-contract gate requires plan_contract.payoff.evidence_path"
+        )
+    resolved = _repository_path(repo_root, raw_path)
+    if not resolved.is_file():
+        raise TransactionError(
+            f"payoff evidence file does not exist: {raw_path}"
+        )
+    return resolved
+
+
 def _execute_deterministic_gates(
     repo_root: Path,
     manifest: HarnessManifest,
@@ -739,6 +758,8 @@ def _execute_deterministic_gates(
                 argument = str(_staged_artifact(repo_root, prepared, "style"))
             elif argument == "<outline_file>":
                 argument = str(_staged_artifact(repo_root, prepared, "outline"))
+            elif argument == "<payoff_evidence_file>":
+                argument = str(_payoff_evidence_file(repo_root, transaction))
             resolved_arguments.append(argument)
         if resolved_arguments and resolved_arguments[0].lower() in {
             "python",
