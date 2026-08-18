@@ -18,11 +18,12 @@
 ## 准备阶段
 
 1. 事务执行器解析卷 ID，记录正式大纲基线。
-2. 审计该卷全部剩余章节，定位受影响的章节任务、卷目标贡献、关联里程碑和章末牵引。
+2. 审计该卷全部剩余章节，定位受影响的章节任务、卷目标贡献、关联里程碑、章末牵引和爽点滚动窗口。
 3. 生成最小差异；不得修改已发布章节契约、固定章节区间、卷目标终态或已完成里程碑。
 4. 将修订号递增，重新计算未发布章节契约，保持全书卷间因果连续。
 5. 提交 `plan-impact` 证据，逐项列出旧值、新值、影响章节和恢复卷目标的因果路径。
-6. 对 staging 大纲运行 `python scripts/validate_outline.py <outline_file>`。
+6. 按 `payoff-spec.md` 为全部剩余未发布章节补齐或重算爽点契约，提交 `payoff_plan_evidence`；既有已发布章节只作为滚动窗口事实，不回填、不改写。
+7. 对 staging 大纲运行 `python scripts/validate_outline.py <outline_file>`。
 
 任何冲突、剩余章数不足或门禁失败都必须停止。Agent 只写事务 staging 和 YAML 证据。
 
@@ -39,3 +40,4 @@
 - [../chapter-creation-spec.md](../chapter-creation-spec.md)
 - [../state-management.md](../state-management.md)
 - [../world-audit.md](../world-audit.md)
+- [../payoff-spec.md](../payoff-spec.md)

@@ -188,6 +188,7 @@ def validate_repository(repo_root, style_override=None):
     declared_paths = set()
     names = set()
     invariant_owners = {}
+    invariant_owner_names = {}
 
     for entry in entries:
         if not isinstance(entry, dict):
@@ -230,6 +231,7 @@ def validate_repository(repo_root, style_override=None):
                 )
                 continue
             invariant_owners[invariant] = resolved
+            invariant_owner_names[invariant] = name
             if resolved.is_file():
                 owner_text = resolved.read_text(encoding="utf-8")
                 if invariant not in owner_text:
@@ -423,6 +425,49 @@ def validate_repository(repo_root, style_override=None):
                                 f"pipeline {pipeline_name} stage {stage_name} "
                                 "required_evidence contains duplicates"
                             )
+
+            payoff_owner = invariant_owner_names.get("INV-PAYOFF-001")
+            if payoff_owner is not None:
+                create_pipeline = pipelines.get("create-chapter")
+                payoff_requirements = {
+                    "payoff-plan": ("semantic-gate", None),
+                    "payoff-contract": ("deterministic-gate", None),
+                    "payoff-fulfillment": (
+                        "semantic-gate",
+                        "payoff_fulfillment_evidence",
+                    ),
+                }
+                create_stages = {}
+                if isinstance(create_pipeline, dict):
+                    create_stages = {
+                        stage.get("name"): stage
+                        for stage in create_pipeline.get("stages") or []
+                        if isinstance(stage, dict) and stage.get("name")
+                    }
+                for stage_name, (handler, evidence_key) in payoff_requirements.items():
+                    stage = create_stages.get(stage_name)
+                    if stage is None:
+                        errors.append(
+                            "pipeline create-chapter requires payoff stage: "
+                            f"{stage_name}"
+                        )
+                        continue
+                    if (
+                        stage.get("uses") != payoff_owner
+                        or stage.get("handler") != handler
+                        or stage.get("required") is not True
+                    ):
+                        errors.append(
+                            f"pipeline create-chapter payoff stage {stage_name} "
+                            f"must use {payoff_owner} as required {handler}"
+                        )
+                    if evidence_key and evidence_key not in (
+                        stage.get("required_evidence") or []
+                    ):
+                        errors.append(
+                            f"pipeline create-chapter payoff stage {stage_name} "
+                            f"requires evidence key {evidence_key}"
+                        )
 
     seen_triggers = set()
     seen_patterns = set()

@@ -29,7 +29,7 @@
 3. **候选生成**: 依据用户方向生成八类 World Bible 候选版，可重写 `outline.md`、人物、力量、地理、时间线、道具、叙事线索和章节摘要。候选不得只堆设定名词，必须让主角目标、阻力、代价、信息差和章末牵引形成可执行链条。
 4. **差异预览**: 输出修改文件、核心设定变化、已解决风险、新增代价、不变硬约束、规划尺度变化、故事力基线变化和 ID 映射。
 5. **用户确认**: 用户确认候选版后，写入覆盖确认和 `rework-user-approval` 语义证据。
-6. **门禁提交**: 对 staging `outline.md` 运行 `python scripts/validate_outline.py <outline_file>`，并由事务执行器按正式目标基线替换八类 World Bible。
+6. **门禁提交**: 按 `payoff-spec.md` 审核密度档、类型轮换和滚动高潮并提交 `payoff_plan_evidence`，再对 staging `outline.md` 运行 `python scripts/validate_outline.py <outline_file>`；全部通过后由事务执行器按正式目标基线替换八类 World Bible。
 7. **全量复审**: 提交完成后新建只读 `审计原创性` 记录，不沿用上一轮 `WARN` 接受结论。
 
 ## 停止条件
@@ -60,3 +60,4 @@
 - [../originality-audit.md](../originality-audit.md)
 - [../state-management.md](../state-management.md)
 - [../chapter-creation-spec.md](../chapter-creation-spec.md)
+- [../payoff-spec.md](../payoff-spec.md)

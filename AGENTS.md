@@ -24,6 +24,7 @@ Novel Assistant 是中文玄幻长篇小说的结构化创作 Harness。项目�
 | World Bible 运行期契约 | `writespec/world-bible-contract.md` |
 | 文本润色 | `writespec/chapter-polish.md` |
 | 读者评价 | `writespec/reader-evaluation.md` |
+| 爽点兑现 | `writespec/payoff-spec.md` |
 | 风格与物理化 | `writespec/style-guide.md`, `writespec/chapter-polish.md` |
 | 世界观审计 | `writespec/world-audit.md` |
 | 归档 | `writespec/commands/archive-world.md`, `writespec/archiving-spec.md` |
@@ -105,6 +106,7 @@ Novel Assistant 是中文玄幻长篇小说的结构化创作 Harness。项目�
 - 修改命令协议时，同步更新 Manifest、README 和对应规范。
 - 修改卷路线图、章节执行契约或剧情对齐规则时，同步更新大纲模板、章节规范、世界审计、事务绑定校验和测试。
 - 修改正文呈现边界、历史正文迁移或正式正文润色规则时，同步更新章节规范、风格指南、正文校验器、迁移/润色命令、事务测试和 Manifest 门禁。
+- 修改爽点定义、密度档、兑现证据或已发布章节重创边界时，同步更新 `payoff-spec.md`、大纲模板、创作命令、读者评价、爽点校验器、事务证据和 Manifest 门禁。
 - 新增规范、模板或技能时，只更新 Manifest 路由和 AGENTS 简要入口；不创建重复的完整索引镜像。
 - 修改风格就绪结构时，同步更新 `create-style.md`、Harness 校验器和测试。
 - 修改 World Bible 初始化字段时，同步更新模板和 `world-audit.md`；修改运行期字段、动作或证据时，同步更新 `world-bible-contract.md`、`world-audit.md`、状态管理和 Manifest 门禁。

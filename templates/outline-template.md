@@ -11,7 +11,13 @@ story_force:
   active_goal: "[主角主动目标]"
   theme_lens: "[反复验证的问题或价值冲突]"
   conflict_engine: "[目标与阻力的持续对抗关系]"
-  reversal_promise: "[主线或卷级反转承诺]"
+reversal_promise: "[主线或卷级反转承诺]"
+payoff_policy:
+  schema: novel-harness/payoff-policy/v1
+  activation_chapter: 1
+  default_profile: standard
+  book_opening_high_through: 10
+  volume_opening_high_count: 3
 volumes:
   - id: ARC-001
     title: "[第一卷卷名]"
@@ -48,6 +54,40 @@ volumes:
         outcome: "[可验证结果变化]"
         arc_contribution: "[对卷目标的具体贡献]"
         closing_pull: "[服务主线的章末牵引]"
+        payoff_contract:
+          profile: high
+          payoffs:
+            - id: PAY-CH-0001-01
+              type: POWER
+              event_key: EVT-CH-0001-01
+              promise: "[本章第一项读者期待]"
+              action: "[主角主动行动]"
+              state_delta: "[局部有利变化]"
+              recognition: "[结果确认]"
+              cost: "[可信代价]"
+              persistence: next-chapter
+            - id: PAY-CH-0001-02
+              type: RESOURCE
+              event_key: EVT-CH-0001-02
+              promise: "[本章第二项读者期待]"
+              action: "[主角主动行动]"
+              state_delta: "[局部有利变化]"
+              recognition: "[结果确认]"
+              cost: "[可信代价]"
+              persistence: scene
+            - id: PAY-CH-0001-03
+              type: AUTONOMY
+              event_key: EVT-CH-0001-03
+              promise: "[本章第三项读者期待]"
+              action: "[主角主动行动]"
+              state_delta: "[局部有利变化]"
+              recognition: "[结果确认]"
+              cost: "[可信代价]"
+              persistence: scene
+          primary_payoff_id: PAY-CH-0001-01
+          climax: none
+          escalation: routine
+          escalation_from: "[首章建立回报基线]"
         milestone: MS-ARC-001-01
         golden_three_role: inciting
         status: planned
@@ -59,6 +99,40 @@ volumes:
         outcome: "[可验证结果变化]"
         arc_contribution: "[对卷目标的具体贡献]"
         closing_pull: "[服务主线的章末牵引]"
+        payoff_contract:
+          profile: high
+          payoffs:
+            - id: PAY-CH-0002-01
+              type: STATUS
+              event_key: EVT-CH-0002-01
+              promise: "[本章第一项读者期待]"
+              action: "[主角主动行动]"
+              state_delta: "[跨章有利变化]"
+              recognition: "[结果确认]"
+              cost: "[可信代价]"
+              persistence: next-chapter
+            - id: PAY-CH-0002-02
+              type: RELATIONSHIP
+              event_key: EVT-CH-0002-02
+              promise: "[本章第二项读者期待]"
+              action: "[主角主动行动]"
+              state_delta: "[局部有利变化]"
+              recognition: "[结果确认]"
+              cost: "[可信代价]"
+              persistence: scene
+            - id: PAY-CH-0002-03
+              type: COMPETENCE
+              event_key: EVT-CH-0002-03
+              promise: "[本章第三项读者期待]"
+              action: "[主角主动行动]"
+              state_delta: "[局部有利变化]"
+              recognition: "[结果确认]"
+              cost: "[可信代价]"
+              persistence: scene
+          primary_payoff_id: PAY-CH-0002-01
+          climax: none
+          escalation: cross-chapter
+          escalation_from: "[相较前章扩大影响范围]"
         milestone: MS-ARC-001-02
         golden_three_role: feedback
         status: planned
@@ -70,6 +144,40 @@ volumes:
         outcome: "[可验证结果变化]"
         arc_contribution: "[对卷目标的具体贡献]"
         closing_pull: "[服务主线的章末牵引]"
+        payoff_contract:
+          profile: high
+          payoffs:
+            - id: PAY-CH-0003-01
+              type: REVERSAL
+              event_key: EVT-CH-0003-01
+              promise: "[本章第一项读者期待]"
+              action: "[主角主动行动]"
+              state_delta: "[短循环结果变化]"
+              recognition: "[结果确认]"
+              cost: "[可信代价]"
+              persistence: short-cycle
+            - id: PAY-CH-0003-02
+              type: INFORMATION
+              event_key: EVT-CH-0003-02
+              promise: "[本章第二项读者期待]"
+              action: "[主角主动行动]"
+              state_delta: "[局部有利变化]"
+              recognition: "[结果确认]"
+              cost: "[可信代价]"
+              persistence: scene
+            - id: PAY-CH-0003-03
+              type: RESOURCE
+              event_key: EVT-CH-0003-03
+              promise: "[本章第三项读者期待]"
+              action: "[主角主动行动]"
+              state_delta: "[局部有利变化]"
+              recognition: "[结果确认]"
+              cost: "[可信代价]"
+              persistence: scene
+          primary_payoff_id: PAY-CH-0003-01
+          climax: small
+          escalation: routine
+          escalation_from: "[关闭前三章短冲突]"
         milestone: MS-ARC-001-03
         golden_three_role: goal-lock
         status: planned
@@ -95,7 +203,7 @@ volumes:
 
 # [小说名称] 创作大纲
 
-> YAML frontmatter 是卷路线图和章节执行契约的机器权威；下方内容是人类可读规划视图，生成或修订时必须与 frontmatter 同步。
+> YAML frontmatter 是卷路线图、章节执行契约和爽点规划的机器权威；下方内容是人类可读规划视图，生成或修订时必须与 frontmatter 同步。
 
 ## 1. 基本信息
 

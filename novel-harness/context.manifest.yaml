@@ -235,6 +235,12 @@ routes:
       purpose: 悬念钩子与伏笔的身份、生命周期、证据和归档语义
       invariants:
         - INV-FORESHADOW-001
+    - name: payoff-spec
+      path: ../writespec/payoff-spec.md
+      activation: pipeline
+      purpose: 爽点定义、密度档、规划契约、正文兑现证据和滚动升级门禁
+      invariants:
+        - INV-PAYOFF-001
     - name: state-management
       path: ../writespec/state-management.md
       activation: pipeline
@@ -310,6 +316,16 @@ pipelines:
         required: true
         allowed_statuses:
           - PASS
+      - name: payoff-plan
+        uses: payoff-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+        evidence:
+          - payoff_plan_evidence
+        required_evidence:
+          - payoff_plan_evidence
       - name: outline-contract
         uses: chapter-creation-spec
         handler: deterministic-gate
@@ -349,6 +365,16 @@ pipelines:
         allowed_statuses:
           - PASS
           - WARN
+      - name: payoff-plan
+        uses: payoff-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+        evidence:
+          - payoff_plan_evidence
+        required_evidence:
+          - payoff_plan_evidence
       - name: outline-contract
         uses: chapter-creation-spec
         handler: deterministic-gate
@@ -400,6 +426,16 @@ pipelines:
         allowed_statuses:
           - PASS
           - WARN
+      - name: payoff-plan
+        uses: payoff-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+        evidence:
+          - payoff_plan_evidence
+        required_evidence:
+          - payoff_plan_evidence
       - name: outline-contract
         uses: chapter-creation-spec
         handler: deterministic-gate
@@ -456,6 +492,16 @@ pipelines:
           - PASS
           - WARN
           - NOT_APPLICABLE
+      - name: payoff-plan
+        uses: payoff-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+        evidence:
+          - payoff_plan_evidence
+        required_evidence:
+          - payoff_plan_evidence
       - name: draft
         uses: chapter-creation-spec
         handler: agent
@@ -473,6 +519,20 @@ pipelines:
           - WARN
         evidence:
           - signing_first_impression_risk
+      - name: payoff-contract
+        uses: payoff-spec
+        handler: deterministic-gate
+        required: true
+      - name: payoff-fulfillment
+        uses: payoff-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+        evidence:
+          - payoff_fulfillment_evidence
+        required_evidence:
+          - payoff_fulfillment_evidence
       - name: reader-evaluation
         uses: reader-evaluation
         handler: semantic-gate
@@ -694,6 +754,16 @@ pipelines:
         required: true
         allowed_statuses:
           - PASS
+      - name: payoff-plan
+        uses: payoff-spec
+        handler: semantic-gate
+        required: true
+        allowed_statuses:
+          - PASS
+        evidence:
+          - payoff_plan_evidence
+        required_evidence:
+          - payoff_plan_evidence
       - name: outline-contract
         uses: chapter-creation-spec
         handler: deterministic-gate
@@ -946,6 +1016,9 @@ templates:
   - name: outline
     path: ../templates/outline-template.md
     used_by: init-world, rework-init-world, optimize-init-world
+  - name: payoff-evidence
+    path: ../templates/payoff-evidence-template.yaml
+    used_by: create-chapter
   - name: characters
     path: ../templates/characters-template.md
     used_by: init-world, rework-init-world, optimize-init-world
@@ -1055,6 +1128,10 @@ verification:
       description: 校验卷路线图、固定章节区间、卷目标、里程碑与章节执行契约
       command: python scripts/validate_outline.py <outline_file>
       invariant: INV-PLOT-001
+    - name: payoff-contract
+      description: 校验爽点证据的密度、类型轮换、事件去重、升级与滚动高潮
+      command: python scripts/validate_payoff.py <payoff_evidence_file>
+      invariant: INV-PAYOFF-001
   semantic_gates:
     - name: source-baseline
       spec: ../writespec/commands/polish-chapter.md
@@ -1084,6 +1161,18 @@ verification:
     - name: plan-approval
       spec: ../writespec/chapter-creation-spec.md
       evidence_required: true
+    - name: payoff-plan
+      spec: ../writespec/payoff-spec.md
+      evidence_required: true
+      required_evidence:
+        - payoff_plan_evidence
+      invariant: INV-PAYOFF-001
+    - name: payoff-fulfillment
+      spec: ../writespec/payoff-spec.md
+      evidence_required: true
+      required_evidence:
+        - payoff_fulfillment_evidence
+      invariant: INV-PAYOFF-001
     - name: rework-audit-baseline
       spec: ../writespec/originality-audit.md
       evidence_required: true

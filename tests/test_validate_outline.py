@@ -1,3 +1,5 @@
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -97,9 +99,148 @@ def valid_contract():
     }
 
 
+def payoff_plan(number, payoff_types, primary_type, climax):
+    payoffs = []
+    for index, payoff_type in enumerate(payoff_types, start=1):
+        payoffs.append(
+            {
+                "id": f"PAY-CH-{number:04d}-{index:02d}",
+                "type": payoff_type,
+                "event_key": f"EVT-CH-{number:04d}-{index:02d}",
+                "promise": f"第{number}章第{index}项读者期待",
+                "action": f"主角完成第{number}章第{index}项行动",
+                "state_delta": f"形成第{number}章第{index}项有利变化",
+                "recognition": f"环境确认第{number}章第{index}项结果",
+                "cost": f"承担第{number}章第{index}项代价",
+                "persistence": "next-chapter" if payoff_type == primary_type else "scene",
+            }
+        )
+    primary = next(item for item in payoffs if item["type"] == primary_type)
+    return {
+        "profile": "high",
+        "payoffs": payoffs,
+        "primary_payoff_id": primary["id"],
+        "climax": climax,
+        "escalation_from": "相较前章改变了收益类型或影响范围",
+        "escalation": "cross-chapter" if number % 2 == 0 else "routine",
+    }
+
+
 class OutlineContractTest(unittest.TestCase):
+    def test_direct_script_entrypoint_accepts_valid_outline(self):
+        repo_root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "outline.md"
+            path.write_text(
+                "---\n"
+                + yaml.safe_dump(
+                    valid_contract(), allow_unicode=True, sort_keys=False
+                )
+                + "---\n# 小说大纲\n",
+                encoding="utf-8",
+            )
+
+            result = subprocess.run(
+                [sys.executable, "scripts/validate_outline.py", str(path)],
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                check=False,
+            )
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
     def test_accepts_frozen_current_arc_and_roadmap_future_arc(self):
         self.assertEqual([], validate_outline_contract(valid_contract()))
+
+    def test_non_retroactive_outline_without_payoff_policy_remains_valid(self):
+        contract = valid_contract()
+
+        self.assertEqual([], validate_outline_contract(contract))
+
+    def test_activated_outline_requires_payoff_contracts(self):
+        contract = valid_contract()
+        contract["payoff_policy"] = {
+            "schema": "novel-harness/payoff-policy/v1",
+            "activation_chapter": 1,
+            "default_profile": "standard",
+            "book_opening_high_through": 10,
+            "volume_opening_high_count": 3,
+        }
+
+        errors = validate_outline_contract(contract)
+
+        self.assertTrue(any("payoff_contract is required" in error for error in errors))
+
+    def test_accepts_activated_outline_with_high_density_plans(self):
+        contract = valid_contract()
+        contract["payoff_policy"] = {
+            "schema": "novel-harness/payoff-policy/v1",
+            "activation_chapter": 1,
+            "default_profile": "standard",
+            "book_opening_high_through": 10,
+            "volume_opening_high_count": 3,
+        }
+        plans = (
+            payoff_plan(1, ("POWER", "RESOURCE", "AUTONOMY"), "POWER", "none"),
+            payoff_plan(2, ("STATUS", "RELATIONSHIP", "COMPETENCE"), "STATUS", "none"),
+            payoff_plan(3, ("REVERSAL", "INFORMATION", "RESOURCE"), "REVERSAL", "small"),
+        )
+        for chapter_contract, plan in zip(
+            contract["volumes"][0]["chapters"], plans
+        ):
+            chapter_contract["payoff_contract"] = plan
+
+        self.assertEqual([], validate_outline_contract(contract))
+
+    def test_activated_outline_rejects_underfilled_high_density_plan(self):
+        contract = valid_contract()
+        contract["payoff_policy"] = {
+            "schema": "novel-harness/payoff-policy/v1",
+            "activation_chapter": 1,
+            "default_profile": "standard",
+            "book_opening_high_through": 10,
+            "volume_opening_high_count": 3,
+        }
+        for number, chapter_contract in enumerate(
+            contract["volumes"][0]["chapters"], start=1
+        ):
+            plan = payoff_plan(
+                number,
+                ("POWER", "RESOURCE", "AUTONOMY"),
+                "POWER",
+                "small" if number == 3 else "none",
+            )
+            chapter_contract["payoff_contract"] = plan
+        contract["volumes"][0]["chapters"][0]["payoff_contract"]["payoffs"].pop()
+
+        errors = validate_outline_contract(contract)
+
+        self.assertTrue(any("at least 3" in error for error in errors), errors)
+
+    def test_activated_outline_rejects_adjacent_repeated_primary_type(self):
+        contract = valid_contract()
+        contract["payoff_policy"] = {
+            "schema": "novel-harness/payoff-policy/v1",
+            "activation_chapter": 1,
+            "default_profile": "standard",
+            "book_opening_high_through": 10,
+            "volume_opening_high_count": 3,
+        }
+        for number, chapter_contract in enumerate(
+            contract["volumes"][0]["chapters"], start=1
+        ):
+            chapter_contract["payoff_contract"] = payoff_plan(
+                number,
+                ("POWER", "RESOURCE", "AUTONOMY"),
+                "POWER",
+                "small" if number == 3 else "none",
+            )
+
+        errors = validate_outline_contract(contract)
+
+        self.assertTrue(any("adjacent primary payoff types" in error for error in errors))
 
     def test_rejects_gap_between_volume_ranges(self):
         contract = valid_contract()

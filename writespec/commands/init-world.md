@@ -12,7 +12,7 @@
 - **准备写入**: Agent 只写 `world/.staging/<transaction-id>/` 下的八类候选文件与事务证据。
 - **正式写入范围**: 仅由事务执行器创建 `world/` 八类活跃文件及必要的 `world/archive/` 目标。
 - **幂等性**: 已存在的 World Bible 不得被默认覆盖。
-- **成功标准**: 八类文件全部存在，字段符合模板，跨文件名称与 ID 一致；全书卷路线图和当前卷详细规划分别取得用户确认并满足 `INV-PLOT-001`。
+- **成功标准**: 八类文件全部存在，字段符合模板，跨文件名称与 ID 一致；全书卷路线图和当前卷详细规划分别取得用户确认并满足 `INV-PLOT-001` 与 `INV-PAYOFF-001`。
 
 ## 执行流程 (Protocol)
 
@@ -80,6 +80,8 @@
 
 `outline.md` 必须采用两层冻结：先生成全部卷的固定章节区间、卷目标、卷间因果和全书终局，取得用户确认；再生成当前卷的 3-5 个里程碑及覆盖整卷的章节执行契约，再次取得用户确认。两次确认作为 `plan-approval` 语义证据写入事务记录。后续卷可以保持 `roadmap`，但进入其第一章前必须通过 `修订卷规划 ARC-NNN` 补全并冻结整卷契约。
 
+全新初始化必须按 `payoff-spec.md` 启用 `payoff_policy`，为冻结章节安排密度档、主爽点类型轮换、三章小高潮和阶段大爽点，并生成 `payoff_plan_evidence`。爽点契约与 `hooks.md` 的钩子/伏笔分别登记，不得用章末悬念替代本章兑现。
+
 候选 World Bible 必须能从八类文件中追踪故事力基线:
 
 - `outline.md`: 记录主题透镜、主角主动目标、核心冲突、卷级反转种子、黄金三章牵引。
@@ -88,7 +90,7 @@
 - `geography.md` / `inventory.md` / `timeline.md`: 记录势力、资源、情报和时间压力如何持续制造冲突。
 - `hooks.md`: 登记主线、卷级和局部线索的层级、误导、真实指向与预计回收范围。
 
-对 staging 大纲运行 `python scripts/validate_outline.py <outline_file>`。缺少固定区间、可验收卷目标、黄金三章角色、章末牵引或完整章节契约时不得提交。
+先通过 `payoff-plan` 语义门禁，再对 staging 大纲运行 `python scripts/validate_outline.py <outline_file>`。缺少固定区间、可验收卷目标、黄金三章角色、章末牵引、爽点升级安排或完整章节契约时不得提交。
 
 ### 阶段 4. 反馈
 只有事务执行器提交并完成后置校验后，输出: `[系统] World Bible 初始化完成。当前主角：[姓名]，境界：[初始境界]。`
@@ -98,6 +100,7 @@
 ## 相关规范
 - 状态管理: [state-management.md](../state-management.md)
 - 叙事线索: [foreshadowing-spec.md](../foreshadowing-spec.md)
+- 爽点兑现: [payoff-spec.md](../payoff-spec.md)
 - 初始化返工: [rework-init-world.md](rework-init-world.md)
 - 模板: [../templates/outline-template.md](../../templates/outline-template.md) 等
 - 后续必需步骤: 在首次执行 `创作第 N 章` 前，使写作风格满足 `INV-STYLE-001`；推荐按 [create-style.md](create-style.md) 执行 `创建写作风格`。

@@ -225,6 +225,8 @@ reader_evaluation:
 
 评分前必须先提炼本章的读者承诺，避免评价漂移为泛泛审稿：
 
+若事务已启用 `INV-PAYOFF-001`，下列字段必须引用 `payoff-evidence.yaml` 中相同的爽点 ID、承诺和状态变化；评价器不得自行把钩子、危机或旁观者反应改判为新爽点。
+
 - `core_reader_payoff`: 本章承诺兑现的核心爽点、压力反击、揭露、选择或获得。
 - `emotional_target`: 本章希望读者最终留下的主要情绪。
 - `information_release`: 本章释放、遮蔽或反转的关键信息。

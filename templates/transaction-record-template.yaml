@@ -14,6 +14,18 @@ plan_contract:
   arc_goal_id: GOAL-ARC-001
   chapter_id: CH-0001
   chapter_contract_hash: sha256:generated-by-executor
+payoff:
+  policy_activation_chapter: CH-0001
+  profile: high
+  plan_hash: sha256:generated-by-executor
+  evidence_path: world/.transactions/TX-CH-0001-R01/payoff-evidence.yaml
+  evidence_hash: sha256:generated-by-executor
+  gate_status: PENDING
+# 仅当同一 `创作第 N 章` 命中已发布目标时使用。
+published_revision:
+  source_hash: null
+  downstream_impact: null
+  approval_status: null
 # 历史呈现迁移子事务使用；普通事务省略。
 parent_transaction: null
 # 迁移父记录使用；普通事务省略。

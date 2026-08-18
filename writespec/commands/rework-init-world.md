@@ -42,6 +42,7 @@
    - ID 映射: 旧 ID、旧名称、新 ID、新名称、重建原因、影响文件。
 5. **用户确认**: 用户确认采用候选版后, 写入覆盖确认和 `rework-user-approval` 语义证据。
 6. **门禁**:
+   - 按 `payoff-spec.md` 重建候选大纲的爽点密度、类型轮换和滚动高潮安排，提交 `payoff_plan_evidence`；不得追溯修改已发布正文（本命令本身要求尚未发布第一章）。
    - 对 staging `outline.md` 运行 `python scripts/validate_outline.py <outline_file>`。
    - 按 `originality-audit.md` 对候选版执行长篇展开性审计和故事力基线审计。
 7. **提交**: 事务执行器按八类 World Bible 目标基线和变更集替换正式文件。废弃候选版只保留在事务记录或 staging, 不进入 `world/archive/`。
@@ -76,3 +77,4 @@
 - [../state-management.md](../state-management.md)
 - [../world-bible-contract.md](../world-bible-contract.md)
 - [../chapter-creation-spec.md](../chapter-creation-spec.md)
+- [../payoff-spec.md](../payoff-spec.md)

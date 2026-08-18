@@ -4,6 +4,23 @@ import re
 
 import yaml
 
+try:
+    from scripts.payoff_contract import (
+        expected_payoff_profile,
+        payoff_plan_window_item,
+        validate_payoff_plan,
+        validate_payoff_plan_window,
+        validate_payoff_policy,
+    )
+except ModuleNotFoundError:  # Direct execution through scripts/validate_outline.py.
+    from payoff_contract import (
+        expected_payoff_profile,
+        payoff_plan_window_item,
+        validate_payoff_plan,
+        validate_payoff_plan_window,
+        validate_payoff_policy,
+    )
+
 
 OUTLINE_SCHEMA = "novel-harness/outline/v2"
 ARC_ID = re.compile(r"ARC-\d{3}")
@@ -94,6 +111,13 @@ def validate_outline_contract(contract: dict) -> list[str]:
         errors.append("outline status must be frozen")
     if not _non_empty(contract.get("novel_goal")):
         errors.append("novel_goal is required")
+
+    payoff_policy = contract.get("payoff_policy")
+    if payoff_policy is not None:
+        errors.extend(validate_payoff_policy(payoff_policy))
+        policy_valid = not validate_payoff_policy(payoff_policy)
+    else:
+        policy_valid = False
 
     volumes = contract.get("volumes")
     if not isinstance(volumes, list) or not volumes:
@@ -195,6 +219,7 @@ def validate_outline_contract(contract: dict) -> list[str]:
 
         expected_numbers = list(range(start, end + 1))
         actual_numbers = []
+        payoff_window = []
         for chapter_index, chapter in enumerate(chapters):
             chapter_label = f"{label}.chapters[{chapter_index}]"
             if not isinstance(chapter, dict):
@@ -205,9 +230,11 @@ def validate_outline_contract(contract: dict) -> list[str]:
                     errors.append(f"{chapter_label}.{field} is required")
             chapter_id = chapter.get("id")
             if isinstance(chapter_id, str) and CHAPTER_ID.fullmatch(chapter_id):
-                actual_numbers.append(int(chapter_id.removeprefix("CH-")))
+                chapter_number = int(chapter_id.removeprefix("CH-"))
+                actual_numbers.append(chapter_number)
             else:
                 errors.append(f"{chapter_label}.id must match CH-NNNN")
+                chapter_number = None
             if chapter.get("status") not in CHAPTER_STATUSES:
                 errors.append(f"{chapter_label}.status is invalid")
             if chapter.get("milestone") not in milestone_ids:
@@ -219,6 +246,25 @@ def validate_outline_contract(contract: dict) -> list[str]:
                     errors.append(
                         f"{chapter_label}.golden_three_role must be {expected_role}"
                     )
+            if (
+                policy_valid
+                and chapter_number is not None
+                and chapter_number >= payoff_policy["activation_chapter"]
+            ):
+                plan = chapter.get("payoff_contract")
+                if plan is None:
+                    errors.append(f"{chapter_label}.payoff_contract is required")
+                    continue
+                profile = expected_payoff_profile(
+                    payoff_policy, chapter_number, start
+                )
+                for error in validate_payoff_plan(plan, chapter_id, profile):
+                    errors.append(f"{chapter_label}.payoff_contract: {error}")
+                window_item = payoff_plan_window_item(plan, chapter_id)
+                if window_item is not None:
+                    payoff_window.append(window_item)
+                    for error in validate_payoff_plan_window(payoff_window, profile):
+                        errors.append(f"{chapter_label}.payoff_window: {error}")
         if actual_numbers != expected_numbers:
             errors.append(f"{label} must define every chapter in its fixed range")
 

@@ -724,6 +724,94 @@ class HarnessValidationTest(unittest.TestCase):
         for token in expected:
             self.assertIn(token, text)
 
+    def test_repository_create_pipeline_routes_payoff_invariant(self):
+        repo_root = Path(__file__).resolve().parents[1]
+        manifest = yaml.safe_load(
+            (repo_root / "novel-harness" / "context.manifest.yaml").read_text(
+                encoding="utf-8"
+            )
+        )
+        payoff_specs = [
+            spec
+            for spec in manifest["routes"]["specs"]
+            if "INV-PAYOFF-001" in (spec.get("invariants") or [])
+        ]
+        self.assertEqual(1, len(payoff_specs))
+        self.assertEqual("payoff-spec", payoff_specs[0]["name"])
+
+        stages = manifest["pipelines"]["create-chapter"]["stages"]
+        by_name = {stage["name"]: stage for stage in stages}
+        self.assertEqual("payoff-spec", by_name["payoff-plan"]["uses"])
+        self.assertEqual("payoff-spec", by_name["payoff-fulfillment"]["uses"])
+        self.assertIn(
+            "payoff_fulfillment_evidence",
+            by_name["payoff-fulfillment"]["required_evidence"],
+        )
+
+    def test_reports_payoff_owner_without_required_create_chapter_gates(self):
+        payoff_spec = self.root / "writespec" / "payoff.md"
+        payoff_spec.write_text(
+            "# Payoff\n\n## INV-PAYOFF-001 Payoff fulfillment\n",
+            encoding="utf-8",
+        )
+        manifest = yaml.safe_load(self.manifest.read_text(encoding="utf-8"))
+        manifest["schema"] = "novel-harness/context/v2"
+        manifest["routes"]["commands"][0].update(
+            {
+                "activation": "command",
+                "matches": [{"literal": "创作章节"}],
+                "pipeline": "create-chapter",
+            }
+        )
+        for spec in manifest["routes"]["specs"]:
+            spec["activation"] = (
+                "profile" if spec["name"] == "style-guide" else "pipeline"
+            )
+        manifest["routes"]["specs"].append(
+            {
+                "name": "payoff-spec",
+                "path": "../writespec/payoff.md",
+                "activation": "pipeline",
+                "invariants": ["INV-PAYOFF-001"],
+            }
+        )
+        manifest["pipelines"] = {
+            "create-chapter": {
+                "stages": [
+                    {
+                        "name": "draft",
+                        "uses": "chapter",
+                        "handler": "agent",
+                        "required": True,
+                    }
+                ]
+            }
+        }
+        manifest["delegation"] = {
+            "output_contract": {
+                "must_include": [
+                    "task",
+                    "status",
+                    "artifact_path",
+                    "artifact_hash",
+                    "evidence_refs",
+                    "blocking_risks",
+                    "summary",
+                ]
+            },
+            "workers": [],
+        }
+        self.manifest.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        errors = validate_repository(self.root)
+
+        self.assertTrue(any("payoff-plan" in error for error in errors))
+        self.assertTrue(any("payoff-contract" in error for error in errors))
+        self.assertTrue(any("payoff-fulfillment" in error for error in errors))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,48 @@
+# 事务执行器复制到对应事务目录后替换示例值；不得直接回写本模板。
+schema: novel-harness/payoff-evidence/v1
+chapter_id: CH-0001
+profile: high
+mode: new
+activation:
+  non_retroactive: true
+  starts_at: CH-0001
+payoffs:
+  - id: PAY-CH-0001-01
+    type: COMPETENCE
+    event_key: EVT-PAY-CH-0001-01
+    promise: 主角能否识别眼前规则中的破局点
+    action: 主角主动验证判断并抢先落子
+    state_delta: 主角取得当前场景的行动先手
+    recognition: 对手被迫改变原定行动
+    cost: 主角暴露一项判断能力并承担被针对风险
+    persistence: scene
+    evidence_refs:
+      - scene-1-action-and-response
+  - id: PAY-CH-0001-02
+    type: RESOURCE
+    event_key: EVT-PAY-CH-0001-02
+    promise: 主角能否从冲突中获得继续行动的资源
+    action: 主角利用先手争取受规则保护的资源
+    state_delta: 主角获得一次可用于后续选择的资源
+    recognition: 制度记录或关键人物确认资源归属
+    cost: 主角承担资源附带的期限或使用限制
+    persistence: next-chapter
+    evidence_refs:
+      - scene-2-resource-confirmation
+  - id: PAY-CH-0001-03
+    type: AUTONOMY
+    event_key: EVT-PAY-CH-0001-03
+    promise: 主角能否摆脱被动接受安排的处境
+    action: 主角以已获得的先手和资源作出拒绝
+    state_delta: 主角取得下一章仍有效的选择权
+    recognition: 对手或制度承认主角可以自行选择
+    cost: 主角放弃暂时安稳并招致更高层注意
+    persistence: next-chapter
+    evidence_refs:
+      - scene-3-primary-choice
+primary_payoff_id: PAY-CH-0001-03
+rolling_window:
+  - chapter_id: CH-0001
+    primary_type: AUTONOMY
+    climax: none
+    escalation: routine
