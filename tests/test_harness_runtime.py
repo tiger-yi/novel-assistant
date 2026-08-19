@@ -280,6 +280,24 @@ class HarnessRepositoryRoutesTest(unittest.TestCase):
             names.index("style-application"),
         )
 
+    def test_create_pipeline_requires_candidate_thread_rationale(self):
+        stages = self.manifest.data["pipelines"]["create-chapter"]["stages"]
+        gate = next(stage for stage in stages if stage.get("name") == "thread-integrity")
+
+        self.assertEqual("foreshadowing-spec", gate.get("uses"))
+        self.assertEqual("semantic-gate", gate.get("handler"))
+        self.assertTrue(gate.get("required"))
+        self.assertEqual(["PASS"], gate.get("allowed_statuses"))
+        self.assertEqual(
+            [
+                "narrative_thread_handling_table",
+                "active_thread_due_audit",
+                "candidate_thread_rationale",
+                "foreshadowing_change_set_evidence",
+            ],
+            gate.get("required_evidence"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -588,9 +588,17 @@ pipelines:
         uses: foreshadowing-spec
         handler: semantic-gate
         required: true
+        allowed_statuses:
+          - PASS
         evidence:
           - narrative_thread_handling_table
           - active_thread_due_audit
+          - candidate_thread_rationale
+          - foreshadowing_change_set_evidence
+        required_evidence:
+          - narrative_thread_handling_table
+          - active_thread_due_audit
+          - candidate_thread_rationale
           - foreshadowing_change_set_evidence
       - name: periodic-trigger-classification
         uses: originality-audit
