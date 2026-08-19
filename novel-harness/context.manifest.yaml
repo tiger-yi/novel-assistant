@@ -543,6 +543,10 @@ pipelines:
           - PASS_WITH_TARGET_MISS
         delegable: true
         worker: reader-gate-worker
+      - name: reader-evaluation-contract
+        uses: reader-evaluation
+        handler: deterministic-gate
+        required: true
       - name: style-application
         uses: style-guide
         handler: semantic-gate
@@ -1132,6 +1136,9 @@ verification:
       description: 校验爽点证据的密度、类型轮换、事件去重、升级与滚动高潮
       command: python scripts/validate_payoff.py <payoff_evidence_file>
       invariant: INV-PAYOFF-001
+    - name: reader-evaluation-contract
+      description: 校验读者评价高分反证、比较依据和改进方向
+      command: python scripts/validate_reader_evaluation.py <reader_evaluation_file>
   semantic_gates:
     - name: source-baseline
       spec: ../writespec/commands/polish-chapter.md

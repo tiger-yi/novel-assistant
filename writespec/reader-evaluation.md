@@ -1,6 +1,6 @@
 # 读者评价门禁
 
-`reader-evaluation` 是 `创作第 N 章` 的 staging 正文质量门禁。`.idea/snake.md` 可作为毒蛇文本读者的草案输入，但本文件才是正式规范来源。
+`reader-evaluation` 是 `创作第 N 章` 的 staging 正文质量门禁。本文件是读者评价的唯一正式规范来源。
 
 本门禁只评价并驱动局部受限重润色，不获得改剧情、改世界状态或发布正文的权限。
 
@@ -17,7 +17,7 @@
 章节创作流程中，本门禁位于 `polish` 之后、`chapter-format` 之前：
 
 ```text
-draft -> polish -> signing-first-impression-risk -> reader-evaluation -> chapter-format -> narrative/world/plot/thread gates -> commit
+draft -> polish -> signing-first-impression-risk -> reader-evaluation -> reader-evaluation-contract -> chapter-format -> narrative/world/plot/thread gates -> commit
 ```
 
 若读者评价触发自动重润色，重润色后的正文必须重新进入后续字数、格式、叙事、世界观、剧情和线索门禁。旧门禁结果不得覆盖新正文。
@@ -30,11 +30,11 @@ draft -> polish -> signing-first-impression-risk -> reader-evaluation -> chapter
 | :--- | :--- | :--- |
 | 目标类型读者 | 40% | 翻页欲、爽点兑现、主角能动性、情绪回报、结尾钩子 |
 | 世界观沉浸读者 | 30% | 设定后果、战力可信、资源/伤势/信息差、环境专用性、伏笔承接 |
-| 毒蛇文本读者 | 30% | 叙事引擎、人物血肉、语言咬合力、结构骨架、情感重量、独特声音 |
+| 毒舌文本读者 | 30% | 叙事引擎、人物血肉、语言咬合力、结构骨架、情感重量、独特声音 |
 
 每个画像内部先按维度权重得到画像分。若单个维度触发结构性或世界状态阻断，不得用其他高分抵消。
 
-## 毒蛇校准
+## 毒舌校准
 
 读者评价默认从 7.0 起评，而不是从 8.5 起评。评分者必须先找扣分点，再确认亮点是否足以抬分。
 
@@ -51,6 +51,11 @@ draft -> polish -> signing-first-impression-risk -> reader-evaluation -> chapter
 - 高分理由只复述剧情事实，没有说明为什么高于普通合格章。
 - 世界观、战力或伏笔分数高于 8.5，却没有引用对应 World Bible 或前文承接证据。
 
+确定性校验规则：
+
+- 任一维度 `> 8.0` 时，`negative_evidence_refs` 必须非空，且 `improvement_hint` 必须指出具体改进方向；不得写“保持现状”或“无需改动”。
+- 任一维度 `>= 8.5` 时，必须提供至少两条不同的 `negative_evidence_refs`，并提供 `comparative_evidence_refs`，说明其为何高于普通强章。
+
 高分上限规则：
 
 - 没有负面短引或明确弱点定位时，聚合分不得高于 `7.9`。
@@ -59,7 +64,7 @@ draft -> polish -> signing-first-impression-risk -> reader-evaluation -> chapter
 - 任一维度只有亮点、没有扣分依据时，该维度分不得高于 `8.0`。
 - 若报告声称没有任何扣分项，本门禁状态必须为 `MANUAL_DECISION_REQUIRED`，要求重评。
 
-评价报告必须包含“毒蛇反证审查”小节，至少回答：
+评价报告必须包含“毒舌反证审查”小节，至少回答：
 
 1. 本章最该被扣分的三处在哪里。
 2. 哪些问题不能自动改，因为会触碰结构或世界状态。
@@ -94,9 +99,9 @@ draft -> polish -> signing-first-impression-risk -> reader-evaluation -> chapter
 
 世界观沉浸读者发现事实、战力、资源、伤势、时间线、信息差或线索生命周期问题时，必须优先标记 `WORLD_STATE_BLOCKED`，不得用文笔或爽点高分抵消。
 
-### 毒蛇文本读者
+### 毒舌文本读者
 
-毒蛇文本读者继承毒蛇评分的文本锋利度，但需服务长篇连载稳定性。
+毒舌文本读者以尖锐、证据驱动的文本批评审查叙事质量，但需服务长篇连载稳定性。
 
 | 维度 | 内部权重 | 9-10 | 7-8 | 5-6 | 3-4 | 1-2 |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -107,7 +112,7 @@ draft -> polish -> signing-first-impression-risk -> reader-evaluation -> chapter
 | 情感重量 | 15% | 情绪由动作、物件、身体反应和潜台词渗出 | 有触动点，少量直白抒写 | 情绪可见但表面化 | 情绪标签化，读者无感 | 情绪虚假或冷漠 |
 | 独特声音 | 15% | 视角、语气和节奏有本书指纹 | 有风格但偶尔滑入通用表达 | 风格模糊，可替代性强 | 模仿感或工业感明显 | 缺少可辨认气质 |
 
-毒蛇文本读者可以指出删冗、节奏、人物和语言问题，但不得要求改变已冻结情节结果。需要改变结果才能解决的问题，必须转入 `manual_decision_suggestions`。
+毒舌文本读者可以指出删冗、节奏、人物和语言问题，但不得要求改变已冻结情节结果。需要改变结果才能解决的问题，必须转入 `manual_decision_suggestions`。
 
 ## 通用扣分项
 
@@ -220,6 +225,9 @@ reader_evaluation:
 - `negative_evidence_refs`: 扣分或压分定位；没有则该维度最高 8.0。
 - `score_ceiling_reason`: 若分数 `>= 8.0`，说明为什么没有被压到 7.x。
 - `improvement_hint`: 至少一个可执行或不可执行的改进方向。
+- `comparative_evidence_refs`: 分数 `>= 8.5` 时，至少一条与普通强章的可定位比较依据。
+
+评价报告完成后，事务记录必须写入 `reader_evaluation.artifact_path` 和 `reader_evaluation.artifact_hash`，并运行 `python scripts/validate_reader_evaluation.py <reader_evaluation_file>`。该确定性校验失败时不得进入后续门禁或提交。
 
 ## 章节承诺与场景诊断
 
@@ -248,7 +256,7 @@ reader_evaluation:
 ## 分数与阻断
 
 - 总分为 10 分制，保留一位小数。
-- 聚合分 = 目标类型读者分数 x 0.40 + 世界观沉浸读者分数 x 0.30 + 毒蛇文本读者分数 x 0.30。
+- 聚合分 = 目标类型读者分数 x 0.40 + 世界观沉浸读者分数 x 0.30 + 毒舌文本读者分数 x 0.30。
 - 聚合分 `< 7.0`: 阻断，最多 2 轮局部受限重润色和复评。
 - 聚合分 `7.0-7.9`: 自动局部受限重润色 1 次；复评后只要仍 `>= 7.0`，不阻断最终发布。
 - 聚合分 `>= 8.0` 且没有自动建议、流失点或未修目标缺口：`PASS`，直接进入后续门禁。

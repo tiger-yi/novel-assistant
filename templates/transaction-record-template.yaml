@@ -21,6 +21,9 @@ payoff:
   evidence_path: world/.transactions/TX-CH-0001-R01/payoff-evidence.yaml
   evidence_hash: sha256:generated-by-executor
   gate_status: PENDING
+reader_evaluation:
+  artifact_path: world/.transactions/TX-CH-NNNN-RNN/reader-evaluation-R1.md
+  artifact_hash: sha256:generated-by-evaluator
 # 仅当同一 `创作第 N 章` 命中已发布目标时使用。
 published_revision:
   source_hash: null

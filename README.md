@@ -117,7 +117,7 @@ AGENTS 只提供人工入口和跨项目原则；Manifest 管理机器路由、�
 | 原创性审计 | [writespec/originality-audit.md](writespec/originality-audit.md) |
 | 润色命令 | [writespec/commands/polish-chapter.md](writespec/commands/polish-chapter.md) |
 | 章节流程 | [writespec/chapter-creation-spec.md](writespec/chapter-creation-spec.md) |
-| 读者评价 | [writespec/reader-evaluation.md](writespec/reader-evaluation.md) |
+| 读者评价（含高分证据校验） | [writespec/reader-evaluation.md](writespec/reader-evaluation.md) |
 | 卷规划修订 | [writespec/commands/revise-arc.md](writespec/commands/revise-arc.md) |
 | 叙事线索 | [writespec/foreshadowing-spec.md](writespec/foreshadowing-spec.md) |
 | 状态事务 | [writespec/state-management.md](writespec/state-management.md) |

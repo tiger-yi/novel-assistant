@@ -1125,6 +1125,102 @@ class TransactionCommitTest(unittest.TestCase):
         with self.assertRaisesRegex(TransactionError, "plan_contract.payoff"):
             commit_transaction(self.root, self.manifest_path, transaction_path)
 
+    def test_executor_resolves_reader_evaluation_report_for_deterministic_gate(self):
+        transaction_path = self.write_prepared_transaction()
+        transaction = load_transaction(transaction_path)
+        transaction["reader_evaluation"] = {
+            "artifact_path": (
+                "world/.transactions/TX-CMD-UPDATE-WORLD-0001-R01/"
+                "reader-evaluation-R1.md"
+            ),
+            "artifact_hash": "sha256:" + "a" * 64,
+        }
+        transaction_path.write_text(
+            yaml.safe_dump(transaction, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+        self.stage_file(
+            "world/.transactions/TX-CMD-UPDATE-WORLD-0001-R01/reader-evaluation-R1.md",
+            "reader evaluation evidence\n",
+        )
+        (self.root / "check_reader_evaluation.py").write_text(
+            "from pathlib import Path\n"
+            "import sys\n"
+            "path = Path(sys.argv[1])\n"
+            "raise SystemExit(0 if path.is_file() else 9)\n",
+            encoding="utf-8",
+        )
+        manifest = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))
+        manifest["pipelines"]["update-world"]["stages"].insert(
+            1,
+            {
+                "name": "reader-evaluation-contract",
+                "uses": "update-world",
+                "handler": "deterministic-gate",
+                "required": True,
+            },
+        )
+        manifest["verification"] = {
+            "commands": [
+                {
+                    "name": "reader-evaluation-contract",
+                    "command": (
+                        "python check_reader_evaluation.py "
+                        "<reader_evaluation_file>"
+                    ),
+                }
+            ]
+        }
+        self.manifest_path.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        result = commit_transaction(self.root, self.manifest_path, transaction_path)
+
+        gate = next(
+            item
+            for item in result["gates"]
+            if item["gate"] == "reader-evaluation-contract"
+        )
+        self.assertEqual("PASS", gate["status"])
+
+    def test_executor_rejects_reader_evaluation_report_without_hash(self):
+        transaction_path = self.write_prepared_transaction()
+        transaction = load_transaction(transaction_path)
+        transaction["reader_evaluation"] = {
+            "artifact_path": "world/.transactions/report.md"
+        }
+        transaction_path.write_text(
+            yaml.safe_dump(transaction, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+        manifest = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))
+        manifest["pipelines"]["update-world"]["stages"].insert(
+            1,
+            {
+                "name": "reader-evaluation-contract",
+                "uses": "update-world",
+                "handler": "deterministic-gate",
+                "required": True,
+            },
+        )
+        manifest["verification"] = {
+            "commands": [
+                {
+                    "name": "reader-evaluation-contract",
+                    "command": "python check_reader.py <reader_evaluation_file>",
+                }
+            ]
+        }
+        self.manifest_path.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(TransactionError, "artifact_hash"):
+            commit_transaction(self.root, self.manifest_path, transaction_path)
+
     def test_required_archive_stage_rejects_unresolved_archive_state(self):
         transaction_path = self.write_prepared_transaction(
             source_command="归档世界",

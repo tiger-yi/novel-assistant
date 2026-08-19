@@ -33,7 +33,7 @@
 7. 将初稿写入 `chapters/.staging/TX-CH-NNNN-RNN/CH-NNNN-标题.txt`，并按爽点契约把行动、代价、状态变化和确认落到可定位场景。
 8. 按 `chapter-polish.md` 执行一次纯文本润色。
 9. 按 `chapter-polish.md` 执行 `signing-first-impression-risk` 语义门禁，审查前 500-1000 字、主要场景入口和章末牵引。`WARN` 可在授权边界内自动修复并进入后续门禁；`FAIL` 必须按 L3 分层和四档自动化阻断分级进入自动修复、自动路由提交、候选复核或人工确认。
-10. 按 `reader-evaluation.md` 执行多读者画像评价；低于阻断线或单画像硬下限时，先依据可自动执行建议进行局部受限重润色并复评，结构性或世界状态建议按四档自动化阻断分级路由。
+10. 按 `reader-evaluation.md` 执行多读者画像评价，记录报告路径/hash 后运行 `reader-evaluation-contract` 确定性校验；低于阻断线或单画像硬下限时，先依据可自动执行建议进行局部受限重润色并复评，结构性或世界状态建议按四档自动化阻断分级路由。校验失败不得进入后续门禁。
 11. 对读者评价后的 staging 正文执行 `style-application` 语义门禁，产出至少 5 条可定位的 `style-application-evidence`，证明最终候选正文已经应用当前 `writespec/style-guide.md`。
 12. 运行字数检查；低于 2300 字时只依据既有细纲补全内容，高于 2800 字时只做不改变事实的压缩，再执行一次纯文本润色，禁止新增设定或注水。
 13. 对最终 staging 版本生成 `payoff-evidence.yaml`，运行 `python scripts/validate_payoff.py <payoff-evidence.yaml>`，再执行 `payoff-fulfillment` 语义门禁；随后运行字数、格式、标题唯一性、六维世界观、剧情对齐、留存结构和逻辑闭环门禁。自动修复最多 3 轮，仍失败则停止。
@@ -55,7 +55,7 @@
 - 字数: `python scripts/check_count.py <chapter_file> --target 2300 --max 2800 --segments`
 - 格式: `python scripts/validate_chapter.py <chapter_file> --target 2300 --max 2800`，必须满足 `INV-CHAPTER-001`。
 - 签约首感风险: 按 `chapter-polish.md` 给出 `signing_first_impression_risk` 证据，覆盖开篇、主要场景入口和章末牵引；接受 `PASS` 或 `WARN` 继续。`FAIL` 时不得发布当前失败正文，`L3-SAFE` 可自动修复，`L3-ROUTE-AUTO` 默认进入 `AUTO_ROUTE_COMMIT` 生成并验证单章候选后由事务执行器提交；若影响卷目标、后续契约、World Bible 核心事实或已发布事实，则降级为 `AUTO_ROUTE_REVIEW` 或 `HUMAN_REQUIRED`。
-- 读者评价: 按 `reader-evaluation.md` 给出三读者画像评分、聚合分、短引证据、建议拆分、artifact 路径/hash 和最终状态；只接受 `PASS`、`PASS_WITH_AUTO_FIX` 或 `PASS_WITH_TARGET_MISS`。
+- 读者评价: 按 `reader-evaluation.md` 给出三读者画像评分、聚合分、短引证据、建议拆分、artifact 路径/hash 和最终状态；随后运行 `python scripts/validate_reader_evaluation.py <reader_evaluation_file>`。只接受 `PASS`、`PASS_WITH_AUTO_FIX` 或 `PASS_WITH_TARGET_MISS`。
 - 爽点兑现: 按 `payoff-spec.md` 提交 `payoff_fulfillment_evidence`，确定性校验结构、密度档、类型轮换和滚动窗口，语义门禁核对正文证据；只接受 `PASS`。需要新增行动或状态变化时必须退出润色并按自动化阻断分级路由。
 - 风格应用: 按 `style-guide.md` 给出至少 5 条可定位证据，覆盖核心调性、受限视角/认知偏差、人物声线、节奏或爽点结构、题材质感/黑名单规避；优先引用正文行号，行号不稳定时使用场景和段落摘要。只接受 `PASS`。失败时只允许文本润色或局部呈现重写，不得改变剧情事实、人物决策、胜负、伤势、资源、伏笔状态或 World Bible。
 - 叙事完整性: 按 `chapter-creation-spec.md` 扫描全部在场台词与非在场引述，提交 `key: reported_speech_audit` 的证据，记录扫描范围、命中位置、表达策略或合法保留理由及未解决项；无命中也必须提交，且只接受 `PASS`。

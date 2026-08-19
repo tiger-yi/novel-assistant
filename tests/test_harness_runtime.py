@@ -261,6 +261,25 @@ class HarnessRepositoryRoutesTest(unittest.TestCase):
                     names.index("chapter-format"),
                 )
 
+    def test_create_pipeline_validates_reader_evaluation_evidence_before_style_gate(self):
+        stages = self.manifest.data["pipelines"]["create-chapter"]["stages"]
+        by_name = {stage.get("name"): stage for stage in stages}
+        names = [stage.get("name") for stage in stages]
+        gate = by_name.get("reader-evaluation-contract")
+
+        self.assertIsNotNone(gate)
+        self.assertEqual("reader-evaluation", gate.get("uses"))
+        self.assertEqual("deterministic-gate", gate.get("handler"))
+        self.assertTrue(gate.get("required"))
+        self.assertLess(
+            names.index("reader-evaluation"),
+            names.index("reader-evaluation-contract"),
+        )
+        self.assertLess(
+            names.index("reader-evaluation-contract"),
+            names.index("style-application"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

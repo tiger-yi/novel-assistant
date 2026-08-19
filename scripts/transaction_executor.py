@@ -728,6 +728,30 @@ def _payoff_evidence_file(repo_root: Path, transaction: dict) -> Path:
     return resolved
 
 
+def _reader_evaluation_file(repo_root: Path, transaction: dict) -> Path:
+    evaluation = transaction.get("reader_evaluation")
+    if not isinstance(evaluation, dict):
+        raise TransactionError(
+            "reader-evaluation-contract gate requires reader_evaluation in transaction record"
+        )
+    raw_path = evaluation.get("artifact_path")
+    if not isinstance(raw_path, str) or not raw_path:
+        raise TransactionError(
+            "reader-evaluation-contract gate requires reader_evaluation.artifact_path"
+        )
+    artifact_hash = evaluation.get("artifact_hash")
+    if not isinstance(artifact_hash, str) or SHA256_VALUE.fullmatch(artifact_hash) is None:
+        raise TransactionError(
+            "reader-evaluation-contract gate requires a valid reader_evaluation.artifact_hash"
+        )
+    resolved = _repository_path(repo_root, raw_path)
+    if not resolved.is_file():
+        raise TransactionError(
+            f"reader evaluation report does not exist: {raw_path}"
+        )
+    return resolved
+
+
 def _execute_deterministic_gates(
     repo_root: Path,
     manifest: HarnessManifest,
@@ -760,6 +784,8 @@ def _execute_deterministic_gates(
                 argument = str(_staged_artifact(repo_root, prepared, "outline"))
             elif argument == "<payoff_evidence_file>":
                 argument = str(_payoff_evidence_file(repo_root, transaction))
+            elif argument == "<reader_evaluation_file>":
+                argument = str(_reader_evaluation_file(repo_root, transaction))
             resolved_arguments.append(argument)
         if resolved_arguments and resolved_arguments[0].lower() in {
             "python",
