@@ -1870,6 +1870,17 @@ class TransactionBeginTest(unittest.TestCase):
         with self.assertRaisesRegex(TransactionError, "plan contract became stale"):
             validate_plan_binding(self.root, transaction)
 
+    def test_plan_binding_allows_gate_metadata(self):
+        self.enable_plan_contract()
+        self.write_outline()
+        path = begin_transaction(self.root, self.manifest_path, "创作第 1 章")
+        transaction = load_transaction(path)
+        transaction["plan_contract"]["payoff"] = {
+            "evidence_path": "world/.transactions/TX-CH-0001-R01/payoff-evidence.yaml"
+        }
+
+        validate_plan_binding(self.root, transaction)
+
     def test_begin_creates_chapter_transaction_with_resolved_mode(self):
         path = begin_transaction(
             self.root, self.manifest_path, "创作第 1 章"

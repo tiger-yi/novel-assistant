@@ -221,7 +221,11 @@ def validate_plan_binding(repo_root: Path, transaction: dict) -> None:
         current = chapter_binding(outline_path, int(chapter))
     except OutlineContractError as exc:
         raise TransactionError(str(exc)) from exc
-    if current != recorded:
+    recorded_binding = {
+        field: recorded.get(field)
+        for field in current
+    }
+    if current != recorded_binding:
         raise TransactionError("plan contract became stale after transaction begin")
 
 
