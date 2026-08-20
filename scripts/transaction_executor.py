@@ -15,11 +15,14 @@ import yaml
 try:
     from scripts.harness_runtime import CommandResolutionError, HarnessManifest
     from scripts.outline_contract import OutlineContractError, chapter_binding
-    from scripts.validate_chapter import find_presentation_errors
+    from scripts.validate_chapter import (
+        find_presentation_errors,
+        find_quoted_lines,
+    )
 except ModuleNotFoundError:  # Direct execution through scripts/novel_harness.py.
     from harness_runtime import CommandResolutionError, HarnessManifest
     from outline_contract import OutlineContractError, chapter_binding
-    from validate_chapter import find_presentation_errors
+    from validate_chapter import find_presentation_errors, find_quoted_lines
 
 
 TRANSACTION_SCHEMA = "novel-harness/transaction/v1"
@@ -40,6 +43,16 @@ ARCHIVE_STATES = {
 }
 GATE_STATUSES = {"PASS", "WARN", "FAIL", "NOT_APPLICABLE"}
 GATE_KINDS = {"deterministic", "semantic"}
+SPEECH_AUDIT_KEY = "reported_speech_audit"
+SPEECH_AUDIT_VERDICTS = {
+    "legal_retention",
+    "event_summary",
+    "indirect_report",
+    "nominalization",
+    "quote_tag",
+    "variant_quote",
+    "impersonation",
+}
 SHA256_VALUE = re.compile(r"sha256:[0-9a-f]{64}")
 TRANSACTION_ID = re.compile(
     r"TX-(?:CH-\d{4}|CMD-[A-Z0-9-]+-\d{4})-R\d{2}"
@@ -602,7 +615,10 @@ def _preflight_changes(
 
 
 def _validate_pipeline_completion(
-    manifest: HarnessManifest, route: dict, transaction: dict
+    manifest: HarnessManifest,
+    route: dict,
+    transaction: dict,
+    expected_quoted_lines: list[dict] | None = None,
 ) -> None:
     pipeline_name = route.get("pipeline")
     if not pipeline_name:
@@ -651,10 +667,13 @@ def _validate_pipeline_completion(
                 raise TransactionError(f"required gate did not pass: {stage_name}")
             required_evidence = set(required_stage.get("required_evidence") or [])
             if handler == "semantic-gate" and required_evidence:
-                evidence_keys = {
-                    item.get("key")
+                evidence_items = [
+                    item
                     for item in (gate.get("evidence") or [])
                     if isinstance(item, dict) and item.get("key")
+                ]
+                evidence_keys = {
+                    item.get("key") for item in evidence_items
                 }
                 missing_evidence = sorted(required_evidence - evidence_keys)
                 if missing_evidence:
@@ -662,6 +681,60 @@ def _validate_pipeline_completion(
                         "required semantic evidence key is missing: "
                         f"{stage_name} ({', '.join(missing_evidence)})"
                     )
+                if SPEECH_AUDIT_KEY in required_evidence:
+                    audit_item = next(
+                        (
+                            item
+                            for item in evidence_items
+                            if item.get("key") == SPEECH_AUDIT_KEY
+                        ),
+                        None,
+                    )
+                    audited_lines = (audit_item or {}).get("audited_lines") or []
+                    if not isinstance(audited_lines, list):
+                        raise TransactionError(
+                            f"{stage_name} evidence {SPEECH_AUDIT_KEY} requires "
+                            "an audited_lines list"
+                        )
+                    for audit_entry in audited_lines:
+                        if not isinstance(audit_entry, dict):
+                            raise TransactionError(
+                                f"{stage_name} audited_lines entries must be mappings"
+                            )
+                        line_no = audit_entry.get("line")
+                        verdict = audit_entry.get("verdict")
+                        rationale = audit_entry.get("rationale")
+                        if not isinstance(line_no, int) or line_no < 1:
+                            raise TransactionError(
+                                f"{stage_name} audited_lines entry requires a "
+                                "positive integer line"
+                            )
+                        if verdict not in SPEECH_AUDIT_VERDICTS:
+                            raise TransactionError(
+                                f"{stage_name} audited line {line_no} has invalid "
+                                f"verdict: {verdict}"
+                            )
+                        if not isinstance(rationale, str) or not rationale.strip():
+                            raise TransactionError(
+                                f"{stage_name} audited line {line_no} requires "
+                                "a non-empty rationale"
+                            )
+                    audited_line_numbers = {
+                        entry.get("line")
+                        for entry in audited_lines
+                        if isinstance(entry, dict)
+                    }
+                    expected_line_numbers = {
+                        entry.get("line")
+                        for entry in (expected_quoted_lines or [])
+                        if isinstance(entry, dict) and entry.get("line")
+                    }
+                    uncovered = sorted(expected_line_numbers - audited_line_numbers)
+                    if uncovered:
+                        raise TransactionError(
+                            f"{stage_name} speech transcript is missing lines: "
+                            f"{', '.join(str(line) for line in uncovered)}"
+                        )
         else:
             stage = stages.get(stage_name)
             if stage is None:
@@ -711,6 +784,22 @@ def _staged_artifact(
             f"deterministic gate requires exactly one staged {artifact} file"
         )
     return candidates[0]
+
+
+def _expected_quoted_lines(
+    repo_root: Path, prepared: list[dict]
+) -> list[dict] | None:
+    """Enumerate all quoted lines in the staged chapter for speech-audit gates.
+    Returns None when no chapter artifact is present (read-only pipelines)."""
+    try:
+        chapter_path = _staged_artifact(repo_root, prepared, "chapter")
+    except TransactionError:
+        return None
+    try:
+        text = chapter_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise TransactionError(f"cannot read staged chapter: {exc}") from exc
+    return find_quoted_lines(text)
 
 
 def _payoff_evidence_file(repo_root: Path, transaction: dict) -> Path:
@@ -1590,7 +1679,12 @@ def commit_transaction(
             reason=no_change_reason,
         )
     _atomic_write_yaml(transaction_path, transaction)
-    _validate_pipeline_completion(manifest, match.route, transaction)
+    _validate_pipeline_completion(
+        manifest,
+        match.route,
+        transaction,
+        expected_quoted_lines=_expected_quoted_lines(repo_root, prepared),
+    )
     if match.name == "init-world":
         events = transaction.setdefault("events", [])
         if "outline_initialized" not in events:

@@ -258,11 +258,12 @@ class TransactionCommitTest(unittest.TestCase):
         command="update-world",
         mode=None,
         arguments=None,
+        staged_text="新大纲\n",
     ):
         target_path = self.root / target
         if baseline_hash is None:
             baseline_hash = sha256_file(target_path)
-        staged_path = self.stage_file(staged, "新大纲\n")
+        staged_path = self.stage_file(staged, staged_text)
         key = "CH-0001:outline"
         data = {
             "schema": "novel-harness/transaction/v1",
@@ -916,6 +917,124 @@ class TransactionCommitTest(unittest.TestCase):
             self.root, self.manifest_path, transaction_path
         )
 
+        self.assertEqual("COMPLETE", committed["state"])
+
+    def test_rejects_speech_audit_with_missing_quoted_line(self):
+        self.write_manifest(writes=["../chapters/"])
+        manifest = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))
+        manifest["pipelines"]["update-world"]["stages"].insert(
+            1,
+            {
+                "name": "narrative-integrity",
+                "uses": "update-world",
+                "handler": "semantic-gate",
+                "required": True,
+                "allowed_statuses": ["PASS"],
+                "required_evidence": ["reported_speech_audit"],
+            },
+        )
+        self.manifest_path.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+        transaction_path = self.write_prepared_transaction(
+            target="chapters/CH-0001.txt",
+            staged=(
+                "world/.staging/TX-CMD-UPDATE-WORLD-0001-R01/"
+                "chapters/CH-0001.txt"
+            ),
+            baseline_hash="absent",
+            staged_text='石横道："扛得住。"\n那"妖丹"两字没人敢提。',
+        )
+        transaction = load_transaction(transaction_path)
+        transaction["gates"] = [
+            {
+                "gate": "narrative-integrity",
+                "kind": "semantic",
+                "required": True,
+                "status": "PASS",
+                "summary": "叙事完整性通过",
+                "evidence": [
+                    {
+                        "key": "reported_speech_audit",
+                        "claim": "只审计了第一行",
+                        "source": "chapters/.staging/CH-0001.txt",
+                        "audited_lines": [
+                            {
+                                "line": 1,
+                                "verdict": "legal_retention",
+                                "rationale": "石横在场景内真实发声",
+                            }
+                        ],
+                    }
+                ],
+            }
+        ]
+        transaction_path.write_text(
+            yaml.safe_dump(transaction, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(TransactionError, "missing lines"):
+            commit_transaction(self.root, self.manifest_path, transaction_path)
+
+    def test_accepts_speech_audit_covering_all_quoted_lines(self):
+        self.write_manifest(writes=["../chapters/"])
+        manifest = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))
+        manifest["pipelines"]["update-world"]["stages"].insert(
+            1,
+            {
+                "name": "narrative-integrity",
+                "uses": "update-world",
+                "handler": "semantic-gate",
+                "required": True,
+                "allowed_statuses": ["PASS"],
+                "required_evidence": ["reported_speech_audit"],
+            },
+        )
+        self.manifest_path.write_text(
+            yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+        transaction_path = self.write_prepared_transaction(
+            target="chapters/CH-0001.txt",
+            staged="world/chapters/.staging/TX-CMD-UPDATE-WORLD-0001-R01/"
+            "chapters/CH-0001.txt",
+            baseline_hash="absent",
+            staged_text='石横道："扛得住。"',
+        )
+        transaction = load_transaction(transaction_path)
+        transaction["gates"] = [
+            {
+                "gate": "narrative-integrity",
+                "kind": "semantic",
+                "required": True,
+                "status": "PASS",
+                "summary": "叙事完整性通过",
+                "evidence": [
+                    {
+                        "key": "reported_speech_audit",
+                        "claim": "全部引号行已审计",
+                        "source": "chapters/.staging/CH-0001.txt",
+                        "audited_lines": [
+                            {
+                                "line": 1,
+                                "verdict": "legal_retention",
+                                "rationale": "石横在当下场景真实发声",
+                            }
+                        ],
+                    }
+                ],
+            }
+        ]
+        transaction_path.write_text(
+            yaml.safe_dump(transaction, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+
+        committed = commit_transaction(
+            self.root, self.manifest_path, transaction_path
+        )
         self.assertEqual("COMPLETE", committed["state"])
 
     def test_rejects_missing_required_agent_stage(self):

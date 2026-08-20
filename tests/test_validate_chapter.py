@@ -5,7 +5,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.validate_chapter import load_blacklist, validate_chapter
+from scripts.validate_chapter import (
+    find_quoted_lines,
+    load_blacklist,
+    validate_chapter,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -174,6 +178,34 @@ class ChapterValidationTest(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn("[FAIL]", result.stdout)
         self.assertIn("[FAIL] INV-CHAPTER-001:", result.stdout)
+
+
+class QuotedLineEnumerationTest(unittest.TestCase):
+    def test_returns_no_lines_when_no_quotes(self):
+        self.assertEqual([], find_quoted_lines("风从门缝钻进来。"))
+
+    def test_enumerates_quoted_ascii_lines(self):
+        text = '石横道："扛得住。"\n他想着"妖丹"两个字。'
+        results = find_quoted_lines(text)
+        self.assertEqual([1, 2], [item["line"] for item in results])
+        self.assertTrue(all(item["quote"] for item in results))
+
+    def test_enumerates_curly_quote_lines(self):
+        text = "他说：“来吧。”\n那两个字没人敢提。"
+        results = find_quoted_lines(text)
+        self.assertEqual([1], [item["line"] for item in results])
+        self.assertEqual("“", results[0]["quote"])
+
+    def test_detects_non_dialogue_quoted_term(self):
+        text = '那颗暗红色的核贴着胸口，把"妖丹"两个字，连带着军需官那张脸，烧进账里。'
+        results = find_quoted_lines(text)
+        self.assertEqual([1], [item["line"] for item in results])
+        self.assertIn("妖丹", results[0]["text"])
+
+    def test_enumerates_all_quoted_lines_not_only_first_quote(self):
+        text = '第一句"甲"。\n第二行"乙"。\n无引号行。'
+        results = find_quoted_lines(text)
+        self.assertEqual([1, 2], [item["line"] for item in results])
 
 
 if __name__ == "__main__":

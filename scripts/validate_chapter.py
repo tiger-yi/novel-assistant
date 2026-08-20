@@ -1,4 +1,5 @@
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -34,6 +35,7 @@ CHAPTER_STRUCTURE_REFERENCE = re.compile(
     r"第(?:[0-9零〇一二三四五六七八九十百千万两]+|[XxNn])章|"
     r"上一章|上章|本章|下一章|下章|前文|后文"
 )
+QUOTED_TEXT = re.compile(r"[\u201c\u201d\u300c\u300d\u2018\u2019\"']")
 
 
 def load_blacklist(style_path):
@@ -100,6 +102,24 @@ def find_presentation_errors(text):
     return errors
 
 
+def find_quoted_lines(text):
+    """Return (line_number, snippet, quote_char) for every line containing a
+    quotation mark. The Agent must semantically audit each result line."""
+    results = []
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        matches = QUOTED_TEXT.findall(line)
+        if not matches:
+            continue
+        results.append(
+            {
+                "line": line_number,
+                "quote": matches[0],
+                "text": line.strip()[:200],
+            }
+        )
+    return results
+
+
 def validate_chapter(
     chapter_path,
     style_path,
@@ -108,6 +128,7 @@ def validate_chapter(
 ):
     chapter_path = Path(chapter_path)
     text = chapter_path.read_text(encoding="utf-8")
+    quoted_lines = find_quoted_lines(text)
     errors = []
 
     current_count = count_words(text)
@@ -136,7 +157,17 @@ def main(argv=None):
     )
     parser.add_argument("--target", type=int, default=DEFAULT_MIN_WORDS)
     parser.add_argument("--max", type=int, default=DEFAULT_MAX_WORDS)
+    parser.add_argument(
+        "--report-quotes",
+        action="store_true",
+        help="Enumerate quoted lines as JSON for Agent semantic audit",
+    )
     args = parser.parse_args(argv)
+
+    if args.report_quotes:
+        text = Path(args.chapter_file).read_text(encoding="utf-8")
+        print(json.dumps(find_quoted_lines(text), ensure_ascii=False))
+        return 0
 
     if args.target < 0 or (args.max is not None and args.max < args.target):
         parser.error("--target must be non-negative and --max must be >= --target")
