@@ -83,6 +83,21 @@ def _within(path: Path, root: Path) -> bool:
     return True
 
 
+def _outline_world_root(outline_path: Path) -> tuple[Path, str | None]:
+    staging_root = outline_path.parent.parent
+    if staging_root.name == ".staging":
+        return staging_root.parent, outline_path.parent.name
+    return outline_path.parent, None
+
+
+def _outline_related_path(outline_path: Path, relative_path: str) -> Path:
+    world_root, transaction_id = _outline_world_root(outline_path)
+    target = (world_root / relative_path).resolve()
+    if transaction_id is None:
+        return target
+    return target.parent / ".staging" / transaction_id / target.name
+
+
 def _archived_chapters(
     contract: dict, outline_path: Path | None, errors: list[str]
 ) -> tuple[dict[int, dict], list[dict]]:
@@ -122,8 +137,9 @@ def _archived_chapters(
             continue
         if not _non_empty(archived_range.get("source_summary")):
             errors.append(f"{label}.source_summary is required")
-        archive_path = (outline_path.parent / archive_file).resolve()
-        archive_root = (outline_path.parent / "archive").resolve()
+        world_root, _ = _outline_world_root(outline_path)
+        archive_path = _outline_related_path(outline_path, archive_file)
+        archive_root = (world_root / "archive").resolve()
         if not _within(archive_path, archive_root):
             errors.append(f"{label}.archive_file must be below world/archive")
             continue
@@ -187,7 +203,7 @@ def _archived_chapters(
             errors.append(f"{label}.published_proof must be a list")
             continue
         proof_ids = []
-        chapter_root = (outline_path.parent.parent / "chapters").resolve()
+        chapter_root = (world_root.parent / "chapters").resolve()
         for proof_index, item in enumerate(proof):
             proof_label = f"{label}.published_proof[{proof_index}]"
             if not isinstance(item, dict):
@@ -206,8 +222,8 @@ def _archived_chapters(
             if not isinstance(chapter_hash, str) or SHA256.fullmatch(chapter_hash) is None:
                 errors.append(f"{proof_label}.chapter_hash must be a sha256 digest")
                 continue
-            published_path = (outline_path.parent / chapter_file).resolve()
-            if not _within(published_path, chapter_root) or ".staging" in published_path.parts:
+            published_path = (world_root / chapter_file).resolve()
+            if not _within(published_path, chapter_root):
                 errors.append(f"{proof_label}.chapter_file must be a formal chapter target")
                 continue
             try:

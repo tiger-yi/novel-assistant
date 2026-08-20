@@ -415,6 +415,36 @@ class OutlineContractTest(unittest.TestCase):
 
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
+    def test_accepts_archived_range_from_transaction_staging(self):
+        directory, outline_path, _ = self.archived_outline()
+        with directory:
+            txid = "TX-CMD-ARCHIVE-WORLD-0001-R01"
+            staged_outline = outline_path.parent / ".staging" / txid / "outline.md"
+            staged_history = (
+                outline_path.parent
+                / "archive"
+                / ".staging"
+                / txid
+                / "outline_history.md"
+            )
+            staged_outline.parent.mkdir(parents=True)
+            staged_history.parent.mkdir(parents=True)
+            staged_outline.write_text(
+                outline_path.read_text(encoding="utf-8"), encoding="utf-8"
+            )
+            staged_history.write_text(
+                (outline_path.parent / "archive" / "outline_history.md").read_text(
+                    encoding="utf-8"
+                ),
+                encoding="utf-8",
+            )
+
+            contract = load_outline_contract(staged_outline)
+
+            self.assertEqual(
+                [], validate_outline_contract(contract, outline_path=staged_outline)
+            )
+
     def test_rejects_missing_volume_golden_three_role(self):
         contract = valid_contract()
         del contract["volumes"][0]["chapters"][0]["golden_three_role"]
