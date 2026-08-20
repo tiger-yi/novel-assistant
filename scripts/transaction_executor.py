@@ -501,6 +501,12 @@ def _preflight_changes(
             raise TransactionError(
                 f"staged file is outside transaction staging: {staged_raw}"
             )
+        txid = transaction.get("transaction_id")
+        expected_staged = target.parent / ".staging" / txid / target.name
+        if staged != expected_staged:
+            raise TransactionError(
+                f"staged file does not mirror target: {staged_raw}"
+            )
         if not _allowed_target(target, manifest, scopes):
             raise TransactionError(
                 f"target is outside command write scope: {target_raw}"

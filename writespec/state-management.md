@@ -47,7 +47,7 @@ ID 创建后不可因改名或状态变化而修改。顺序型 ID 取全部活�
 
 1. **Preflight**：校验风格就绪、八类 Bible、章节序号、已发布状态和未完成事务。
 2. **Plan**：绑定冻结大纲修订、正式摘要、所属卷、卷目标和章节契约摘要，生成一个不改变绑定结果的执行方案。
-3. **Stage**：写入 `chapters/.staging/TX-CH-NNNN-RNN/CH-NNNN-标题.txt`；所有候选文件路径必须同时包含 `.staging` 和事务 ID。
+3. **Stage**：章节正文写入 `chapters/.staging/TX-CH-NNNN-RNN/CH-NNNN-标题.txt`，World Bible 候选写入 `world/.staging/TX-CH-NNNN-RNN/<目标文件名>`；所有候选文件路径必须同时包含 `.staging` 和事务 ID，且必须镜像目标文件目录：staging 路径必须等于 `<目标父目录>/.staging/<事务ID>/<目标文件名>`，不得把 World Bible 候选放入 `chapters/.staging/` 或反向放置。
 4. **Text Polish**：执行纯文本润色；不足字数时补全后再次润色。
 5. **Final Gates**：对最终 staging 版本运行字数、格式、六维审计和逻辑闭环。
 6. **Prepare Change Set**：生成 World Bible 变更集，记录实体 ID、旧值、新值、来源章节和幂等键。

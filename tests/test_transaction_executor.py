@@ -250,7 +250,7 @@ class TransactionCommitTest(unittest.TestCase):
         self,
         *,
         target="world/outline.md",
-        staged="world/.staging/TX-CMD-UPDATE-WORLD-0001-R01/world/outline.md",
+        staged="world/.staging/TX-CMD-UPDATE-WORLD-0001-R01/outline.md",
         baseline_hash=None,
         state="PREPARED",
         applied=False,
@@ -342,7 +342,7 @@ class TransactionCommitTest(unittest.TestCase):
         second_target = self.root / "world/characters.md"
         second_target.write_text("用户角色\n", encoding="utf-8")
         second_stage = self.stage_file(
-            "world/.staging/TX-CMD-UPDATE-WORLD-0001-R01/world/characters.md",
+            "world/.staging/TX-CMD-UPDATE-WORLD-0001-R01/characters.md",
             "新角色\n",
         )
         data["changes"].append(
@@ -452,6 +452,7 @@ class TransactionCommitTest(unittest.TestCase):
     def test_resume_recovers_new_target_created_before_key_was_recorded(self):
         transaction_path = self.write_prepared_transaction(
             target="world/new.md",
+            staged="world/.staging/TX-CMD-UPDATE-WORLD-0001-R01/new.md",
             baseline_hash="absent",
             state="COMMITTING",
         )
@@ -664,6 +665,7 @@ class TransactionCommitTest(unittest.TestCase):
     def test_rejects_target_outside_manifest_write_scope(self):
         transaction_path = self.write_prepared_transaction(
             target="chapters/CH-0001.txt",
+            staged="chapters/.staging/TX-CMD-UPDATE-WORLD-0001-R01/CH-0001.txt",
             baseline_hash="absent",
         )
 
@@ -693,8 +695,8 @@ class TransactionCommitTest(unittest.TestCase):
         transaction_path = self.write_prepared_transaction(
             target="chapters/CH-0002-他章.txt",
             staged=(
-                "world/.staging/TX-CMD-UPDATE-WORLD-0001-R01/"
-                "chapters/CH-0002-他章.txt"
+                "chapters/.staging/TX-CMD-UPDATE-WORLD-0001-R01/"
+                "CH-0002-他章.txt"
             ),
             baseline_hash="absent",
             source_command="迁移正文呈现 CH-0001",
@@ -720,6 +722,24 @@ class TransactionCommitTest(unittest.TestCase):
         )
 
         with self.assertRaisesRegex(TransactionError, "outside transaction staging"):
+            commit_transaction(self.root, self.manifest_path, transaction_path)
+
+    def test_rejects_world_bible_staged_under_chapters_staging(self):
+        transaction_path = self.write_prepared_transaction(
+            target="world/outline.md",
+            staged="chapters/.staging/TX-CMD-UPDATE-WORLD-0001-R01/outline.md",
+        )
+
+        with self.assertRaisesRegex(TransactionError, "does not mirror target"):
+            commit_transaction(self.root, self.manifest_path, transaction_path)
+
+    def test_rejects_staged_path_that_does_not_mirror_target(self):
+        transaction_path = self.write_prepared_transaction(
+            target="world/outline.md",
+            staged="world/.staging/TX-CMD-UPDATE-WORLD-0001-R01/world/outline.md",
+        )
+
+        with self.assertRaisesRegex(TransactionError, "does not mirror target"):
             commit_transaction(self.root, self.manifest_path, transaction_path)
 
     def test_preview_mode_has_no_write_scope(self):
@@ -940,8 +960,8 @@ class TransactionCommitTest(unittest.TestCase):
         transaction_path = self.write_prepared_transaction(
             target="chapters/CH-0001.txt",
             staged=(
-                "world/.staging/TX-CMD-UPDATE-WORLD-0001-R01/"
-                "chapters/CH-0001.txt"
+                "chapters/.staging/TX-CMD-UPDATE-WORLD-0001-R01/"
+                "CH-0001.txt"
             ),
             baseline_hash="absent",
             staged_text='石横道："扛得住。"\n那"妖丹"两字没人敢提。',
@@ -998,8 +1018,7 @@ class TransactionCommitTest(unittest.TestCase):
         )
         transaction_path = self.write_prepared_transaction(
             target="chapters/CH-0001.txt",
-            staged="world/chapters/.staging/TX-CMD-UPDATE-WORLD-0001-R01/"
-            "chapters/CH-0001.txt",
+            staged="chapters/.staging/TX-CMD-UPDATE-WORLD-0001-R01/CH-0001.txt",
             baseline_hash="absent",
             staged_text='石横道："扛得住。"',
         )
