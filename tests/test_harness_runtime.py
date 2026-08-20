@@ -163,6 +163,20 @@ class HarnessRepositoryRoutesTest(unittest.TestCase):
             commands.get("outline-contract"),
         )
 
+    def test_archive_world_requires_outline_contract_before_archive_commit(self):
+        pipeline = (self.manifest.data.get("pipelines") or {}).get(
+            "archive-world", {}
+        )
+        stages = pipeline.get("stages") or []
+        names = [stage.get("name") for stage in stages]
+
+        self.assertLess(names.index("archive-integrity"), names.index("outline-contract"))
+        self.assertLess(names.index("outline-contract"), names.index("commit"))
+        gate = next(stage for stage in stages if stage.get("name") == "outline-contract")
+        self.assertEqual("chapter-creation-spec", gate.get("uses"))
+        self.assertEqual("deterministic-gate", gate.get("handler"))
+        self.assertTrue(gate.get("required"))
+
     def test_resolves_presentation_migration_parent_and_child(self):
         parent = self.manifest.resolve("迁移正文呈现")
         child = self.manifest.resolve("迁移正文呈现 CH-0007")

@@ -25,7 +25,7 @@ def main(argv=None):
     except OutlineContractError as exc:
         print(f"[FAIL] INV-PLOT-001: {exc}")
         return 1
-    errors = validate_outline_contract(contract)
+    errors = validate_outline_contract(contract, outline_path=args.outline_file)
     if errors:
         for error in errors:
             print(f"[FAIL] INV-PLOT-001: {error}")

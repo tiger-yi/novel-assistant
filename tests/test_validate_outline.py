@@ -1,3 +1,5 @@
+import copy
+import hashlib
 import subprocess
 import sys
 import tempfile
@@ -127,6 +129,73 @@ def payoff_plan(number, payoff_types, primary_type, climax):
 
 
 class OutlineContractTest(unittest.TestCase):
+    def archived_outline(self):
+        directory = tempfile.TemporaryDirectory()
+        root = Path(directory.name)
+        outline_path = root / "world" / "outline.md"
+        history_path = root / "world" / "archive" / "outline_history.md"
+        chapters_root = root / "chapters"
+        history_path.parent.mkdir(parents=True)
+        chapters_root.mkdir()
+
+        contract = copy.deepcopy(valid_contract())
+        volume = contract["volumes"][0]
+        volume["end_chapter"] = 5
+        contract["volumes"][1]["start_chapter"] = 6
+        volume["milestones"][-1]["due_chapter"] = 5
+        volume["chapters"].extend(
+            [
+                chapter(4, "MS-ARC-001-03"),
+                chapter(5, "MS-ARC-001-03"),
+            ]
+        )
+        archived_chapters = volume["chapters"][:3]
+        for archived_chapter in archived_chapters:
+            archived_chapter["status"] = "published"
+        volume["chapters"] = volume["chapters"][3:]
+
+        proof = []
+        for archived_chapter in archived_chapters:
+            chapter_id = archived_chapter["id"]
+            chapter_file = chapters_root / f"{chapter_id}.txt"
+            chapter_file.write_text(f"{chapter_id} 已发布正文", encoding="utf-8")
+            proof.append(
+                {
+                    "chapter_id": chapter_id,
+                    "chapter_file": f"../chapters/{chapter_file.name}",
+                    "chapter_hash": "sha256:"
+                    + hashlib.sha256(chapter_file.read_bytes()).hexdigest(),
+                }
+            )
+        contract["archived_ranges"] = [
+            {
+                "start_chapter": 1,
+                "end_chapter": 3,
+                "archive_file": "archive/outline_history.md",
+                "anchor": "第1-3章",
+                "source_summary": "前三章已发布并完成卷内开局推进",
+                "published_proof": proof,
+            }
+        ]
+        history_path.write_text(
+            "# 大纲历史\n\n## 第1-3章\n\n```yaml\n"
+            + yaml.safe_dump(
+                {"chapters": archived_chapters},
+                allow_unicode=True,
+                sort_keys=False,
+            )
+            + "```\n",
+            encoding="utf-8",
+        )
+        outline_path.parent.mkdir(exist_ok=True)
+        outline_path.write_text(
+            "---\n"
+            + yaml.safe_dump(contract, allow_unicode=True, sort_keys=False)
+            + "---\n# 小说大纲\n",
+            encoding="utf-8",
+        )
+        return directory, outline_path, contract
+
     def test_direct_script_entrypoint_accepts_valid_outline(self):
         repo_root = Path(__file__).resolve().parents[1]
         with tempfile.TemporaryDirectory() as directory:
@@ -265,6 +334,86 @@ class OutlineContractTest(unittest.TestCase):
         errors = validate_outline_contract(contract)
 
         self.assertTrue(any("every chapter" in error for error in errors))
+
+    def test_accepts_archived_published_range(self):
+        directory, outline_path, contract = self.archived_outline()
+        with directory:
+            self.assertEqual(
+                [], validate_outline_contract(contract, outline_path=outline_path)
+            )
+
+    def test_rejects_archived_range_overlapping_active_contract(self):
+        directory, outline_path, contract = self.archived_outline()
+        with directory:
+            contract["volumes"][0]["chapters"].append(
+                chapter(3, "MS-ARC-001-03", "goal-lock")
+            )
+
+            errors = validate_outline_contract(contract, outline_path=outline_path)
+
+        self.assertTrue(any("overlap" in error for error in errors), errors)
+
+    def test_rejects_archived_range_without_published_contract(self):
+        directory, outline_path, contract = self.archived_outline()
+        with directory:
+            history_path = outline_path.parent / "archive" / "outline_history.md"
+            history_path.write_text(
+                history_path.read_text(encoding="utf-8").replace(
+                    "status: published", "status: planned", 1
+                ),
+                encoding="utf-8",
+            )
+
+            errors = validate_outline_contract(contract, outline_path=outline_path)
+
+        self.assertTrue(any("published" in error for error in errors), errors)
+
+    def test_rejects_archived_range_with_missing_anchor(self):
+        directory, outline_path, contract = self.archived_outline()
+        with directory:
+            contract["archived_ranges"][0]["anchor"] = "第4-6章"
+
+            errors = validate_outline_contract(contract, outline_path=outline_path)
+
+        self.assertTrue(any("anchor" in error for error in errors), errors)
+
+    def test_rejects_archived_range_when_anchor_has_no_own_yaml_block(self):
+        directory, outline_path, contract = self.archived_outline()
+        with directory:
+            history_path = outline_path.parent / "archive" / "outline_history.md"
+            history_path.write_text(
+                history_path.read_text(encoding="utf-8").replace(
+                    "## 第1-3章\n\n```yaml",
+                    "## 第1-3章\n\n索引说明。\n\n## 其他区间\n\n```yaml",
+                ),
+                encoding="utf-8",
+            )
+
+            errors = validate_outline_contract(contract, outline_path=outline_path)
+
+        self.assertTrue(any("requires a YAML chapter block" in error for error in errors), errors)
+
+    def test_chapter_binding_reads_archived_contract(self):
+        directory, outline_path, _ = self.archived_outline()
+        with directory:
+            binding = chapter_binding(outline_path, 1)
+
+        self.assertEqual("CH-0001", binding["chapter_id"])
+
+    def test_direct_script_entrypoint_accepts_archived_range(self):
+        directory, outline_path, _ = self.archived_outline()
+        with directory:
+            repo_root = Path(__file__).resolve().parents[1]
+            result = subprocess.run(
+                [sys.executable, "scripts/validate_outline.py", str(outline_path)],
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                check=False,
+            )
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
     def test_rejects_missing_volume_golden_three_role(self):
         contract = valid_contract()

@@ -27,6 +27,7 @@ ARC_ID = re.compile(r"ARC-\d{3}")
 GOAL_ID = re.compile(r"GOAL-ARC-\d{3}")
 MILESTONE_ID = re.compile(r"MS-ARC-\d{3}-\d{2}")
 CHAPTER_ID = re.compile(r"CH-\d{4}")
+SHA256 = re.compile(r"sha256:[0-9a-f]{64}")
 PLANNING_STATUSES = {"roadmap", "frozen", "complete"}
 CHAPTER_STATUSES = {"planned", "published"}
 GOLDEN_THREE_ROLES = ("inciting", "feedback", "goal-lock")
@@ -74,6 +75,154 @@ def _non_empty(value) -> bool:
     return value is not None
 
 
+def _within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    return True
+
+
+def _archived_chapters(
+    contract: dict, outline_path: Path | None, errors: list[str]
+) -> tuple[dict[int, dict], list[dict]]:
+    ranges = contract.get("archived_ranges", [])
+    if ranges is None:
+        ranges = []
+    if not isinstance(ranges, list):
+        errors.append("archived_ranges must be a list")
+        return {}, []
+    if ranges and outline_path is None:
+        errors.append("archived_ranges requires an outline path")
+        return {}, []
+
+    chapters = {}
+    valid_ranges = []
+    previous_end = 0
+    for index, archived_range in enumerate(ranges):
+        label = f"archived_ranges[{index}]"
+        if not isinstance(archived_range, dict):
+            errors.append(f"{label} must be a mapping")
+            continue
+        start = archived_range.get("start_chapter")
+        end = archived_range.get("end_chapter")
+        if not isinstance(start, int) or not isinstance(end, int) or start > end:
+            errors.append(f"{label} requires a valid chapter range")
+            continue
+        if start <= previous_end:
+            errors.append("archived ranges must not overlap")
+        previous_end = max(previous_end, end)
+        archive_file = archived_range.get("archive_file")
+        anchor = archived_range.get("anchor")
+        if not isinstance(archive_file, str) or not archive_file.strip():
+            errors.append(f"{label}.archive_file is required")
+            continue
+        if not isinstance(anchor, str) or not anchor.strip():
+            errors.append(f"{label}.anchor is required")
+            continue
+        if not _non_empty(archived_range.get("source_summary")):
+            errors.append(f"{label}.source_summary is required")
+        archive_path = (outline_path.parent / archive_file).resolve()
+        archive_root = (outline_path.parent / "archive").resolve()
+        if not _within(archive_path, archive_root):
+            errors.append(f"{label}.archive_file must be below world/archive")
+            continue
+        try:
+            archive_text = archive_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            errors.append(f"{label}.archive_file cannot be read: {exc}")
+            continue
+        anchor_match = re.search(
+            rf"^#{{1,6}}\s+{re.escape(anchor.strip())}\s*$",
+            archive_text,
+            flags=re.MULTILINE,
+        )
+        if anchor_match is None:
+            errors.append(f"{label}.anchor is missing from archive_file")
+            continue
+        section_text = archive_text[anchor_match.end() :]
+        heading_level = len(anchor_match.group().split()[0])
+        next_heading = re.search(
+            rf"^#{{1,{heading_level}}}\s+", section_text, flags=re.MULTILINE
+        )
+        if next_heading is not None:
+            section_text = section_text[: next_heading.start()]
+        block_match = re.search(r"```ya?ml\s*\n(.*?)```", section_text, re.DOTALL)
+        if block_match is None:
+            errors.append(f"{label}.anchor requires a YAML chapter block")
+            continue
+        try:
+            archived_data = yaml.safe_load(block_match.group(1))
+        except yaml.YAMLError as exc:
+            errors.append(f"{label}.anchor YAML is invalid: {exc}")
+            continue
+        archived_list = (
+            archived_data.get("chapters") if isinstance(archived_data, dict) else None
+        )
+        if not isinstance(archived_list, list):
+            errors.append(f"{label}.anchor YAML requires chapters")
+            continue
+        archive_numbers = []
+        for chapter_index, chapter in enumerate(archived_list):
+            chapter_label = f"{label}.chapters[{chapter_index}]"
+            if not isinstance(chapter, dict):
+                errors.append(f"{chapter_label} must be a mapping")
+                continue
+            chapter_id = chapter.get("id")
+            if not isinstance(chapter_id, str) or CHAPTER_ID.fullmatch(chapter_id) is None:
+                errors.append(f"{chapter_label}.id must match CH-NNNN")
+                continue
+            chapter_number = int(chapter_id.removeprefix("CH-"))
+            archive_numbers.append(chapter_number)
+            if chapter.get("status") != "published":
+                errors.append(f"{chapter_label} must be published before archiving")
+            if chapter_number in chapters:
+                errors.append("archived ranges must not overlap")
+            chapters[chapter_number] = chapter
+        if sorted(archive_numbers) != list(range(start, end + 1)):
+            errors.append(f"{label} must preserve every chapter in its range")
+
+        proof = archived_range.get("published_proof")
+        if not isinstance(proof, list):
+            errors.append(f"{label}.published_proof must be a list")
+            continue
+        proof_ids = []
+        chapter_root = (outline_path.parent.parent / "chapters").resolve()
+        for proof_index, item in enumerate(proof):
+            proof_label = f"{label}.published_proof[{proof_index}]"
+            if not isinstance(item, dict):
+                errors.append(f"{proof_label} must be a mapping")
+                continue
+            chapter_id = item.get("chapter_id")
+            chapter_file = item.get("chapter_file")
+            chapter_hash = item.get("chapter_hash")
+            if not isinstance(chapter_id, str) or CHAPTER_ID.fullmatch(chapter_id) is None:
+                errors.append(f"{proof_label}.chapter_id must match CH-NNNN")
+                continue
+            proof_ids.append(int(chapter_id.removeprefix("CH-")))
+            if not isinstance(chapter_file, str) or not chapter_file.strip():
+                errors.append(f"{proof_label}.chapter_file is required")
+                continue
+            if not isinstance(chapter_hash, str) or SHA256.fullmatch(chapter_hash) is None:
+                errors.append(f"{proof_label}.chapter_hash must be a sha256 digest")
+                continue
+            published_path = (outline_path.parent / chapter_file).resolve()
+            if not _within(published_path, chapter_root) or ".staging" in published_path.parts:
+                errors.append(f"{proof_label}.chapter_file must be a formal chapter target")
+                continue
+            try:
+                actual_hash = _sha256_bytes(published_path.read_bytes())
+            except OSError as exc:
+                errors.append(f"{proof_label}.chapter_file cannot be read: {exc}")
+                continue
+            if actual_hash != chapter_hash:
+                errors.append(f"{proof_label}.chapter_hash does not match published chapter")
+        if sorted(proof_ids) != list(range(start, end + 1)):
+            errors.append(f"{label}.published_proof must cover every archived chapter")
+        valid_ranges.append({"start": start, "end": end})
+    return chapters, valid_ranges
+
+
 def load_outline_contract(path: Path) -> dict:
     try:
         text = path.read_text(encoding="utf-8")
@@ -99,7 +248,9 @@ def load_outline_contract(path: Path) -> dict:
     return contract
 
 
-def validate_outline_contract(contract: dict) -> list[str]:
+def validate_outline_contract(
+    contract: dict, outline_path: Path | None = None
+) -> list[str]:
     if not isinstance(contract, dict):
         return ["outline contract root must be a mapping"]
     errors = []
@@ -111,6 +262,10 @@ def validate_outline_contract(contract: dict) -> list[str]:
         errors.append("outline status must be frozen")
     if not _non_empty(contract.get("novel_goal")):
         errors.append("novel_goal is required")
+
+    archived_chapters, archived_ranges = _archived_chapters(
+        contract, outline_path, errors
+    )
 
     payoff_policy = contract.get("payoff_policy")
     if payoff_policy is not None:
@@ -219,8 +374,17 @@ def validate_outline_contract(contract: dict) -> list[str]:
 
         expected_numbers = list(range(start, end + 1))
         actual_numbers = []
+        archived_numbers = [
+            number for number in archived_chapters if start <= number <= end
+        ]
+        combined_chapters = [
+            *[item for item in chapters if isinstance(item, dict)],
+            *[archived_chapters[number] for number in archived_numbers],
+        ]
         payoff_window = []
-        for chapter_index, chapter in enumerate(chapters):
+        for chapter_index, chapter in enumerate(
+            sorted(combined_chapters, key=lambda item: item.get("id", ""))
+        ):
             chapter_label = f"{label}.chapters[{chapter_index}]"
             if not isinstance(chapter, dict):
                 errors.append(f"{chapter_label} must be a mapping")
@@ -239,7 +403,7 @@ def validate_outline_contract(contract: dict) -> list[str]:
                 errors.append(f"{chapter_label}.status is invalid")
             if chapter.get("milestone") not in milestone_ids:
                 errors.append(f"{chapter_label}.milestone is not declared")
-            offset = chapter_index
+            offset = chapter_number - start if chapter_number is not None else chapter_index
             if offset < 3:
                 expected_role = GOLDEN_THREE_ROLES[offset]
                 if chapter.get("golden_three_role") != expected_role:
@@ -265,8 +429,20 @@ def validate_outline_contract(contract: dict) -> list[str]:
                     payoff_window.append(window_item)
                     for error in validate_payoff_plan_window(payoff_window, profile):
                         errors.append(f"{chapter_label}.payoff_window: {error}")
-        if actual_numbers != expected_numbers:
+        if len(actual_numbers) != len(set(actual_numbers)):
+            errors.append(f"{label} active and archived chapter contracts overlap")
+        if sorted(actual_numbers) != expected_numbers:
             errors.append(f"{label} must define every chapter in its fixed range")
+
+    for archived_range in archived_ranges:
+        if not any(
+            isinstance(volume, dict)
+            and volume.get("planning_status") == "frozen"
+            and volume.get("start_chapter") <= archived_range["start"]
+            and archived_range["end"] <= volume.get("end_chapter")
+            for volume in volumes
+        ):
+            errors.append("archived range must belong wholly to a frozen volume")
 
     if not current_found:
         errors.append("current_arc must reference a declared volume")
@@ -275,9 +451,10 @@ def validate_outline_contract(contract: dict) -> list[str]:
 
 def chapter_binding(path: Path, chapter_number: int) -> dict:
     contract = load_outline_contract(path)
-    errors = validate_outline_contract(contract)
+    errors = validate_outline_contract(contract, outline_path=path)
     if errors:
         raise OutlineContractError("; ".join(errors))
+    archived_chapters, _ = _archived_chapters(contract, path, [])
     for volume in contract["volumes"]:
         if volume["start_chapter"] <= chapter_number <= volume["end_chapter"]:
             if volume.get("planning_status") != "frozen":
@@ -286,7 +463,12 @@ def chapter_binding(path: Path, chapter_number: int) -> dict:
                 )
             chapter_id = f"CH-{chapter_number:04d}"
             chapter = next(
-                item for item in volume["chapters"] if item.get("id") == chapter_id
+                (
+                    item
+                    for item in volume["chapters"]
+                    if item.get("id") == chapter_id
+                ),
+                archived_chapters.get(chapter_number),
             )
             return {
                 "outline_revision": contract["revision"],

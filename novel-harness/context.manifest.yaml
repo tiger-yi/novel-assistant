@@ -890,6 +890,10 @@ pipelines:
         uses: archiving-spec
         handler: semantic-gate
         required: true
+      - name: outline-contract
+        uses: chapter-creation-spec
+        handler: deterministic-gate
+        required: true
       - name: commit
         uses: archiving-spec
         handler: transaction-archive
