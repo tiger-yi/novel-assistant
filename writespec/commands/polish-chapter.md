@@ -39,6 +39,8 @@
 
 若原正式正文本身存在字数、格式、世界观或叙事线索硬伤，返回 `SOURCE_BASELINE_INVALID` 或 `PREEXISTING_WORLD_ISSUE`。润色命令不得借机修剧情或修 World Bible。
 
+原文关键台词含混作为可修复基线问题记录，不使 `source-baseline` 直接失败；它允许进入等义润色，但最终 staging 必须通过 `dialogue_clarity_audit`。修复无法保持事实、知情范围、决定和关系状态时停止，不得借润色扩写解释。
+
 ## 最终门禁
 
 - `chapter-length`: 2300-2800 字。
@@ -46,7 +48,7 @@
 - `signing-first-impression-risk`: 润色后正文必须按 `chapter-polish.md` 给出 `signing_first_impression_risk` 证据，覆盖开篇、主要场景入口和章末牵引；接受 `PASS` 或 `WARN` 继续。已发布章节若命中 `L3-ROUTE-AUTO`，只有等义呈现修订可在验证通过后自动提交；影响事件重心、摘要语义、World Bible 或后续契约时，只保留候选预览和推荐路由。
 - `presentation-equivalence`: 新旧正文事件、因果、人物行为、资源、伤势和信息差等义，只接受 `PASS`。
 - `style-application`: 润色后正文必须证明已应用当前 `writespec/style-guide.md`，产出至少 5 条可定位的 `style_application_evidence`，覆盖核心调性、受限视角/认知偏差、人物声线、节奏或爽点结构、题材质感/黑名单规避；只接受 `PASS`。
-- `narrative-integrity`: 不存在叙事层泄漏；同时按 `chapter-creation-spec.md` 扫描全部在场台词与非在场引述，提交 `key: reported_speech_audit` 的证据，记录扫描范围、命中位置、表达策略或合法保留理由及未解决项。无命中也必须提交，只接受 `PASS`。
+- `narrative-integrity`: 不存在叙事层泄漏；同时按 `chapter-creation-spec.md` 提交独立的 `key: reported_speech_audit` 与 `key: dialogue_clarity_audit`。关键台词审计必须绑定最终 staging hash，完整扫描六类风险；零命中也必须提交，只接受 `PASS`。原文问题可进入润色，最终未解决项非空时不得覆盖正式正文。
 - `world-audit`: 未引入新世界观冲突。
 - `thread-integrity`: 叙事线索状态和证据不变，只接受 `PASS`。
 

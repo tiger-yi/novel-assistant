@@ -209,7 +209,7 @@ class HarnessRepositoryRoutesTest(unittest.TestCase):
             self.assertTrue(gate.get("required"))
             self.assertEqual(["style_application_evidence"], gate.get("evidence"))
 
-    def test_chapter_output_pipelines_require_reported_speech_audit(self):
+    def test_chapter_output_pipelines_require_dialogue_integrity_evidence(self):
         pipelines = self.manifest.data.get("pipelines") or {}
         for pipeline_name in (
             "create-chapter",
@@ -229,9 +229,15 @@ class HarnessRepositoryRoutesTest(unittest.TestCase):
             self.assertTrue(gate.get("required"))
             self.assertEqual(["PASS"], gate.get("allowed_statuses"))
             self.assertEqual(
-                ["reported_speech_audit"],
+                ["reported_speech_audit", "dialogue_clarity_audit"],
                 gate.get("required_evidence"),
             )
+
+    def test_presentation_scan_requires_dialogue_clarity_scan_evidence(self):
+        stage = self.manifest.data["pipelines"]["migration-scan"]["stages"][0]
+
+        self.assertEqual("presentation-scan", stage.get("name"))
+        self.assertEqual(["dialogue_clarity_scan"], stage.get("required_evidence"))
 
     def test_chapter_and_polish_pipelines_require_signing_first_impression_gate(self):
         pipelines = self.manifest.data.get("pipelines") or {}

@@ -568,8 +568,10 @@ pipelines:
         evidence:
           - chapter_title_uniqueness
           - reported_speech_audit
+          - dialogue_clarity_audit
         required_evidence:
           - reported_speech_audit
+          - dialogue_clarity_audit
       - name: world-audit
         uses: world-audit
         handler: semantic-gate
@@ -675,8 +677,10 @@ pipelines:
           - PASS
         evidence:
           - reported_speech_audit
+          - dialogue_clarity_audit
         required_evidence:
           - reported_speech_audit
+          - dialogue_clarity_audit
         delegable: true
         worker: gate-worker
       - name: world-audit
@@ -748,8 +752,10 @@ pipelines:
           - PASS
         evidence:
           - reported_speech_audit
+          - dialogue_clarity_audit
         required_evidence:
           - reported_speech_audit
+          - dialogue_clarity_audit
   revise-arc:
     stages:
       - name: preflight
@@ -792,6 +798,10 @@ pipelines:
         required: true
         allowed_statuses:
           - PASS
+        evidence:
+          - dialogue_clarity_scan
+        required_evidence:
+          - dialogue_clarity_scan
   migration-chapter:
     stages:
       - name: preflight
@@ -820,8 +830,10 @@ pipelines:
           - PASS
         evidence:
           - reported_speech_audit
+          - dialogue_clarity_audit
         required_evidence:
           - reported_speech_audit
+          - dialogue_clarity_audit
       - name: plot-alignment
         uses: chapter-creation-spec
         handler: semantic-gate
@@ -1169,6 +1181,7 @@ verification:
       evidence_required: true
       required_evidence:
         - reported_speech_audit
+        - dialogue_clarity_audit
       invariant: INV-CHAPTER-001
     - name: plot-alignment
       spec: ../writespec/chapter-creation-spec.md
