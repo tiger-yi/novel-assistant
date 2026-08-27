@@ -55,10 +55,10 @@
 - 字数: `python scripts/check_count.py <chapter_file> --target 2300 --max 2800 --segments`
 - 格式: `python scripts/validate_chapter.py <chapter_file> --target 2300 --max 2800`，必须满足 `INV-CHAPTER-001`。
 - 签约首感风险: 按 `chapter-polish.md` 给出 `signing_first_impression_risk` 证据，覆盖开篇、主要场景入口和章末牵引；接受 `PASS` 或 `WARN` 继续。`FAIL` 时不得发布当前失败正文，`L3-SAFE` 可自动修复，`L3-ROUTE-AUTO` 默认进入 `AUTO_ROUTE_COMMIT` 生成并验证单章候选后由事务执行器提交；若影响卷目标、后续契约、World Bible 核心事实或已发布事实，则降级为 `AUTO_ROUTE_REVIEW` 或 `HUMAN_REQUIRED`。
-- 读者评价: 按 `reader-evaluation.md` 给出三读者画像评分、聚合分、短引证据、建议拆分、artifact 路径/hash 和最终状态；随后运行 `python scripts/validate_reader_evaluation.py <reader_evaluation_file>`。只接受 `PASS`、`PASS_WITH_AUTO_FIX` 或 `PASS_WITH_TARGET_MISS`。
+- 读者评价: 按 `reader-evaluation.md` 给出三读者画像评分、聚合分、短引证据、建议拆分、独立的 `dialogue_clarity_cross_check`、artifact 路径/hash 和最终状态；随后运行 `python scripts/validate_reader_evaluation.py <reader_evaluation_file>`。交叉复核的外部补释依赖或审计冲突必须为空，只接受 `PASS`、`PASS_WITH_AUTO_FIX` 或 `PASS_WITH_TARGET_MISS`。
 - 爽点兑现: 按 `payoff-spec.md` 提交 `payoff_fulfillment_evidence`，确定性校验结构、密度档、类型轮换和滚动窗口，语义门禁核对正文证据；只接受 `PASS`。需要新增行动或状态变化时必须退出润色并按自动化阻断分级路由。
 - 风格应用: 按 `style-guide.md` 给出至少 5 条可定位证据，覆盖核心调性、受限视角/认知偏差、人物声线、节奏或爽点结构、题材质感/黑名单规避；优先引用正文行号，行号不稳定时使用场景和段落摘要。只接受 `PASS`。失败时只允许文本润色或局部呈现重写，不得改变剧情事实、人物决策、胜负、伤势、资源、伏笔状态或 World Bible。
-- 叙事完整性: 按 `chapter-creation-spec.md` 扫描全部在场台词与非在场引述，提交 `key: reported_speech_audit` 的证据，记录扫描范围、命中位置、表达策略或合法保留理由及未解决项；无命中也必须提交，且只接受 `PASS`。
+- 叙事完整性: 按 `chapter-creation-spec.md` 扫描全部在场台词与非在场引述，并独立执行关键台词风险扫描；提交 `key: reported_speech_audit` 与 `key: dialogue_clarity_audit`。后者必须绑定最终 staging hash，覆盖六类风险、关键台词语义与未解决项；零命中仍提交完整证据，且只接受 `PASS`。
 - 世界观: 按 `world-audit.md` 给出带文件、章节 ID 或实体 ID 的六维结果，其中战力满足 `INV-POWER-001`。
 - 剧情对齐: 按 `INV-PLOT-001` 逐项核对事务绑定、章节结果、卷目标贡献、里程碑和未授权重大事实；不允许 `WARN` 放行。
 - 状态闭环: 按 `state-management.md` 核对消耗、伤势、信息差、事务状态与幂等键；叙事线索状态满足 `INV-FORESHADOW-001`。

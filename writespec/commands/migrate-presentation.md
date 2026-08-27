@@ -11,9 +11,9 @@
 ## 批次扫描
 
 1. 事务执行器扫描 `chapters/` 下正式 `CH-NNNN*.txt`，忽略 staging 和非正式文件。
-2. 记录命中章节、行号、规则类别和原文命中项；无违规章节不进入授权集合。
-3. `presentation-scan` 证据必须证明扫描范围完整。提交前执行器重新扫描，结果变化即以 stale scan 停止。
-4. 父记录完成后，其 `migration.chapters` 是子事务授权范围；Agent 不得扩大范围。
+2. 确定性呈现扫描记录命中章节、行号、规则类别和原文命中项；Agent 另提交 `key: dialogue_clarity_scan`，绑定每个正式章节的路径/hash，并列出关键台词语义含混命中。两类均无违规的章节不进入授权集合。
+3. `presentation-scan` 证据必须证明全部正式章节扫描范围完整、未解决项为空。提交前执行器复核确定性结果、章节集合、hash、行号和短引；结果变化即以 stale scan 停止。
+4. 执行器把合法的确定性命中和关键台词命中合并到 `migration.chapters`。父记录完成后，该清单才是子事务授权范围；Agent 不得扩大范围，批次扫描也不得直接修改章节。
 
 ## 单章迁移
 
@@ -27,7 +27,7 @@
 
 - `chapter-format`: 对 staging 正文重新执行完整 `INV-CHAPTER-001`。
 - `presentation-equivalence`: 逐项证明新旧正文事件和事实等义，只接受 `PASS`。
-- `narrative-integrity`: 证明不存在内部 ID、作者/读者/剧情安排或外部镜头调度；同时扫描全部在场台词与非在场引述，提交 `key: reported_speech_audit` 的证据，记录命中位置、表达策略或合法保留理由及未解决项。无命中也必须提交，只接受 `PASS`。
+- `narrative-integrity`: 证明不存在内部 ID、作者/读者/剧情安排或外部镜头调度；同时提交独立的 `key: reported_speech_audit` 与 `key: dialogue_clarity_audit`。后者必须绑定最终 staging hash，覆盖六类关键台词风险；无命中也必须提交，只接受 `PASS`。
 - `plot-alignment`: 证明修订未改变已发布剧情事实，只接受 `PASS`。
 - `thread-integrity`: 证明叙事线索状态和因果不变，只接受 `PASS`。
 - 事务与 Postflight: 校验目标基线、正文摘要、证据引用和幂等键。

@@ -90,7 +90,7 @@ Manifest 支持可选 subagent delegation 策略。subagent 可以全量读取�
 
 爽点不是钩子或伏笔。新初始化/修订大纲在 `outline.md` 规划爽点契约，每次后续章节事务在 staging 生成 `payoff-evidence.yaml`，先由 `python scripts/validate_payoff.py` 校验结构和滚动密度，再由语义门禁核对正文中的行动、状态变化、确认与代价。旧章节和未声明启用策略的旧冻结契约不追溯失败。
 
-`INV-CHAPTER-001` 同时禁止面板化符号、书名号、内部 ID、裸字母数字代号、章节结构引用、非对话引号和叙事层泄漏。章节创作、两种正文润色与历史呈现迁移都通过必需的 `narrative-integrity` 提交 `reported_speech_audit`；旧话转述的表达选择以 `writespec/chapter-creation-spec.md` 为唯一正式指导。使用 `python scripts/novel_harness.py invariants` 可从 Manifest 动态查看全部 INV 的唯一 owner 与相关门禁；项目不维护重复的 `INV/` 目录。
+`INV-CHAPTER-001` 同时禁止面板化符号、书名号、内部 ID、裸字母数字代号、章节结构引用、非对话引号、叙事层泄漏和关键台词核心语义不闭合。章节创作、两种正文润色与历史呈现迁移都通过必需的 `narrative-integrity` 分别提交 `reported_speech_audit` 与绑定最终正文 hash 的 `dialogue_clarity_audit`；新章读者评价另做独立交叉复核。已发布原文的含混可以进入等义润色，但最终候选未通过时不得覆盖；历史批量扫描只在显式命令下报告并授权逐章修订。唯一正式规则以 `writespec/chapter-creation-spec.md` 为准。使用 `python scripts/novel_harness.py invariants` 可从 Manifest 动态查看全部 INV 的唯一 owner 与相关门禁；项目不维护重复的 `INV/` 目录。
 
 历史正文通过 `迁移正文呈现` 先执行只读扫描，再对授权清单逐章使用 `迁移正文呈现 CH-NNNN`。每章生成新的 `RNN`，只允许等义修改呈现和证据指针；剧情事实、实体状态和线索生命周期不得变化。单章失败不回滚其他已完成章节，父批次保留 `PARTIAL` 状态和恢复范围。
 

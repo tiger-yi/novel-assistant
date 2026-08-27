@@ -15,6 +15,10 @@ import yaml
 try:
     from scripts.harness_runtime import CommandResolutionError, HarnessManifest
     from scripts.outline_contract import OutlineContractError, chapter_binding
+    from scripts.reader_evaluation_contract import (
+        ReaderEvaluationContractError,
+        load_reader_evaluation_report,
+    )
     from scripts.validate_chapter import (
         find_presentation_errors,
         find_quoted_lines,
@@ -22,6 +26,10 @@ try:
 except ModuleNotFoundError:  # Direct execution through scripts/novel_harness.py.
     from harness_runtime import CommandResolutionError, HarnessManifest
     from outline_contract import OutlineContractError, chapter_binding
+    from reader_evaluation_contract import (
+        ReaderEvaluationContractError,
+        load_reader_evaluation_report,
+    )
     from validate_chapter import find_presentation_errors, find_quoted_lines
 
 
@@ -44,6 +52,8 @@ ARCHIVE_STATES = {
 GATE_STATUSES = {"PASS", "WARN", "FAIL", "NOT_APPLICABLE"}
 GATE_KINDS = {"deterministic", "semantic"}
 SPEECH_AUDIT_KEY = "reported_speech_audit"
+DIALOGUE_CLARITY_AUDIT_KEY = "dialogue_clarity_audit"
+DIALOGUE_CLARITY_SCAN_KEY = "dialogue_clarity_scan"
 SPEECH_AUDIT_VERDICTS = {
     "legal_retention",
     "event_summary",
@@ -53,6 +63,15 @@ SPEECH_AUDIT_VERDICTS = {
     "variant_quote",
     "impersonation",
 }
+DIALOGUE_RISK_CATEGORIES = {
+    "character_decision",
+    "action_causality",
+    "fact_revelation",
+    "resource_or_state",
+    "relationship_commitment",
+    "payoff_or_closing_pull",
+}
+DIALOGUE_CLARITY_VERDICTS = {"clear", "resolved_after_auto_fix"}
 SHA256_VALUE = re.compile(r"sha256:[0-9a-f]{64}")
 TRANSACTION_ID = re.compile(
     r"TX-(?:CH-\d{4}|CMD-[A-Z0-9-]+-\d{4})-R\d{2}"
@@ -625,6 +644,7 @@ def _validate_pipeline_completion(
     route: dict,
     transaction: dict,
     expected_quoted_lines: list[dict] | None = None,
+    chapter_context: dict | None = None,
 ) -> None:
     pipeline_name = route.get("pipeline")
     if not pipeline_name:
@@ -741,6 +761,18 @@ def _validate_pipeline_completion(
                             f"{stage_name} speech transcript is missing lines: "
                             f"{', '.join(str(line) for line in uncovered)}"
                         )
+                if DIALOGUE_CLARITY_AUDIT_KEY in required_evidence:
+                    audit_item = next(
+                        (
+                            item
+                            for item in evidence_items
+                            if item.get("key") == DIALOGUE_CLARITY_AUDIT_KEY
+                        ),
+                        None,
+                    )
+                    _validate_dialogue_clarity_audit(
+                        stage_name, audit_item, chapter_context
+                    )
         else:
             stage = stages.get(stage_name)
             if stage is None:
@@ -808,6 +840,332 @@ def _expected_quoted_lines(
     return find_quoted_lines(text)
 
 
+def _staged_chapter_context(
+    repo_root: Path, prepared: list[dict]
+) -> dict | None:
+    try:
+        chapter_path = _staged_artifact(repo_root, prepared, "chapter")
+    except TransactionError:
+        return None
+    try:
+        text = chapter_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise TransactionError(f"cannot read staged chapter: {exc}") from exc
+    return {
+        "source": chapter_path.relative_to(repo_root).as_posix(),
+        "source_hash": sha256_file(chapter_path),
+        "lines": text.splitlines(),
+    }
+
+
+def _non_empty_string(value) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _non_empty_string_list(value) -> bool:
+    return isinstance(value, list) and bool(value) and all(
+        _non_empty_string(item) for item in value
+    )
+
+
+def _validate_dialogue_clarity_audit(
+    stage_name: str, audit_item: dict | None, chapter_context: dict | None
+) -> None:
+    label = f"{stage_name} evidence {DIALOGUE_CLARITY_AUDIT_KEY}"
+    if not isinstance(audit_item, dict):
+        raise TransactionError(f"{label} must be a mapping")
+    if chapter_context is None:
+        raise TransactionError(f"{label} requires a staged chapter")
+    if audit_item.get("source") != chapter_context["source"]:
+        raise TransactionError(f"{label} source does not match staged chapter")
+    source_hash = audit_item.get("source_hash")
+    if (
+        not isinstance(source_hash, str)
+        or SHA256_VALUE.fullmatch(source_hash) is None
+        or source_hash != chapter_context["source_hash"]
+    ):
+        raise TransactionError(f"{label} source_hash does not match staged chapter")
+
+    lines = chapter_context["lines"]
+    scan_scope = audit_item.get("scan_scope")
+    if not isinstance(scan_scope, dict):
+        raise TransactionError(f"{label} scan_scope must be a mapping")
+    if scan_scope.get("start_line") != 1 or scan_scope.get("end_line") != len(lines):
+        raise TransactionError(f"{label} scan_scope must cover the complete chapter")
+
+    counts = audit_item.get("risk_category_counts")
+    if not isinstance(counts, dict) or set(counts) != DIALOGUE_RISK_CATEGORIES:
+        raise TransactionError(
+            f"{label} risk_category_counts must cover all risk categories"
+        )
+    if any(
+        not isinstance(value, int) or isinstance(value, bool) or value < 0
+        for value in counts.values()
+    ):
+        raise TransactionError(
+            f"{label} risk_category_counts values must be non-negative integers"
+        )
+
+    key_dialogues = audit_item.get("key_dialogues")
+    if not isinstance(key_dialogues, list):
+        raise TransactionError(f"{label} key_dialogues must be a list")
+    unresolved = audit_item.get("unresolved_items")
+    if not isinstance(unresolved, list):
+        raise TransactionError(f"{label} unresolved_items must be a list")
+    if unresolved:
+        raise TransactionError(f"{label} unresolved_items must be empty for PASS")
+
+    observed_counts = {category: 0 for category in DIALOGUE_RISK_CATEGORIES}
+    for index, dialogue in enumerate(key_dialogues):
+        item_label = f"{label} key_dialogues[{index}]"
+        if not isinstance(dialogue, dict):
+            raise TransactionError(f"{item_label} must be a mapping")
+        start_line = dialogue.get("start_line")
+        end_line = dialogue.get("end_line")
+        if (
+            not isinstance(start_line, int)
+            or isinstance(start_line, bool)
+            or not isinstance(end_line, int)
+            or isinstance(end_line, bool)
+            or start_line < 1
+            or end_line < start_line
+            or end_line > len(lines)
+        ):
+            raise TransactionError(f"{item_label} has invalid line range")
+        excerpt = dialogue.get("excerpt")
+        if not _non_empty_string(excerpt):
+            raise TransactionError(f"{item_label} requires a non-empty excerpt")
+        declared_text = "\n".join(lines[start_line - 1 : end_line])
+        if excerpt not in declared_text:
+            raise TransactionError(
+                f"{item_label} excerpt is not present in the declared lines"
+            )
+        categories = dialogue.get("risk_categories")
+        if (
+            not isinstance(categories, list)
+            or not categories
+            or len(categories) != len(set(categories))
+            or any(category not in DIALOGUE_RISK_CATEGORIES for category in categories)
+        ):
+            raise TransactionError(f"{item_label} has invalid risk_categories")
+        for category in categories:
+            observed_counts[category] += 1
+        for field in ("core_referent", "character_stance", "causal_role"):
+            if not _non_empty_string(dialogue.get(field)):
+                raise TransactionError(f"{item_label} requires {field}")
+        if not _non_empty_string_list(dialogue.get("context_anchors")):
+            raise TransactionError(f"{item_label} requires context_anchors")
+        verdict = dialogue.get("verdict")
+        if verdict not in DIALOGUE_CLARITY_VERDICTS:
+            raise TransactionError(f"{item_label} has invalid verdict: {verdict}")
+        if verdict == "resolved_after_auto_fix":
+            trace = dialogue.get("repair_trace")
+            if not isinstance(trace, dict):
+                raise TransactionError(f"{item_label} requires repair_trace")
+            for field in (
+                "original_excerpt",
+                "ambiguity_reason",
+                "anchor_strategy",
+                "equivalence_basis",
+            ):
+                if not _non_empty_string(trace.get(field)):
+                    raise TransactionError(
+                        f"{item_label} repair_trace requires {field}"
+                    )
+    if counts != observed_counts:
+        raise TransactionError(
+            f"{label} risk_category_counts do not match key_dialogues"
+        )
+
+    no_match_reason = audit_item.get("no_match_reason")
+    if not key_dialogues and not _non_empty_string(no_match_reason):
+        raise TransactionError(f"{label} requires no_match_reason when no key dialogue matches")
+    if key_dialogues and no_match_reason not in {None, ""}:
+        raise TransactionError(f"{label} no_match_reason is only valid for zero matches")
+
+
+def _apply_dialogue_clarity_migration_scan(
+    repo_root: Path, transaction: dict
+) -> None:
+    gate = next(
+        (
+            item
+            for item in (transaction.get("gates") or [])
+            if isinstance(item, dict) and item.get("gate") == "presentation-scan"
+        ),
+        None,
+    )
+    if gate is None:
+        gate = next(
+            (
+                item
+                for item in (transaction.get("gates") or [])
+                if isinstance(item, dict) and item.get("gate") == "scan"
+            ),
+            None,
+        )
+    evidence = next(
+        (
+            item
+            for item in ((gate or {}).get("evidence") or [])
+            if isinstance(item, dict) and item.get("key") == DIALOGUE_CLARITY_SCAN_KEY
+        ),
+        None,
+    )
+    if not isinstance(evidence, dict):
+        return
+    unresolved = evidence.get("unresolved_items")
+    if not isinstance(unresolved, list) or unresolved:
+        raise TransactionError(
+            f"{DIALOGUE_CLARITY_SCAN_KEY}.unresolved_items must be an empty list"
+        )
+
+    formal_chapters = {}
+    for path in sorted((repo_root / "chapters").glob("CH-*.txt")):
+        match = re.match(r"^(CH-\d{4})(?:-|\.)", path.name)
+        if match is None:
+            continue
+        chapter = match.group(1)
+        if chapter in formal_chapters:
+            raise TransactionError(f"duplicate formal chapter target: {chapter}")
+        formal_chapters[chapter] = path
+
+    scanned = evidence.get("scanned_chapters")
+    if not isinstance(scanned, list):
+        raise TransactionError(
+            f"{DIALOGUE_CLARITY_SCAN_KEY}.scanned_chapters must be a list"
+        )
+    scanned_by_chapter = {}
+    for index, item in enumerate(scanned):
+        label = f"{DIALOGUE_CLARITY_SCAN_KEY}.scanned_chapters[{index}]"
+        if not isinstance(item, dict):
+            raise TransactionError(f"{label} must be a mapping")
+        chapter = item.get("chapter")
+        if chapter not in formal_chapters or chapter in scanned_by_chapter:
+            raise TransactionError(f"{label} has invalid or duplicate chapter")
+        path = formal_chapters[chapter]
+        source = path.relative_to(repo_root).as_posix()
+        if item.get("source") != source:
+            raise TransactionError(f"{label}.source does not match formal chapter")
+        if item.get("source_hash") != sha256_file(path):
+            raise TransactionError(f"{label}.source_hash does not match formal chapter")
+        scanned_by_chapter[chapter] = item
+    if set(scanned_by_chapter) != set(formal_chapters):
+        missing = sorted(set(formal_chapters) - set(scanned_by_chapter))
+        raise TransactionError(
+            f"{DIALOGUE_CLARITY_SCAN_KEY} did not scan all formal chapters: "
+            + ", ".join(missing)
+        )
+
+    issues = evidence.get("issues")
+    if not isinstance(issues, list):
+        raise TransactionError(f"{DIALOGUE_CLARITY_SCAN_KEY}.issues must be a list")
+    clarity_issues = {}
+    for index, item in enumerate(issues):
+        label = f"{DIALOGUE_CLARITY_SCAN_KEY}.issues[{index}]"
+        if not isinstance(item, dict):
+            raise TransactionError(f"{label} must be a mapping")
+        chapter = item.get("chapter")
+        path = formal_chapters.get(chapter)
+        if path is None:
+            raise TransactionError(f"{label}.chapter was not scanned")
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeError) as exc:
+            raise TransactionError(f"cannot read formal chapter: {exc}") from exc
+        start_line = item.get("start_line")
+        end_line = item.get("end_line")
+        if (
+            not isinstance(start_line, int)
+            or isinstance(start_line, bool)
+            or not isinstance(end_line, int)
+            or isinstance(end_line, bool)
+            or start_line < 1
+            or end_line < start_line
+            or end_line > len(lines)
+        ):
+            raise TransactionError(f"{label} has invalid line range")
+        excerpt = item.get("excerpt")
+        if not _non_empty_string(excerpt) or excerpt not in "\n".join(
+            lines[start_line - 1 : end_line]
+        ):
+            raise TransactionError(f"{label}.excerpt is not present in formal chapter")
+        categories = item.get("risk_categories")
+        if (
+            not isinstance(categories, list)
+            or not categories
+            or len(categories) != len(set(categories))
+            or any(category not in DIALOGUE_RISK_CATEGORIES for category in categories)
+        ):
+            raise TransactionError(f"{label} has invalid risk_categories")
+        if not _non_empty_string(item.get("reason")):
+            raise TransactionError(f"{label}.reason must be a non-empty string")
+        clarity_issues.setdefault(chapter, []).append(item)
+
+    migration = transaction.setdefault("migration", {})
+    presentation_issues = migration.get("presentation_issues")
+    if not isinstance(presentation_issues, dict):
+        presentation_issues = migration.get("issues") or {}
+    combined_issues = {
+        chapter: list(items) for chapter, items in presentation_issues.items()
+    }
+    for chapter, items in clarity_issues.items():
+        combined_issues.setdefault(chapter, []).extend(
+            f"dialogue clarity lines {item['start_line']}-{item['end_line']}: "
+            f"{item['reason']}"
+            for item in items
+        )
+    migration["presentation_issues"] = presentation_issues
+    migration["dialogue_clarity_issues"] = clarity_issues
+    migration["issues"] = combined_issues
+    migration["chapters"] = sorted(combined_issues)
+
+
+def _validate_reader_dialogue_cross_check(
+    repo_root: Path, transaction: dict
+) -> None:
+    if not isinstance(transaction.get("reader_evaluation"), dict):
+        return
+    audit_item = None
+    for gate in transaction.get("gates") or []:
+        if not isinstance(gate, dict) or gate.get("gate") != "narrative-integrity":
+            continue
+        audit_item = next(
+            (
+                item
+                for item in (gate.get("evidence") or [])
+                if isinstance(item, dict)
+                and item.get("key") == DIALOGUE_CLARITY_AUDIT_KEY
+            ),
+            None,
+        )
+        break
+    if not isinstance(audit_item, dict):
+        return
+    report_path = _reader_evaluation_file(repo_root, transaction)
+    try:
+        report = load_reader_evaluation_report(report_path)
+    except ReaderEvaluationContractError as exc:
+        raise TransactionError(str(exc)) from exc
+    cross_check = report.get("dialogue_clarity_cross_check") or {}
+    reviewed = cross_check.get("reviewed_dialogues") or []
+    reviewed_refs = {
+        (item.get("line"), item.get("excerpt"))
+        for item in reviewed
+        if isinstance(item, dict)
+    }
+    audited_refs = {
+        (item.get("start_line"), item.get("excerpt"))
+        for item in (audit_item.get("key_dialogues") or [])
+        if isinstance(item, dict)
+    }
+    if reviewed_refs != audited_refs:
+        raise TransactionError(
+            "reader dialogue_clarity_cross_check does not cover the audited "
+            "key dialogues"
+        )
+
+
 def _payoff_evidence_file(repo_root: Path, transaction: dict) -> Path:
     payoff = (transaction.get("plan_contract") or {}).get("payoff")
     if not isinstance(payoff, dict):
@@ -827,7 +1185,9 @@ def _payoff_evidence_file(repo_root: Path, transaction: dict) -> Path:
     return resolved
 
 
-def _reader_evaluation_file(repo_root: Path, transaction: dict) -> Path:
+def _reader_evaluation_file(
+    repo_root: Path, transaction: dict, chapter_context: dict | None = None
+) -> Path:
     evaluation = transaction.get("reader_evaluation")
     if not isinstance(evaluation, dict):
         raise TransactionError(
@@ -848,6 +1208,26 @@ def _reader_evaluation_file(repo_root: Path, transaction: dict) -> Path:
         raise TransactionError(
             f"reader evaluation report does not exist: {raw_path}"
         )
+    if sha256_file(resolved) != artifact_hash:
+        raise TransactionError(
+            "reader-evaluation-contract gate reader_evaluation.artifact_hash "
+            "does not match the report file"
+        )
+    if chapter_context is not None:
+        try:
+            report = load_reader_evaluation_report(resolved)
+        except ReaderEvaluationContractError as exc:
+            raise TransactionError(str(exc)) from exc
+        cross_check = report.get("dialogue_clarity_cross_check")
+        if not isinstance(cross_check, dict):
+            raise TransactionError(
+                "reader evaluation dialogue_clarity_cross_check is missing"
+            )
+        if cross_check.get("source_hash") != chapter_context["source_hash"]:
+            raise TransactionError(
+                "reader evaluation dialogue_clarity_cross_check.source_hash "
+                "does not match staged chapter"
+            )
     return resolved
 
 
@@ -863,6 +1243,7 @@ def _execute_deterministic_gates(
         route.get("pipeline"), {}
     )
     gates = transaction.setdefault("gates", [])
+    chapter_context = _staged_chapter_context(repo_root, prepared)
     for stage in pipeline.get("stages") or []:
         if (
             not isinstance(stage, dict)
@@ -884,7 +1265,11 @@ def _execute_deterministic_gates(
             elif argument == "<payoff_evidence_file>":
                 argument = str(_payoff_evidence_file(repo_root, transaction))
             elif argument == "<reader_evaluation_file>":
-                argument = str(_reader_evaluation_file(repo_root, transaction))
+                argument = str(
+                    _reader_evaluation_file(
+                        repo_root, transaction, chapter_context=chapter_context
+                    )
+                )
             resolved_arguments.append(argument)
         if resolved_arguments and resolved_arguments[0].lower() in {
             "python",
@@ -1374,6 +1759,8 @@ def begin_transaction(
             "migration_state": "SCANNED",
             "chapters": sorted(issues),
             "issues": issues,
+            "presentation_issues": issues,
+            "dialogue_clarity_issues": {},
             "completed": [],
             "failed": [],
         }
@@ -1596,7 +1983,8 @@ def commit_transaction(
         raise TransactionError("resolved arguments do not match transaction arguments")
     if match.name == "migrate-presentation":
         current_issues = _scan_presentation_issues(repo_root)
-        recorded_issues = (transaction.get("migration") or {}).get("issues")
+        migration = transaction.get("migration") or {}
+        recorded_issues = migration.get("presentation_issues", migration.get("issues"))
         if current_issues != recorded_issues:
             raise TransactionError("migration scan became stale before commit")
     if match.route.get("plan_contract") == "required":
@@ -1690,7 +2078,11 @@ def commit_transaction(
         match.route,
         transaction,
         expected_quoted_lines=_expected_quoted_lines(repo_root, prepared),
+        chapter_context=_staged_chapter_context(repo_root, prepared),
     )
+    _validate_reader_dialogue_cross_check(repo_root, transaction)
+    if match.name == "migrate-presentation":
+        _apply_dialogue_clarity_migration_scan(repo_root, transaction)
     if match.name == "init-world":
         events = transaction.setdefault("events", [])
         if "outline_initialized" not in events:
