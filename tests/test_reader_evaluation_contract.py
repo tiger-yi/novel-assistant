@@ -27,57 +27,11 @@ def report_with(item):
         "target_genre_reader": {
             "weighted_score": item["score"],
             "dimensions": [item],
-        },
-        "dialogue_clarity_cross_check": {
-            "source_hash": "sha256:" + "a" * 64,
-            "reviewed_dialogues": [],
-            "external_explanation_dependencies": [],
-            "audit_conflicts": [],
-            "no_match_reason": "风险扫描未识别出需要复核的关键台词",
-        },
+        }
     }
 
 
 class ReaderEvaluationContractTest(unittest.TestCase):
-    def test_rejects_report_without_dialogue_clarity_cross_check(self):
-        report = report_with(dimension(8.0, negative_refs=[]))
-        del report["dialogue_clarity_cross_check"]
-
-        errors = validate_reader_evaluation_report(report)
-
-        self.assertTrue(any("dialogue_clarity_cross_check" in error for error in errors))
-
-    def test_rejects_dialogue_cross_check_with_invalid_source_hash(self):
-        report = report_with(dimension(8.0, negative_refs=[]))
-        report["dialogue_clarity_cross_check"]["source_hash"] = "sha256:bad"
-
-        errors = validate_reader_evaluation_report(report)
-
-        self.assertTrue(any("source_hash" in error for error in errors), errors)
-
-    def test_rejects_dialogue_cross_check_with_external_dependency(self):
-        report = report_with(dimension(8.0, negative_refs=[]))
-        report["dialogue_clarity_cross_check"][
-            "external_explanation_dependencies"
-        ] = [{"line": 12, "reason": "核心所指存在两种解释"}]
-
-        errors = validate_reader_evaluation_report(report)
-
-        self.assertTrue(
-            any("external_explanation_dependencies" in error for error in errors),
-            errors,
-        )
-
-    def test_rejects_dialogue_cross_check_with_audit_conflict(self):
-        report = report_with(dimension(8.0, negative_refs=[]))
-        report["dialogue_clarity_cross_check"]["audit_conflicts"] = [
-            {"line": 12, "reason": "读者复核与专门审计结论不一致"}
-        ]
-
-        errors = validate_reader_evaluation_report(report)
-
-        self.assertTrue(any("audit_conflicts" in error for error in errors), errors)
-
     def test_accepts_very_high_score_with_two_counterexamples_and_comparison(self):
         report = report_with(
             dimension(

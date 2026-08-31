@@ -10,7 +10,6 @@ class ReaderEvaluationContractError(ValueError):
 
 YAML_BLOCK = re.compile(r"```ya?ml\s*\n(.*?)```", re.DOTALL | re.IGNORECASE)
 NO_CHANGE_HINT = re.compile(r"(?:保持现状|无需改动|无需修改|不需要改)")
-SHA256_VALUE = re.compile(r"sha256:[0-9a-f]{64}")
 
 
 def _non_empty_strings(value) -> bool:
@@ -60,64 +59,6 @@ def validate_reader_evaluation_report(report: dict) -> list[str]:
         return ["reader evaluation report must be a mapping"]
 
     errors = []
-    cross_check = report.get("dialogue_clarity_cross_check")
-    if not isinstance(cross_check, dict):
-        errors.append("dialogue_clarity_cross_check must be a mapping")
-    else:
-        source_hash = cross_check.get("source_hash")
-        if not isinstance(source_hash, str) or SHA256_VALUE.fullmatch(source_hash) is None:
-            errors.append(
-                "dialogue_clarity_cross_check.source_hash must be a SHA-256 value"
-            )
-        reviewed = cross_check.get("reviewed_dialogues")
-        if not isinstance(reviewed, list):
-            errors.append(
-                "dialogue_clarity_cross_check.reviewed_dialogues must be a list"
-            )
-            reviewed = []
-        for index, item in enumerate(reviewed):
-            label = f"dialogue_clarity_cross_check.reviewed_dialogues[{index}]"
-            if not isinstance(item, dict):
-                errors.append(f"{label} must be a mapping")
-                continue
-            line = item.get("line")
-            if not isinstance(line, int) or isinstance(line, bool) or line < 1:
-                errors.append(f"{label}.line must be a positive integer")
-            for field in ("excerpt", "finding"):
-                value = item.get(field)
-                if not isinstance(value, str) or not value.strip():
-                    errors.append(f"{label}.{field} must be a non-empty string")
-            if item.get("external_explanation_dependency") is not False:
-                errors.append(
-                    f"{label}.external_explanation_dependency must be false"
-                )
-        dependencies = cross_check.get("external_explanation_dependencies")
-        if not isinstance(dependencies, list):
-            errors.append(
-                "dialogue_clarity_cross_check.external_explanation_dependencies must be a list"
-            )
-        elif dependencies:
-            errors.append(
-                "dialogue_clarity_cross_check.external_explanation_dependencies must be empty"
-            )
-        conflicts = cross_check.get("audit_conflicts")
-        if not isinstance(conflicts, list):
-            errors.append(
-                "dialogue_clarity_cross_check.audit_conflicts must be a list"
-            )
-        elif conflicts:
-            errors.append("dialogue_clarity_cross_check.audit_conflicts must be empty")
-        no_match_reason = cross_check.get("no_match_reason")
-        if not reviewed and (
-            not isinstance(no_match_reason, str) or not no_match_reason.strip()
-        ):
-            errors.append(
-                "dialogue_clarity_cross_check.no_match_reason is required when no dialogue is reviewed"
-            )
-        if reviewed and no_match_reason not in {None, ""}:
-            errors.append(
-                "dialogue_clarity_cross_check.no_match_reason is only valid for zero matches"
-            )
     found_dimensions = False
     for persona_path, dimensions in _dimension_sets(report):
         found_dimensions = True

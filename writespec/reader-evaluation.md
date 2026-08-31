@@ -172,16 +172,6 @@ draft -> polish -> signing-first-impression-risk -> reader-evaluation -> reader-
 评价报告必须用固定结构输出，避免自由评论漂移：
 
 ```yaml
-dialogue_clarity_cross_check:
-  source_hash: "sha256:<最终 staging hash>"
-  reviewed_dialogues:
-    - line: 1
-      excerpt: "不超过 40 字的短引"
-      finding: "核心所指、人物立场和因果作用均可由本章恢复"
-      external_explanation_dependency: false
-  external_explanation_dependencies: []
-  audit_conflicts: []
-  no_match_reason: null
 reader_evaluation:
   round: R1
   chapter_id: CH-NNNN
@@ -226,8 +216,6 @@ reader_evaluation:
   status: PASS|PASS_WITH_AUTO_FIX|PASS_WITH_TARGET_MISS|BLOCKED|BLOCKED_WITH_REPAIR_PLAN|MANUAL_DECISION_REQUIRED
 ```
 
-`dialogue_clarity_cross_check` 是新章读者评价的必填独立复核，不参与画像权重计算。它必须绑定被评最终 staging hash，并从目标读者角度检查关键台词是否存在正文外补释依赖；`reviewed_dialogues` 必须按行号和短引完整覆盖最终 `dialogue_clarity_audit.key_dialogues`。零命中时使用 `reviewed_dialogues: []` 并填写非空 `no_match_reason`；有复核项时 `no_match_reason` 为空。最终报告中的 `external_explanation_dependencies` 与 `audit_conflicts` 必须为空，否则自动回到受限重润色并重新生成读者报告和 `dialogue_clarity_audit`，最多计入事务三轮修复上限，不得用高分抵消冲突。
-
 每个 `dimensions` 条目必须包含 `name`、`score`、`weight`、`evidence_refs`、`reason` 和 `suggestion_type`。缺少维度分、证据或建议分类时，本门禁不得放行。
 
 每个 `deductions` 条目必须包含 `name`、`severity`、`penalty`、`evidence_refs`、`reason` 和 `suggestion_type`。`severity` 与 `penalty` 必须符合“通用扣分项”的严重度表；若人工调整幅度，必须说明原因。
@@ -239,7 +227,7 @@ reader_evaluation:
 - `improvement_hint`: 至少一个可执行或不可执行的改进方向。
 - `comparative_evidence_refs`: 分数 `>= 8.5` 时，至少一条与普通强章的可定位比较依据。
 
-评价报告完成后，事务记录必须写入 `reader_evaluation.artifact_path` 和 `reader_evaluation.artifact_hash`，并运行 `python scripts/validate_reader_evaluation.py <reader_evaluation_file>`。事务执行器还会核对 artifact 实际 hash 和交叉复核的正文 hash。任一校验失败时不得进入后续门禁或提交。
+评价报告完成后，事务记录必须写入 `reader_evaluation.artifact_path` 和 `reader_evaluation.artifact_hash`，并运行 `python scripts/validate_reader_evaluation.py <reader_evaluation_file>`。该确定性校验失败时不得进入后续门禁或提交。
 
 ## 章节承诺与场景诊断
 
@@ -390,7 +378,6 @@ reader_evaluation:
 - 复评轮次的 `revision_delta`。
 - `forbidden_changes`: 不得自动修改的事实、状态、设定和伏笔。
 - `protected_highlights`: 高分亮点，重润色时不得误伤。
-- `dialogue_clarity_cross_check`: 关键台词独立复核、外部补释依赖和专门审计冲突；不改变评分权重。
 - 最终状态：`PASS`、`PASS_WITH_AUTO_FIX`、`PASS_WITH_TARGET_MISS`、`BLOCKED`、`BLOCKED_WITH_REPAIR_PLAN` 或 `MANUAL_DECISION_REQUIRED`。
 
 短引用规则：
